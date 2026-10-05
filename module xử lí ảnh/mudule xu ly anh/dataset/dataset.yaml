@@ -1,0 +1,11 @@
+# YOLOv8 Dataset Config - Comic Speech Bubble Detector
+path: d:\PTUD\mudule xu ly anh\dataset
+train: images/train
+val: images/val
+
+# Classes
+nc: 1
+names: ['speech_bubble']
+
+# Ghi chú:
+# speech_bubble = bong bóng chat chứa đoạn thoại trong truyện tranh

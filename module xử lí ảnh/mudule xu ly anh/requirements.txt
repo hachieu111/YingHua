@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+paddlepaddle
+paddleocr>=2.7.0
+opencv-python
+numpy
+ultralytics>=8.0.0
+albumentations
+pypinyin>=0.50.0

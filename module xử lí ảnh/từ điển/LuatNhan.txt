@@ -1,0 +1,146 @@
+# ===================================================================
+# LUẬT NHẬN DÀNH CHO TIẾNG TRUNG - TỐI ƯU HÓA
+# PHIÊN BẢN 2.0
+#
+# Nguyên tắc:
+# 1. Cụ thể trước, chung chung sau.
+# 2. Dùng ([^，。！？]+?) thay cho (.+) để tránh lỗi tham lam và không vượt qua dấu câu.
+# 3. Gom nhóm các luật có cùng cấu trúc.
+# ===================================================================
+
+# --- PHẦN 1: CẤU TRÚC (CHƯƠNG, HỒI, QUYỂN) ---
+# Ưu tiên hàng đầu vì tính chính xác và không gây xung đột.
+书生第([一二三四五六七八九十百千万零〇]+)章=Chương [CONVERT_NUMBER($1)]:
+^第([一二三四五六七八九十百千万零〇]+)章$=Chương [CONVERT_NUMBER($1)]:
+^第([一二三四五六七八九十百千万零〇]+)节$=Chương [CONVERT_NUMBER($1)]:
+第([一二三四五六七八九十百千万零〇\s]+)章=Chương [CONVERT_NUMBER_SPACED($1)]:
+第([一二三四五六七八九十百千万零〇\s]+)节=Chương [CONVERT_NUMBER_SPACED($1)]:
+^([一二三四五六七八九十百千万零〇]+)章$=Chương [CONVERT_NUMBER($1)]:
+^([一二三四五六七八九十百千万零〇]+)节$=Chương [CONVERT_NUMBER($1)]:
+^([一二三四五六七八九零〇]+)章$=Chương [CONVERT_DIGITS($1)]:
+^([一二三四五六七八九零〇]+)节$=Chương [CONVERT_DIGITS($1)]:
+第\s*0*(\d+)\s*章=Chương $1:
+第\s*0*(\d+)\s*节=Chương $1:
+^\s*(\d+)\s*章$=Chương $1:
+^\s*(\d+)\s*节$=Chương $1:
+正文\s*0*(\d+)=Chương $1:
+第([一二三四五六七八九十百千万零〇]+)卷=Quyển [CONVERT_NUMBER($1)]
+第([一二三四五六七八九十百千万零〇]+)回=Hồi [CONVERT_NUMBER($1)]
+第([一二三四五六七八九十百千万零〇]+)集=Tập [CONVERT_NUMBER($1)]
+
+# --- PHẦN 2: CÁC CỤM TỪ CỐ ĐỊNH & THÀNH NGỮ ---
+# Các luật này có độ ưu tiên cao để đảm bảo dịch đúng nghĩa đen của cụm từ.
+非([^，。！？]+?)莫属=trừ $1 ra không còn có thể là ai khác
+唯([^，。！？]+?)马首是瞻=chỉ nghe lệnh $1
+不在([^，。！？]+?)之下=không hề kém cạnh $1
+入不了([^，。！？]+?)的眼=không lọt nổi vào mắt xanh của $1
+在([^，。！？]+?)头上动土=động thổ trên đầu $1
+百分之(\d+(?:\.\d+)?)=$1%
+^(\d+)\s*万多$=hơn $1 vạn
+
+# --- PHẦN 3: CẤU TRÚC SO SÁNH (QUAN TRỌNG) ---
+# Sắp xếp từ cụ thể (có "còn", "càng") đến chung chung.
+比([^，。！？]+?)还强劲=còn mạnh hơn $1
+比([^，。！？]+?)还强势=còn bá đạo hơn $1
+比([^，。！？]+?)还强大=còn mạnh hơn $1
+比([^，。！？]+?)还强悍=còn cường hãn hơn $1
+比([^，。！？]+?)更强大=cường đại hơn $1
+比([^，。！？]+?)还快=còn nhanh hơn $1
+比([^，。！？]+?)还强=còn mạnh hơn $1
+比([^，。！？]+?)更高=cao hơn $1
+要比([^，。！？]+?)强劲=còn mạnh hơn $1
+要比([^，。！？]+?)强大=còn mạnh hơn $1
+要比([^，。！？]+?)快=còn nhanh hơn $1
+要比([^，。！？]+?)高=còn cao hơn $1
+比([^，。！？]+?)强劲=mạnh hơn $1
+比([^，。！？]+?)强势=cường thế hơn $1
+比([^，。！？]+?)强大=mạnh hơn $1
+比([^，。！？]+?)强悍=cường hãn hơn $1
+比([^，。！？]+?)强=mạnh hơn $1
+比([^，。！？]+?)高=cao hơn $1
+比([^，。！？]+?)快=nhanh hơn $1
+不比([^，。！？]+?)强=không mạnh bằng $1
+不比([^，。！？]+?)快=không nhanh bằng $1
+不比([^，。！？]+?)高=không cao bằng $1
+
+# --- PHẦN 4: CẤU TRÚC VỚI ĐỘNG TỪ VÀ GIỚI TỪ ---
+# Các cấu trúc câu phổ biến trong giao tiếp và miêu tả.
+把主意打在了([^，。！？]+?)的身上=có mưu đồ xấu với $1
+超出了([^，。！？]+?)的预料=nằm ngoài dự đoán của $1
+在([^，。！？]+?)的指挥下=dưới sự chỉ huy của $1
+在([^，。！？]+?)的帮助下=được sự giúp đỡ của $1
+死在了([^，。！？]+?)的手下=chết dưới tay $1
+拜在([^，。！？]+?)了门下=bái $1 làm thầy
+跟([^，。！？]+?)说的一样=giống như $1 nói
+与([^，。！？]+?)想的一样=đúng như những gì $1 nghĩ
+看在([^，。！？]+?)的份上=nể mặt $1
+落在([^，。！？]+?)手里=rơi vào tay $1
+对([^，。！？]+?)出手=ra tay với $1
+对([^，。！？]+?)下手=xuống tay với $1
+和([^，。！？]+?)做对=đối phó với $1
+与([^，。！？]+?)为敌=đối địch với $1
+和([^，。！？]+?)联手=liên thủ với $1
+和([^，。！？]+?)合作=hợp tác với $1
+跟([^，。！？]+?)决裂=đoạn tuyệt với $1
+向([^，。！？]+?)低头=cúi đầu trước $1
+帮了([^，。！？]+?)一把=giúp $1 một tay
+威胁([^，。！？]+?)不了=không uy hiếp được $1
+奈何([^，。！？]+?)不得=không làm gì được $1
+饶([^，。！？]+?)不得=không thể tha cho $1
+阻([^，。！？]+?)不住=không ngăn cản được $1
+看([^，。！？]+?)不顺眼=nhìn $1 không vừa mắt
+打([^，。！？]+?)的主意=có ý đồ với $1
+找([^，。！？]+?)的麻烦=gây sự với $1
+教训([^，。！？]+?)一顿=giáo huấn $1 một trận
+揍([^，。！？]+?)一顿=đánh $1 một trận
+对([^，。！？]+?)说=nói với $1
+跟([^，。！？]+?)说=nói với $1
+向([^，。！？]+?)说=nói với $1
+和([^，。！？]+?)商量=thương lượng với $1
+替([^，。！？]+?)报仇=báo thù cho $1
+替([^，。！？]+?)出气=giúp $1 hả giận
+给([^，。！？]+?)准备=chuẩn bị cho $1
+把([^，。！？]+?)留下=giữ $1 lại
+把([^，。！？]+?)卖了=bán đứng $1
+把([^，。！？]+?)当=coi $1 là
+上了([^，。！？]+?)的当=bị $1 lừa
+有种([^，。！？]+?)别=nếu $1 có gan thì đừng
+敢不敢杀([^，。！？]+?)=có dám giết $1 hay không
+
+# --- PHẦN 5: CÁC CỤM TỪ VỊ TRÍ VÀ TRẠNG THÁI ---
+# Mô tả vị trí và mối quan hệ.
+在([^，。！？]+?)的?面前\s*和\s*在([^，。！？]+?)的?面前=trước mặt [TRANSLATE_CAPITALIZE($1)] và trước mặt [TRANSLATE_CAPITALIZE($2)]
+在([^，。！？]+?)的面前=trước mặt $1
+在([^，。！？]+?)的身后=sau lưng $1
+在([^，。！？]+?)的怀里=trong ngực $1
+在([^，。！？]+?)的眼中=ở trong mắt $1
+在([^，。！？]+?)看来=theo $1 thấy
+在([^，。！？]+?)手上=trên tay $1
+在([^，。！？]+?)身上=trên người $1
+在([^，。！？]+?)心里=trong lòng $1
+在([^，。！？]+?)面前=trước mặt $1
+在([^，。！？]+?)身后=sau lưng $1
+站在([^，。！？]+?)上=đứng trên $1
+跟在([^，。！？]+?)身后=đi theo sau $1
+和([^，。！？]+?)在一起=cùng với $1
+跟([^，。！？]+?)团聚=đoàn tụ với $1
+
+# --- PHẦN 6: LUẬT CHUNG VÀ MỚI BỔ SUNG ĐỂ VĂN PHONG TỰ NHIÊN HƠN ---
+# Các luật này giúp dịch thoát nghĩa hơn.
+关于([^，。！？]+?)的=về $1
+对于([^，。！？]+?)来说=đối với $1 mà nói
+什么的=gì đó, vân vân
+是不是=có phải không
+看起来=xem ra, dường như
+原来是=hóa ra là
+没想到=không ngờ tới
+比如说=ví dụ như
+也就是说=nói cách khác
+总而言之=nói tóm lại
+除此之外=ngoài ra
+另一方...=mặt khác...
+# Các định dạng ngày tháng và số liệu phổ biến.
+(\d+)月(\d+)號=ngày $2 tháng $1
+(\d+)月(\d+)号=ngày $2 tháng $1
+(\d+)年(\d+)月(\d+)日=ngày $3 tháng $2 năm $1
+(\d+)年(\d+)月=tháng $2 năm $1

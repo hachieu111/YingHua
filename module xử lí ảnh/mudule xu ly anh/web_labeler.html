@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>🎌 Comic Label Tool v3 — Đa Giác & Tọa Độ Tỷ Lệ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: #0b0f19; color: #e2e8f0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* TOP BAR */
+  .topbar {
+    background: #111827; border-bottom: 1px solid #1f2937; padding: 10px 18px;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap; z-index: 100;
+  }
+  .topbar h1 { font-size: 16px; font-weight: 700; color: #818cf8; white-space: nowrap; }
+  .sep { color: #374151; }
+  #info-text { font-size: 13px; color: #9ca3af; min-width: 220px; }
+
+  /* BUTTONS */
+  .btn {
+    padding: 6px 13px; border: none; border-radius: 6px; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all .15s; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+  .btn-nav { background: #374151; color: #f3f4f6; }
+  .btn-upload { background: linear-gradient(135deg, #0284c7, #0369a1); color: #fff; }
+  .btn-ai { background: linear-gradient(135deg, #6366f1, #4f46e5); color: #fff; }
+  .btn-save { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
+  .btn-export { background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: #fff; }
+  .btn-finish-poly { background: #f59e0b; color: #111827; font-weight: 700; }
+  .btn-cancel-poly { background: #ef4444; color: #fff; }
+
+  /* TOOLBAR / CLASS BAR */
+  .toolbar {
+    background: #131b2e; border-bottom: 1px solid #1f2937; padding: 8px 18px;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  }
+  .tool-group { display: flex; align-items: center; gap: 8px; }
+  .tool-label { font-size: 12px; color: #9ca3af; font-weight: 500; }
+  
+  .mode-btn {
+    padding: 5px 12px; border-radius: 6px; border: 1px solid #374151;
+    background: #1f2937; color: #d1d5db; font-size: 12px; font-weight: 600; cursor: pointer;
+  }
+  .mode-btn.active { background: #3b82f6; border-color: #60a5fa; color: #fff; box-shadow: 0 0 10px rgba(59,130,246,.4); }
+
+  .class-btn {
+    padding: 5px 12px; border-radius: 20px; border: 2px solid transparent;
+    font-size: 12px; font-weight: 600; cursor: pointer; opacity: 0.65; transition: all .15s;
+  }
+  .class-btn.active { opacity: 1; border-color: #fff; transform: scale(1.04); box-shadow: 0 0 12px rgba(255,255,255,.2); }
+
+  /* MAIN WORKSPACE */
+  .main { flex: 1; display: flex; overflow: hidden; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 320px; flex-shrink: 0; background: #111827; border-right: 1px solid #1f2937;
+    display: flex; flex-direction: column; overflow-y: auto;
+  }
+  .side-section { padding: 14px 16px; border-bottom: 1px solid #1f2937; }
+  .side-section h3 { font-size: 13px; font-weight: 700; color: #9ca3af; text-transform: uppercase; margin-bottom: 10px; letter-spacing: .5px; }
+
+  .box-list { display: flex; flex-direction: column; gap: 6px; max-height: 380px; overflow-y: auto; }
+  .box-item {
+    background: #1f2937; border-radius: 6px; padding: 8px 10px; display: flex;
+    align-items: center; gap: 8px; font-size: 12px; cursor: pointer; border-left: 4px solid transparent;
+    transition: background .15s;
+  }
+  .box-item:hover { background: #283548; }
+  .box-item.selected { background: #283548; border-color: #38bdf8 !important; }
+  .box-item .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .box-item .text-desc { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #e5e7eb; }
+  .box-item .del-btn { color: #9ca3af; font-size: 14px; cursor: pointer; padding: 2px 5px; }
+  .box-item .del-btn:hover { color: #ef4444; }
+
+  /* VIEWER CANVAS */
+  .viewer {
+    flex: 1; overflow: auto; background: #07090e; display: flex; align-items: flex-start; justify-content: center;
+    padding: 24px; position: relative;
+  }
+  #img-container {
+    position: relative; display: inline-block; box-shadow: 0 10px 40px rgba(0,0,0,.8);
+    border-radius: 4px; user-select: none;
+  }
+  #main-img { display: block; max-width: 100%; height: auto; pointer-events: none; }
+
+  /* SVG OVERLAY */
+  #svg-layer {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    cursor: crosshair;
+  }
+  .poly-shape {
+    stroke-width: 2.5; stroke-linejoin: round; cursor: pointer;
+    transition: stroke-width .1s, fill-opacity .1s;
+  }
+  .poly-shape:hover { stroke-width: 4; fill-opacity: 0.35 !important; }
+  .temp-line { stroke: #f59e0b; stroke-width: 2; stroke-dasharray: 4,4; }
+  .temp-dot { fill: #f59e0b; }
+
+  /* TOAST */
+  #toast {
+    position: fixed; bottom: 20px; right: 20px; background: #1e293b; border: 1px solid #334155;
+    border-radius: 8px; padding: 12px 18px; font-size: 13px; color: #f8fafc; z-index: 999;
+    box-shadow: 0 10px 25px rgba(0,0,0,.5); transform: translateY(60px); opacity: 0; transition: all .25s;
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+  #toast.success { border-color: #10b981; color: #6ee7b7; }
+  #toast.error { border-color: #ef4444; color: #fca5a5; }
+  #toast.warn { border-color: #f59e0b; color: #fde68a; }
+
+  /* MODAL */
+  .modal-bg {
+    position: fixed; inset: 0; background: rgba(0,0,0,.75); display: none;
+    align-items: center; justify-content: center; z-index: 500;
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: #1f2937; border: 1px solid #374151; border-radius: 12px;
+    padding: 22px; width: 440px; box-shadow: 0 20px 50px rgba(0,0,0,.6);
+  }
+  .modal h2 { font-size: 16px; font-weight: 700; color: #f3f4f6; margin-bottom: 14px; }
+  .modal .field { margin-bottom: 14px; }
+  .modal label { display: block; font-size: 12px; color: #9ca3af; margin-bottom: 6px; }
+  .modal input, .modal select {
+    width: 100%; padding: 8px 12px; background: #111827; border: 1px solid #374151;
+    border-radius: 6px; color: #f3f4f6; font-size: 13px; outline: none;
+  }
+  .modal input:focus, .modal select:focus { border-color: #6366f1; }
+  .modal-btns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+
+  /* HINT BANNER */
+  .poly-hint {
+    display: none; background: rgba(245,158,11,.15); border: 1px solid rgba(245,158,11,.4);
+    color: #fde68a; font-size: 12px; padding: 6px 12px; border-radius: 6px; align-items: center; gap: 8px;
+  }
+  .poly-hint.active { display: flex; }
+
+  /* POLYGON TOOLTIP */
+  #poly-tooltip {
+    position: fixed; background: rgba(17, 24, 39, 0.95); border: 2px solid #60a5fa;
+    color: #ffffff; padding: 12px 18px; border-radius: 8px; font-size: 20px; font-weight: 700;
+    pointer-events: none; z-index: 1000; box-shadow: 0 8px 25px rgba(0,0,0,0.7);
+    display: none; white-space: pre-wrap; max-width: 400px; letter-spacing: 0.5px;
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <h1>🎌 Comic Label Tool v3</h1>
+  <span class="sep">|</span>
+  <button class="btn btn-nav" onclick="navigate(-1)">◀ Trước</button>
+  <span id="info-text">Đang tải...</span>
+  <button class="btn btn-nav" onclick="navigate(1)">Tiếp ▶</button>
+  <span class="sep">|</span>
+
+  <!-- MỞ THƯ MỤC ẢNH -->
+  <div style="display:flex; gap: 4px; align-items:center;">
+    <input type="text" id="folder-path-input" placeholder="Nhập/dán đường dẫn thư mục ảnh vào đây..." style="padding: 6px; border-radius: 4px; border: 1px solid #374151; background: #1f2937; color: white; font-size: 13px; width: 260px;">
+    <button class="btn btn-upload" style="background: linear-gradient(135deg, #0ea5e9, #0284c7);" onclick="setFolder()">📂 Mở Thư Mục</button>
+  </div>
+
+  <!-- AI AUTO BUBBLE -->
+  <div style="display:flex; gap: 4px;">
+    <button class="btn btn-ai" onclick="autoBubbleCluster()" title="Gom các dòng chữ gần nhau thành 1 khung bong bóng hoàn chỉnh cho ẢNH HIỆN TẠI">
+      🤖 AI Trang Này
+    </button>
+    <button class="btn btn-ai" style="background: linear-gradient(135deg, #10b981, #059669);" onclick="autoAiAllImages()" title="Tự động chạy AI gom bong bóng cho TOÀN BỘ ẢNH trong thư mục">
+      ✨ AI Toàn Bộ Ảnh
+    </button>
+  </div>
+
+  <!-- SAVE & EXPORT -->
+  <button class="btn btn-save" onclick="saveAndNext()">💾 Lưu & Tiếp ▶</button>
+  <button class="btn btn-export" onclick="exportYolo()">📦 Xuất YOLOv8</button>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <!-- CHẾ ĐỘ VẼ -->
+  <div class="tool-group">
+    <span class="tool-label">Chế độ vẽ:</span>
+    <button class="mode-btn active" id="btn-mode-poly" onclick="setDrawMode('polygon')">📐 Đa Giác (Chữ nghiêng / Uốn lượn)</button>
+    <button class="mode-btn" id="btn-mode-rect" onclick="setDrawMode('rect')">🔲 Chữ Nhật</button>
+  </div>
+
+  <span class="sep">|</span>
+
+  <!-- CHỌN CLASS -->
+  <div class="tool-group">
+    <span class="tool-label">Loại nhãn:</span>
+    <div id="class-buttons" style="display:flex; gap:6px;"></div>
+  </div>
+
+  <!-- POLYGON ACTIONS (HIỆN KHI ĐANG VẼ) -->
+  <div class="poly-hint" id="poly-hint">
+    <span>Đang vẽ đa giác (<span id="poly-pt-count">0</span> điểm): Click để thêm điểm. Nhấn <b>Enter</b> hoặc <b>Double-click</b> để kết thúc!</span>
+    <button class="btn btn-finish-poly" onclick="finishPolygon()">✔ Hoàn thành đa giác</button>
+    <button class="btn btn-cancel-poly" onclick="cancelPolygon()">✖ Hủy</button>
+  </div>
+</div>
+
+<!-- MAIN WORKSPACE -->
+<div class="main">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="side-section">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+        <h3 style="margin-bottom:0; font-size:13px;">📋 Danh Sách Nhãn</h3>
+        <button class="btn btn-cancel-poly" style="padding: 3px 8px; font-size:11px; margin-left: 5px;" onclick="deleteAllBoxes()" title="Xóa toàn bộ nhãn của ảnh này">🗑 Xóa Tất Cả</button>
+      </div>
+      <div class="box-list" id="box-list"></div>
+    </div>
+    <div class="side-section">
+      <h3>💡 Hướng Dẫn Gán Nhãn Chuẩn</h3>
+      <div style="font-size:12px; color:#9ca3af; line-height:1.7;">
+        • <b>Khung Bong Bóng:</b> Khoanh <b>toàn bộ bong bóng thoại</b> (chứa tất cả các dòng đối thoại), KHÔNG khoanh từng dòng chữ con.<br>
+        • <b>Đa giác:</b> Click từng đỉnh quanh bong bóng nghiêng/thư pháp. Bấm <b>Enter</b> hoặc bấm nút màu vàng để khép góc.<br>
+        • <b>Tọa độ:</b> Đã tự động chia theo <b>tỷ lệ ảnh (0.0 - 1.0)</b>, tương thích mọi kích thước ảnh.<br>
+        • <b>Phím tắt:</b><br>
+        - <code>1, 2, 3</code>: Đổi loại nhãn<br>
+        - <code>Enter</code>: Hoàn thành đa giác / Lưu ảnh<br>
+        - <code>Delete</code>: Xóa nhãn đang chọn<br>
+        - <code>Mũi tên Trái/Phải</code>: Chuyển trang truyện<br>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEWER -->
+  <div class="viewer" id="viewer-container">
+    <div id="img-container">
+      <img id="main-img" src="" alt="Comic" onload="onImgLoaded()">
+      <svg id="svg-layer"
+           onmousedown="onSvgMouseDown(event)"
+           onmousemove="onSvgMouseMove(event)"
+           onmouseup="onSvgMouseUp(event)"
+           ondblclick="onSvgDblClick(event)">
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: GÁN TEXT & CLASS CHO VÙNG VỪA VẼ -->
+<div class="modal-bg" id="modal-new">
+  <div class="modal">
+    <h2>🏷️ Xác Nhận Vùng Vừa Gán Nhãn</h2>
+    <div class="field">
+      <label>Loại nhãn:</label>
+      <select id="modal-class"></select>
+    </div>
+    <div class="field">
+      <label style="display:flex; justify-content:space-between; align-items:center;">
+        <span>Văn bản đối thoại (ghép toàn bộ chữ trong bong bóng nếu có):</span>
+        <button class="btn btn-ai" style="padding:4px 8px; font-size:11px;" onclick="ocrCurrentBox()" type="button" id="btn-ocr-region">🤖 Nhận diện chữ vùng này</button>
+      </label>
+      <input type="text" id="modal-text" placeholder="Nhập chữ tiếng Trung hoặc để trống...">
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-nav" onclick="closeModal('modal-new')">Hủy bỏ</button>
+      <button class="btn btn-save" onclick="confirmBoxModal()">✔ Xác nhận</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: KẾT QUẢ EXPORT -->
+<div class="modal-bg" id="modal-export">
+  <div class="modal" style="width:500px;">
+    <h2>📦 Xuất Dataset YOLOv8 Segmentation Thành Công!</h2>
+    <div id="export-result" style="font-size:12px; color:#d1d5db; line-height:1.8; margin-bottom:16px;"></div>
+    <div class="modal-btns">
+      <button class="btn btn-nav" onclick="closeModal('modal-export')">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<div id="poly-tooltip"></div>
+<div id="toast"></div>
+
+<script>
+const CLASSES = __CLASSES_JSON__;
+let currentIndex = 0;
+let totalImages = 0;         // Tổng số ảnh
+let currentBoxes = [];       // Danh sách nhãn (tọa độ NORMALIZED 0.0 - 1.0)
+let activeClassId = 0;
+let drawMode = 'polygon';    // 'polygon' hoặc 'rect'
+let selectedBoxIndex = -1;
+let draggingHandle = null;   // { boxIdx, ptIdx } - Điểm đang được kéo
+
+// Biến trạng thái vẽ Đa giác
+let isDrawingPoly = false;
+let polyPoints = [];         // Lưu điểm [nx, ny] normalized 0..1
+let mouseNormPos = null;
+
+// Biến trạng thái vẽ Chữ nhật
+let isDraggingRect = false;
+let rectStartNorm = null;
+
+// ===================== KHỞI TẠO =====================
+function initUI() {
+  const btnContainer = document.getElementById('class-buttons');
+  const modalSelect = document.getElementById('modal-class');
+
+  CLASSES.forEach(cls => {
+    const btn = document.createElement('button');
+    btn.className = 'class-btn' + (cls.id === activeClassId ? ' active' : '');
+    btn.id = `class-btn-${cls.id}`;
+    btn.style.background = cls.color + '26';
+    btn.style.color = cls.color;
+    btn.innerText = cls.label;
+    btn.onclick = () => setActiveClass(cls.id);
+    btnContainer.appendChild(btn);
+
+    const opt = document.createElement('option');
+    opt.value = cls.id;
+    opt.text = cls.label;
+    modalSelect.appendChild(opt);
+  });
+}
+
+function setActiveClass(id) {
+  activeClassId = id;
+  CLASSES.forEach(cls => {
+    const btn = document.getElementById(`class-btn-${cls.id}`);
+    if (btn) {
+      if (cls.id === id) btn.classList.add('active');
+      else btn.classList.remove('active');
+    }
+  });
+}
+
+function setDrawMode(mode) {
+  drawMode = mode;
+  document.getElementById('btn-mode-poly').classList.toggle('active', mode === 'polygon');
+  document.getElementById('btn-mode-rect').classList.toggle('active', mode === 'rect');
+  if (isDrawingPoly) cancelPolygon();
+}
+
+// ===================== TẢI DỮ LIỆU =====================
+async function loadInfo() {
+  cancelPolygon();
+  selectedBoxIndex = -1;
+  const res = await fetch(`/api/info?index=${currentIndex}`);
+  const data = await res.json();
+  if (data.error) { toast(data.error, 'error'); return; }
+
+  document.getElementById('info-text').innerText =
+    `📄 Ảnh ${data.index + 1}/${data.total} — ${data.filename} (${data.width}x${data.height})`;
+
+  totalImages = data.total;
+  currentBoxes = data.boxes || [];
+  document.getElementById('main-img').src = `/api/image/${currentIndex}?t=${Date.now()}`;
+}
+
+function onImgLoaded() {
+  renderAll();
+}
+
+// ===================== SVG RENDERING =====================
+function getSvgCoords(e) {
+  const svg = document.getElementById('svg-layer');
+  const rect = svg.getBoundingClientRect();
+  const px = e.clientX - rect.left;
+  const py = e.clientY - rect.top;
+  // Normalized 0.0 - 1.0
+  const nx = Math.max(0.0, Math.min(1.0, px / rect.width));
+  const ny = Math.max(0.0, Math.min(1.0, py / rect.height));
+  return { px, py, nx, ny, width: rect.width, height: rect.height };
+}
+
+function renderAll() {
+  renderSvg();
+  renderSidebar();
+}
+
+function renderSvg() {
+  const svg = document.getElementById('svg-layer');
+  svg.innerHTML = '';
+  const rect = svg.getBoundingClientRect();
+  const W = rect.width;
+  const H = rect.height;
+  if (!W || !H) return;
+
+  // 1. Vẽ các nhãn đã lưu
+  currentBoxes.forEach((item, idx) => {
+    const cls = CLASSES.find(c => c.id === item.class_id) || CLASSES[0];
+    const isSelected = (idx === selectedBoxIndex);
+
+    // Điểm polygon dạng pixel hiển thị
+    let pts = [];
+    if (item.polygon && item.polygon.length >= 3) {
+      pts = item.polygon.map(p => `${p[0] * W},${p[1] * H}`).join(' ');
+    } else if (item.box) {
+      const [bx, by, bw, bh] = item.box;
+      pts = [
+        `${bx * W},${by * H}`,
+        `${(bx + bw) * W},${by * H}`,
+        `${(bx + bw) * W},${(by + bh) * H}`,
+        `${bx * W},${(by + bh) * H}`
+      ].join(' ');
+    }
+
+    const polyEl = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    polyEl.setAttribute('points', pts);
+    polyEl.setAttribute('class', 'poly-shape');
+    polyEl.setAttribute('fill', cls.color);
+    polyEl.setAttribute('fill-opacity', isSelected ? '0.35' : '0.2');
+    polyEl.setAttribute('stroke', isSelected ? '#38bdf8' : cls.color);
+    polyEl.setAttribute('stroke-width', isSelected ? '3.5' : '2.5');
+    
+    // Hover tooltips
+    polyEl.onmouseenter = (e) => {
+      const tt = document.getElementById('poly-tooltip');
+      tt.innerText = item.text || '(Chưa có text)';
+      tt.style.display = 'block';
+    };
+    polyEl.onmousemove = (e) => {
+      const tt = document.getElementById('poly-tooltip');
+      tt.style.left = (e.clientX + 15) + 'px';
+      tt.style.top = (e.clientY + 15) + 'px';
+    };
+    polyEl.onmouseleave = (e) => {
+      document.getElementById('poly-tooltip').style.display = 'none';
+    };
+
+    polyEl.onclick = (e) => {
+      e.stopPropagation();
+      selectBox(idx);
+    };
+
+    polyEl.ondblclick = (e) => {
+      e.stopPropagation();
+      document.getElementById('poly-tooltip').style.display = 'none';
+      openEditModal(idx);
+    };
+    svg.appendChild(polyEl);
+
+    // Vẽ các điểm (handles) để tùy chỉnh kích thước (MẶC ĐỊNH CHO TẤT CẢ)
+    if (item.polygon && item.polygon.length > 0) {
+      const isRect = (item.polygon.length === 4);
+      
+      // 1. Vẽ Corner Handles (4 góc hoặc các đỉnh đa giác)
+      item.polygon.forEach((pt, ptIdx) => {
+        const handle = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        const hSize = 8;
+        handle.setAttribute('x', pt[0] * W - hSize/2);
+        handle.setAttribute('y', pt[1] * H - hSize/2);
+        handle.setAttribute('width', hSize);
+        handle.setAttribute('height', hSize);
+        handle.setAttribute('fill', '#ffffff');
+        handle.setAttribute('stroke', '#ef4444');
+        handle.setAttribute('stroke-width', '2');
+        handle.style.cursor = isRect ? (ptIdx % 2 === 0 ? 'nwse-resize' : 'nesw-resize') : 'move';
+        handle.onmousedown = (e) => {
+          e.stopPropagation();
+          draggingHandle = { boxIdx: idx, type: 'corner', ptIdx: ptIdx, isRect: isRect };
+        };
+        svg.appendChild(handle);
+      });
+
+      // 2. Vẽ Edge Handles (Các thanh kéo dọc/ngang) nếu là Hình chữ nhật
+      if (isRect) {
+        const edges = [
+          { eIdx: 0, p1: 0, p2: 1, type: 'top', cursor: 'ns-resize' },
+          { eIdx: 1, p1: 1, p2: 2, type: 'right', cursor: 'ew-resize' },
+          { eIdx: 2, p1: 2, p2: 3, type: 'bottom', cursor: 'ns-resize' },
+          { eIdx: 3, p1: 3, p2: 0, type: 'left', cursor: 'ew-resize' }
+        ];
+        edges.forEach(edge => {
+          const pt1 = item.polygon[edge.p1];
+          const pt2 = item.polygon[edge.p2];
+          const mx = (pt1[0] + pt2[0]) / 2;
+          const my = (pt1[1] + pt2[1]) / 2;
+          
+          const eHandle = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          const ehSize = 10;
+          eHandle.setAttribute('x', mx * W - ehSize/2);
+          eHandle.setAttribute('y', my * H - ehSize/2);
+          eHandle.setAttribute('width', ehSize);
+          eHandle.setAttribute('height', ehSize);
+          eHandle.setAttribute('fill', '#38bdf8');
+          eHandle.setAttribute('stroke', '#ffffff');
+          eHandle.setAttribute('stroke-width', '1.5');
+          eHandle.setAttribute('rx', '3'); // Bo góc chút cho khác biệt
+          eHandle.style.cursor = edge.cursor;
+          eHandle.onmousedown = (e) => {
+            e.stopPropagation();
+            draggingHandle = { boxIdx: idx, type: 'edge', p1: edge.p1, p2: edge.p2, edgeType: edge.type };
+          };
+          svg.appendChild(eHandle);
+        });
+      }
+    }
+
+    // Vẽ text badge nhãn loại
+    if (item.polygon && item.polygon.length > 0) {
+      const firstPt = item.polygon[0];
+      const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      textEl.setAttribute('x', firstPt[0] * W + 4);
+      textEl.setAttribute('y', Math.max(14, firstPt[1] * H - 4));
+      textEl.setAttribute('fill', '#ffffff');
+      textEl.setAttribute('font-size', '11');
+      textEl.setAttribute('font-weight', 'bold');
+      textEl.setAttribute('style', 'text-shadow: 0 1px 3px rgba(0,0,0,0.8); pointer-events: none;');
+      const previewText = item.text ? ' (' + item.text.slice(0, 8) + '...)' : '';
+      textEl.textContent = cls.label.split(' ')[0] + previewText;
+      svg.appendChild(textEl);
+    }
+
+    // Vẽ 2 nút Sửa & Xóa nổi trực tiếp trên ảnh (chỉ hiện cho khung đang chọn)
+    if (isSelected && item.polygon && item.polygon.length > 0) {
+      const xs = item.polygon.map(p => p[0] * W);
+      const ys = item.polygon.map(p => p[1] * H);
+      const maxX = Math.max(...xs);
+      const minY = Math.min(...ys);
+
+      let btnY = minY - 26;
+      if (btnY < 0) btnY = minY + 6; // Kéo xuống dưới nếu bị lấp viền trên
+      let btnX = maxX - 50;
+      if (btnX < 0) btnX = 4;
+      
+      const actionGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+
+      // --- Nút Edit ---
+      const editBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      editBg.setAttribute('x', btnX);
+      editBg.setAttribute('y', btnY);
+      editBg.setAttribute('width', '24');
+      editBg.setAttribute('height', '24');
+      editBg.setAttribute('fill', '#3b82f6');
+      editBg.setAttribute('rx', '4');
+      editBg.style.cursor = 'pointer';
+      editBg.onmousedown = (e) => { e.stopPropagation(); openEditModal(idx); };
+
+      const editTxt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      editTxt.setAttribute('x', btnX + 4);
+      editTxt.setAttribute('y', btnY + 16);
+      editTxt.setAttribute('font-size', '13');
+      editTxt.textContent = '✏️';
+      editTxt.style.pointerEvents = 'none';
+
+      // --- Nút Delete ---
+      const delBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      delBg.setAttribute('x', btnX + 28);
+      delBg.setAttribute('y', btnY);
+      delBg.setAttribute('width', '24');
+      delBg.setAttribute('height', '24');
+      delBg.setAttribute('fill', '#ef4444');
+      delBg.setAttribute('rx', '4');
+      delBg.style.cursor = 'pointer';
+      delBg.onmousedown = (e) => { e.stopPropagation(); deleteBox(idx); };
+
+      const delTxt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      delTxt.setAttribute('x', btnX + 34);
+      delTxt.setAttribute('y', btnY + 16);
+      delTxt.setAttribute('font-size', '14');
+      delTxt.textContent = '✖';
+      delTxt.setAttribute('fill', '#fff');
+      delTxt.style.pointerEvents = 'none';
+      
+      actionGroup.appendChild(editBg);
+      actionGroup.appendChild(editTxt);
+      actionGroup.appendChild(delBg);
+      actionGroup.appendChild(delTxt);
+      svg.appendChild(actionGroup);
+    }
+  });
+
+  // 2. Vẽ đa giác đang tạo dở (Polygon in progress)
+  if (isDrawingPoly && polyPoints.length > 0) {
+    // Các đỉnh đã chấm
+    polyPoints.forEach((pt, i) => {
+      const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      dot.setAttribute('cx', pt[0] * W);
+      dot.setAttribute('cy', pt[1] * H);
+      dot.setAttribute('r', i === 0 ? '6' : '4');
+      dot.setAttribute('class', 'temp-dot');
+      if (i === 0) {
+        dot.setAttribute('stroke', '#ffffff');
+        dot.setAttribute('stroke-width', '2');
+        dot.style.cursor = 'pointer';
+        dot.onclick = (e) => { e.stopPropagation(); finishPolygon(); };
+      }
+      svg.appendChild(dot);
+    });
+
+    // Đường nối các đỉnh
+    if (polyPoints.length > 1) {
+      const ptsStr = polyPoints.map(p => `${p[0] * W},${p[1] * H}`).join(' ');
+      const polyLine = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+      polyLine.setAttribute('points', ptsStr);
+      polyLine.setAttribute('fill', 'none');
+      polyLine.setAttribute('stroke', '#f59e0b');
+      polyLine.setAttribute('stroke-width', '2');
+      svg.appendChild(polyLine);
+    }
+
+    // Đường nối đỉnh cuối tới chuột
+    if (mouseNormPos) {
+      const lastPt = polyPoints[polyPoints.length - 1];
+      const guideLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      guideLine.setAttribute('x1', lastPt[0] * W);
+      guideLine.setAttribute('y1', lastPt[1] * H);
+      guideLine.setAttribute('x2', mouseNormPos[0] * W);
+      guideLine.setAttribute('y2', mouseNormPos[1] * H);
+      guideLine.setAttribute('class', 'temp-line');
+      svg.appendChild(guideLine);
+    }
+  }
+
+  // 3. Vẽ chữ nhật đang kéo dở (Rectangle in progress)
+  if (isDraggingRect && rectStartNorm && mouseNormPos) {
+    const x1 = Math.min(rectStartNorm[0], mouseNormPos[0]) * W;
+    const y1 = Math.min(rectStartNorm[1], mouseNormPos[1]) * H;
+    const w  = Math.abs(rectStartNorm[0] - mouseNormPos[0]) * W;
+    const h  = Math.abs(rectStartNorm[1] - mouseNormPos[1]) * H;
+
+    const rectEl = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rectEl.setAttribute('x', x1);
+    rectEl.setAttribute('y', y1);
+    rectEl.setAttribute('width', w);
+    rectEl.setAttribute('height', h);
+    rectEl.setAttribute('fill', 'rgba(59,130,246,0.2)');
+    rectEl.setAttribute('stroke', '#3b82f6');
+    rectEl.setAttribute('stroke-width', '2');
+    rectEl.setAttribute('stroke-dasharray', '4,4');
+    svg.appendChild(rectEl);
+  }
+}
+
+// ===================== MOUSE EVENTS TRÊN SVG =====================
+function onSvgMouseDown(e) {
+  if (e.button !== 0) return; // Chỉ nhận chuột trái
+  const c = getSvgCoords(e);
+
+  if (drawMode === 'polygon') {
+    if (!isDrawingPoly) {
+      // Bắt đầu vẽ polygon
+      isDrawingPoly = true;
+      polyPoints = [[c.nx, c.ny]];
+      document.getElementById('poly-hint').classList.add('active');
+    } else {
+      // Kiểm tra nếu click gần điểm đầu tiên (trong bán kính 15px) thì kết thúc
+      const first = polyPoints[0];
+      const dist = Math.hypot((first[0] - c.nx) * c.width, (first[1] - c.ny) * c.height);
+      if (dist < 15 && polyPoints.length >= 3) {
+        finishPolygon();
+        return;
+      }
+      // Thêm điểm mới
+      polyPoints.push([c.nx, c.ny]);
+    }
+    document.getElementById('poly-pt-count').innerText = polyPoints.length;
+    renderSvg();
+  } else if (drawMode === 'rect') {
+    isDraggingRect = true;
+    rectStartNorm = [c.nx, c.ny];
+    mouseNormPos = [c.nx, c.ny];
+    renderSvg();
+  }
+}
+
+function onSvgMouseMove(e) {
+  const c = getSvgCoords(e);
+  mouseNormPos = [c.nx, c.ny];
+  
+  if (draggingHandle) {
+    const { boxIdx, type } = draggingHandle;
+    const poly = currentBoxes[boxIdx].polygon;
+
+    if (type === 'corner') {
+      const { ptIdx } = draggingHandle;
+      poly[ptIdx] = [c.nx, c.ny];
+    } else if (type === 'edge') {
+      const { p1, p2, edgeType } = draggingHandle;
+      if (edgeType === 'top' || edgeType === 'bottom') {
+        poly[p1][1] = c.ny;
+        poly[p2][1] = c.ny;
+      } else {
+        poly[p1][0] = c.nx;
+        poly[p2][0] = c.nx;
+      }
+    }
+
+    renderSvg();
+    return;
+  }
+
+  if (isDrawingPoly || isDraggingRect) {
+    renderSvg();
+  }
+}
+
+function onSvgMouseUp(e) {
+  if (draggingHandle) {
+    // Cập nhật lại bounding box
+    const { boxIdx } = draggingHandle;
+    const poly = currentBoxes[boxIdx].polygon;
+    const xs = poly.map(p => p[0]);
+    const ys = poly.map(p => p[1]);
+    const minX = Math.min(...xs);
+    const minY = Math.min(...ys);
+    const maxX = Math.max(...xs);
+    const maxY = Math.max(...ys);
+    currentBoxes[boxIdx].box = [minX, minY, maxX - minX, maxY - minY];
+    
+    draggingHandle = null;
+    renderSvg();
+    return;
+  }
+
+  if (drawMode === 'rect' && isDraggingRect) {
+    isDraggingRect = false;
+    const c = getSvgCoords(e);
+    const x1 = Math.min(rectStartNorm[0], c.nx);
+    const y1 = Math.min(rectStartNorm[1], c.ny);
+    const x2 = Math.max(rectStartNorm[0], c.nx);
+    const y2 = Math.max(rectStartNorm[1], c.ny);
+    const bw = x2 - x1;
+    const bh = y2 - y1;
+
+    // Chỉ nhận nếu kéo đủ lớn (> 10px)
+    if (bw * c.width > 10 && bh * c.height > 10) {
+      tempPolyToConfirm = [
+        [x1, y1],
+        [x2, y1],
+        [x2, y2],
+        [x1, y2]
+      ];
+      tempBoxToConfirm = [x1, y1, bw, bh];
+      openConfirmModal();
+    }
+    rectStartNorm = null;
+    renderSvg();
+  }
+}
+
+function onSvgDblClick(e) {
+  if (drawMode === 'polygon' && isDrawingPoly) {
+    finishPolygon();
+  }
+}
+
+// ===================== KẾT THÚC VẼ / SỬA BOX =====================
+let tempPolyToConfirm = null;
+let tempBoxToConfirm = null;
+let editingBoxIndex = -1; // -1 nghĩa là tạo mới, >= 0 nghĩa là đang sửa
+
+function finishPolygon() {
+  if (!isDrawingPoly || polyPoints.length < 3) {
+    toast('Đa giác cần ít nhất 3 điểm!', 'warn');
+    return;
+  }
+
+  const xs = polyPoints.map(p => p[0]);
+  const ys = polyPoints.map(p => p[1]);
+  const minX = Math.min(...xs), maxX = Math.max(...xs);
+  const minY = Math.min(...ys), maxY = Math.max(...ys);
+
+  tempPolyToConfirm = [...polyPoints];
+  tempBoxToConfirm = [minX, minY, maxX - minX, maxY - minY];
+
+  cancelPolygon();
+  openConfirmModal();
+}
+
+function cancelPolygon() {
+  isDrawingPoly = false;
+  polyPoints = [];
+  mouseNormPos = null;
+  document.getElementById('poly-hint').classList.remove('active');
+  renderSvg();
+}
+
+function openConfirmModal() {
+  editingBoxIndex = -1; // Đang tạo mới
+  document.getElementById('modal-class').value = activeClassId;
+  document.getElementById('modal-text').value = '';
+  document.getElementById('modal-new').classList.add('open');
+  document.getElementById('modal-text').focus();
+}
+
+function openEditModal(idx) {
+  editingBoxIndex = idx; // Đang sửa box có sẵn
+  const item = currentBoxes[idx];
+  document.getElementById('modal-class').value = item.class_id;
+  document.getElementById('modal-text').value = item.text || '';
+  document.getElementById('modal-new').classList.add('open');
+  document.getElementById('modal-text').focus();
+}
+
+function confirmBoxModal() {
+  const classId = parseInt(document.getElementById('modal-class').value);
+  const text = document.getElementById('modal-text').value.trim();
+
+  if (editingBoxIndex === -1) {
+    // Tạo mới
+    currentBoxes.push({
+      box: tempBoxToConfirm,
+      polygon: tempPolyToConfirm,
+      text: text,
+      class_id: classId,
+      confidence: 1.0
+    });
+    selectBox(currentBoxes.length - 1);
+    toast('✔ Đã thêm vùng gán nhãn!', 'success');
+  } else {
+    // Cập nhật box có sẵn
+    currentBoxes[editingBoxIndex].class_id = classId;
+    currentBoxes[editingBoxIndex].text = text;
+    selectBox(editingBoxIndex);
+    toast('✔ Đã cập nhật tùy chỉnh nhãn!', 'success');
+  }
+
+  closeModal('modal-new');
+  renderAll();
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function selectBox(idx) {
+  selectedBoxIndex = idx;
+  renderAll();
+}
+
+function deleteBox(idx) {
+  currentBoxes.splice(idx, 1);
+  selectedBoxIndex = -1;
+  renderAll();
+  toast('Đã xóa nhãn.', 'warn');
+}
+
+function deleteAllBoxes() {
+  if (currentBoxes.length === 0) {
+    toast('Không có nhãn nào để xóa!', 'warn');
+    return;
+  }
+  if (confirm('Bạn có chắc chắn muốn xóa TOÀN BỘ nhãn trong ảnh này không?')) {
+    currentBoxes = [];
+    selectedBoxIndex = -1;
+    renderAll();
+    toast('Đã xóa tất cả nhãn!', 'success');
+  }
+}
+
+// ===================== SIDEBAR LIST =====================
+function renderSidebar() {
+  const list = document.getElementById('box-list');
+  list.innerHTML = '';
+
+  if (currentBoxes.length === 0) {
+    list.innerHTML = '<div style="color:#6b7280; font-size:12px; padding:10px 0;">Chưa có nhãn nào trong trang này.</div>';
+    return;
+  }
+
+  currentBoxes.forEach((item, idx) => {
+    const cls = CLASSES.find(c => c.id === item.class_id) || CLASSES[0];
+    const isSelected = (idx === selectedBoxIndex);
+
+    const div = document.createElement('div');
+    div.className = 'box-item' + (isSelected ? ' selected' : '');
+    div.onclick = () => selectBox(idx);
+
+    const dot = document.createElement('div');
+    dot.className = 'dot';
+    dot.style.background = cls.color;
+
+    const desc = document.createElement('div');
+    desc.className = 'text-desc';
+    desc.innerText = `${cls.label} — ${item.text || '(Chưa có text)'}`;
+
+    const editBtn = document.createElement('span');
+    editBtn.className = 'del-btn';
+    editBtn.style.color = '#60a5fa'; // Blueish color to differentiate from delete
+    editBtn.innerHTML = '✏️';
+    editBtn.title = 'Tùy chỉnh nhãn (Sửa class & text)';
+    editBtn.onclick = (e) => {
+      e.stopPropagation();
+      openEditModal(idx);
+    };
+
+    const del = document.createElement('span');
+    del.className = 'del-btn';
+    del.innerHTML = '✖';
+    del.title = 'Xóa nhãn này';
+    del.onclick = (e) => {
+      e.stopPropagation();
+      deleteBox(idx);
+    };
+
+    div.appendChild(dot);
+    div.appendChild(desc);
+    div.appendChild(editBtn);
+    div.appendChild(del);
+    list.appendChild(div);
+  });
+}
+
+// ===================== AI GOM BONG BÓNG CHAT =====================
+async function autoBubbleCluster() {
+  toast('🤖 AI đang nhận diện và gom cụm bong bóng chat...', 'warn');
+  const res = await fetch(`/api/predict_bubble/${currentIndex}`, {method: 'POST'});
+  const data = await res.json();
+
+  if (!data.boxes || data.boxes.length === 0) {
+    toast('Không tìm thấy vùng bong bóng chat nào!', 'warn');
+    return;
+  }
+
+// Thêm các bong bóng mới vào danh sách
+  currentBoxes = [...currentBoxes, ...data.boxes];
+  renderAll();
+  toast(`✅ AI đã gom được ${data.count} khung bong bóng hoàn chỉnh!`, 'success');
+}
+
+// ===================== AI TOÀN BỘ ẢNH =====================
+async function autoAiAllImages() {
+  if (totalImages === 0) {
+    toast('Không có ảnh nào để xử lý!', 'warn');
+    return;
+  }
+  if (!confirm(`Bạn có chắc chắn muốn AI tự động quét và gom bong bóng cho TOÀN BỘ ${totalImages} ảnh không?\nQuá trình này có thể mất vài phút tùy vào số lượng ảnh.`)) {
+    return;
+  }
+  
+  const originalIndex = currentIndex;
+  let successCount = 0;
+  
+  for (let i = 0; i < totalImages; i++) {
+    toast(`🤖 Đang xử lý ảnh ${i + 1} / ${totalImages}...`, 'warn');
+    
+    try {
+      // 1. Chạy AI dự đoán cho ảnh i
+      const res = await fetch(`/api/predict_bubble/${i}`, {method: 'POST'});
+      const data = await res.json();
+      
+      if (data.boxes && data.boxes.length > 0) {
+        // 2. Lấy dữ liệu label hiện tại của ảnh i
+        const infoRes = await fetch(`/api/info?index=${i}`);
+        const infoData = await infoRes.json();
+        const existingBoxes = infoData.boxes || [];
+        
+        // 3. Gộp label cũ và mới
+        const mergedBoxes = [...existingBoxes, ...data.boxes];
+        
+        // 4. Lưu đè lại file label của ảnh i
+        await fetch(`/api/save/${i}`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({boxes: mergedBoxes})
+        });
+        successCount++;
+      }
+    } catch (e) {
+      console.error(`Lỗi xử lý ảnh ${i}:`, e);
+    }
+  }
+  
+  toast(`🎉 Đã hoàn thành quét AI Toàn Bộ! Đã thêm nhãn cho ${successCount} ảnh.`, 'success');
+  
+  // Tải lại trạng thái ảnh hiện tại
+  loadInfo();
+}
+
+// ===================== MỞ THƯ MỤC TRỰC TIẾP =====================
+async function setFolder() {
+  const folder = document.getElementById('folder-path-input').value.trim();
+  if (!folder) {
+    toast('Vui lòng nhập đường dẫn thư mục!', 'warn');
+    return;
+  }
+  
+  toast('Đang nạp ảnh từ thư mục...', 'warn');
+  try {
+    const res = await fetch('/api/set_folder', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({folder: folder})
+    });
+    const data = await res.json();
+    if (data.error) {
+      toast('❌ ' + data.error, 'error');
+    } else {
+      toast(`🎉 Đã mở thư mục có ${data.total} ảnh!`, 'success');
+      currentIndex = 0;
+      loadInfo();
+    }
+  } catch (e) {
+    toast('Lỗi kết nối Server!', 'error');
+  }
+}
+
+// ===================== LƯU & CHUYỂN TRANG =====================
+async function saveAndNext() {
+  await fetch(`/api/save/${currentIndex}`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({boxes: currentBoxes})
+  });
+  toast('💾 Đã lưu nhãn thành công!', 'success');
+  navigate(1);
+}
+
+function navigate(dir) {
+  currentIndex += dir;
+  if (currentIndex < 0) currentIndex = 0;
+  loadInfo();
+}
+
+// ===================== EXPORT YOLOV8 =====================
+async function exportYolo() {
+  toast('📦 Đang xuất YOLOv8 dataset...', 'warn');
+  const res = await fetch('/api/export_yolo', {method: 'POST'});
+  const data = await res.json();
+  if (data.error) { toast('❌ ' + data.error, 'error'); return; }
+
+  document.getElementById('export-result').innerHTML = `
+    <div>✔ <b>Trạng thái:</b> Thành công!</div>
+    <div>📁 <b>Thư mục xuất:</b> <code>${data.output_dir}</code></div>
+    <div>🖼 <b>Số ảnh:</b> ${data.exported} ảnh</div>
+    <div>📋 <b>Loại nhãn:</b> ${data.classes.join(', ')}</div>
+    <div>📐 <b>Tọa độ:</b> Đã chuẩn hóa tỉ lệ [0.0 - 1.0]</div>
+    <div>📄 <b>Config:</b> <code>${data.data_yaml}</code></div>
+    <hr style="border-color:#374151; margin:10px 0;">
+    <div style="color:#60a5fa;">
+      <b>Bước tiếp theo:</b><br>
+      1. Nén thư mục <code>yolo_export</code> thành file zip và upload lên Google Drive.<br>
+      2. Mở file <code>colab_training.ipynb</code> trên Google Colab.<br>
+      3. Bật GPU T4 và bấm Run để bắt đầu train!
+    </div>
+  `;
+  document.getElementById('modal-export').classList.add('open');
+}
+
+// ===================== OCR VÙNG ĐÃ CHỌN =====================
+async function ocrCurrentBox() {
+  const btn = document.getElementById('btn-ocr-region');
+  btn.innerText = "⏳ Đang quét...";
+  
+  let targetBox = (editingBoxIndex >= 0) ? currentBoxes[editingBoxIndex].box : tempBoxToConfirm;
+  if (!targetBox) {
+    toast('Chưa có vùng để nhận diện!', 'error');
+    btn.innerText = "🤖 Nhận diện chữ vùng này";
+    return;
+  }
+  
+  try {
+    const res = await fetch(`/api/ocr_region/${currentIndex}`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ box: targetBox })
+    });
+    const data = await res.json();
+    if (data.text) {
+      document.getElementById('modal-text').value = data.text;
+      toast('Đã nhận diện xong chữ Hán!', 'success');
+    } else {
+      toast('Không tìm thấy chữ trong vùng này!', 'warn');
+    }
+  } catch(e) {
+    console.error(e);
+    toast('Lỗi kết nối OCR!', 'error');
+  }
+  btn.innerText = "🤖 Nhận diện chữ vùng này";
+}
+
+// ===================== TOAST & PHÍM TẮT =====================
+let toastTimer;
+function toast(msg, type='') {
+  const el = document.getElementById('toast');
+  el.innerHTML = msg;
+  el.className = 'show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.className = '', 3500);
+}
+
+document.addEventListener('keydown', e => {
+  if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT') return;
+
+  // Undo (Ctrl + Z) khi đang vẽ đa giác
+  if (e.ctrlKey && e.key.toLowerCase() === 'z') {
+    if (isDrawingPoly && polyPoints.length > 0) {
+      e.preventDefault();
+      polyPoints.pop();
+      if (polyPoints.length === 0) {
+        cancelPolygon();
+      } else {
+        document.getElementById('poly-pt-count').innerText = polyPoints.length;
+        renderSvg();
+      }
+      return;
+    }
+  }
+
+  if (e.key === 'ArrowRight') saveAndNext();
+  if (e.key === 'ArrowLeft') navigate(-1);
+  if (e.key === 'Enter') {
+    if (isDrawingPoly) finishPolygon();
+  }
+  if (e.key === 'Escape') {
+    if (isDrawingPoly) cancelPolygon();
+  }
+  if (e.key === 'Delete' || e.key === 'Backspace') {
+    if (selectedBoxIndex >= 0) deleteBox(selectedBoxIndex);
+  }
+  if (e.key >= '1' && e.key <= '3') {
+    const id = parseInt(e.key) - 1;
+    setActiveClass(id);
+    if (selectedBoxIndex >= 0) {
+      currentBoxes[selectedBoxIndex].class_id = id;
+      renderAll();
+    }
+  }
+});
+
+// ===================== DRAG & DROP ẢNH VÀO WEB =====================
+window.addEventListener('dragover', e => e.preventDefault());
+window.addEventListener('drop', async e => {
+  e.preventDefault();
+  if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+    const fakeEvent = { target: { files: e.dataTransfer.files } };
+    await handleUpload(fakeEvent);
+  }
+});
+
+// Bắt sự kiện nhả chuột bên ngoài SVG để tránh lỗi kẹt handle
+window.addEventListener('mouseup', () => {
+  if (draggingHandle) {
+    const { boxIdx } = draggingHandle;
+    const poly = currentBoxes[boxIdx].polygon;
+    const xs = poly.map(p => p[0]);
+    const ys = poly.map(p => p[1]);
+    const minX = Math.min(...xs), minY = Math.min(...ys);
+    const maxX = Math.max(...xs), maxY = Math.max(...ys);
+    currentBoxes[boxIdx].box = [minX, minY, maxX - minX, maxY - minY];
+    draggingHandle = null;
+    renderSvg();
+  }
+});
+
+// Window Resize -> Re-render SVG
+window.addEventListener('resize', () => {
+  renderSvg();
+});
+
+// Khởi chạy
+initUI();
+loadInfo();
+</script>
+</body>
+</html>
