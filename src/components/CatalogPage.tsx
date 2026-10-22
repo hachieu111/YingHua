@@ -143,20 +143,24 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
         </div>
       </section>
 
-      {/* FILTER & LEVEL ROADMAP BAR */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-8">
-        <div>
+      {/* ROADMAP HEADER: grouped title and search, distinct from catalog content */}
+      <section className="mb-6 rounded-3xl border border-blue-100 bg-gradient-to-r from-white via-white to-[#eff4ff] p-5 sm:p-7 shadow-soft">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+          <div className="min-w-0">
           <span className="text-xs font-bold uppercase tracking-wider text-[#a43073]">
             Phân loại trình độ
           </span>
-          <h2 className="text-2xl font-bold text-slate-800 font-['Plus_Jakarta_Sans']">
+          <h2 className="text-2xl sm:text-[28px] font-bold text-slate-800 font-['Plus_Jakarta_Sans']">
             Lộ Trình Đọc Theo Cấp Độ HSK
           </h2>
-        </div>
+          <p className="mt-1 text-xs sm:text-sm text-slate-500">
+            Tìm truyện phù hợp với trình độ và mục tiêu học tập của bạn.
+          </p>
+          </div>
 
-        {/* Search inside catalog */}
-        <div className="relative md:w-72">
-          <span className="material-symbols-outlined absolute left-3.5 top-2.5 text-slate-400 text-[18px]">
+          {/* Search inside catalog */}
+          <div className="relative w-full md:w-[min(100%,22rem)] shrink-0">
+          <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">
             search
           </span>
           <input
@@ -164,10 +168,11 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Tìm theo tên truyện hoặc từ khóa..."
-            className="w-full pl-9 pr-4 py-2 rounded-full bg-white text-slate-800 text-xs shadow-xs border border-pink-100 outline-none focus:ring-2 focus:ring-[#f472b6] transition-all"
+            className="w-full pl-11 pr-4 py-3 rounded-2xl bg-white text-slate-800 text-sm shadow-xs border border-blue-100 outline-none focus:ring-2 focus:ring-[#f472b6] focus:border-pink-200 transition-all placeholder:text-slate-400"
           />
+          </div>
         </div>
-      </div>
+      </section>
 
       {/* Filter Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-8 custom-scrollbar">

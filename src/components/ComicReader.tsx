@@ -1,13 +1,23 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Bookmark, BookmarkCheck, Eraser, Highlighter, Palette, PenLine } from 'lucide-react';
 import { COMIC_PAGES } from '../data/mockData';
+import { VocabularyItem } from '../types';
 import { speakChinese } from '../utils/speech';
 
 interface ComicReaderProps {
   onOpenUpload: () => void;
-  onSaveVocab?: (word: string) => void;
+  onSaveVocab?: (word: VocabularyItem) => void;
 }
 
 export const ComicReader: React.FC<ComicReaderProps> = ({ onOpenUpload, onSaveVocab }) => {
+  const [savedWords, setSavedWords] = useState<string[]>(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('yinghua-reader-flashcards') || '[]') as VocabularyItem[];
+      return saved.map(item => item.hanzi);
+    } catch {
+      return [];
+    }
+  });
   const [currentPageIndex, setCurrentPageIndex] = useState<number>(0);
   const [viewMode, setViewMode] = useState<'bubble' | 'study'>('bubble');
   const [overlaysVisible, setOverlaysVisible] = useState<boolean>(true);
@@ -16,8 +26,50 @@ export const ComicReader: React.FC<ComicReaderProps> = ({ onOpenUpload, onSaveVo
   const [isPlayingFullPage, setIsPlayingFullPage] = useState<boolean>(false);
   const [activeBubbleId, setActiveBubbleId] = useState<string | null>(null);
   const [savedSuccessMsg, setSavedSuccessMsg] = useState<string | null>(null);
+  const [isStudyMenuOpen, setIsStudyMenuOpen] = useState(false);
+  const [annotationTool, setAnnotationTool] = useState<'none' | 'highlight' | 'draw'>('none');
+  const [annotationColor, setAnnotationColor] = useState('#f472b6');
+  const [pageHighlights, setPageHighlights] = useState<Record<string, string>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('yinghua-reader-highlights') || '{}') as Record<string, string>;
+    } catch {
+      return {};
+    }
+  });
+  const [pageStrokes, setPageStrokes] = useState<Record<string, { color: string; points: { x: number; y: number }[] }[]>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('yinghua-reader-strokes') || '{}') as Record<string, { color: string; points: { x: number; y: number }[] }[]>;
+    } catch {
+      return {};
+    }
+  });
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [savedPages, setSavedPages] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('yinghua-reader-saved-pages') || '[]') as string[];
+    } catch {
+      return [];
+    }
+  });
+  const drawingPointerId = useRef<number | null>(null);
 
   const activePage = COMIC_PAGES[currentPageIndex] || COMIC_PAGES[0];
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('yinghua-reader-highlights', JSON.stringify(pageHighlights));
+    } catch {
+      // Annotations remain usable for the current session when storage is unavailable.
+    }
+  }, [pageHighlights]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('yinghua-reader-strokes', JSON.stringify(pageStrokes));
+    } catch {
+      // Annotations remain usable for the current session when storage is unavailable.
+    }
+  }, [pageStrokes]);
 
   const handlePlayVoice = (text: string) => {
     speakChinese(text, speechRate);
@@ -31,13 +83,158 @@ export const ComicReader: React.FC<ComicReaderProps> = ({ onOpenUpload, onSaveVo
     setIsPlayingFullPage(false);
   };
 
-  const handleSaveAllVocab = () => {
-    if (onSaveVocab) {
-      activePage.vocabulary.forEach(v => onSaveVocab(v.hanzi));
-    }
-    setSavedSuccessMsg(`Đã thêm ${activePage.vocabulary.length} từ vào Flashcard!`);
+  const saveVocabulary = (vocab: typeof activePage.vocabulary[number]) => {
+    onSaveVocab?.({
+      id: `reader-${activePage.id}-${vocab.hanzi}`,
+      hanzi: vocab.hanzi,
+      pinyin: vocab.pinyin,
+      sinoVietnamese: vocab.hanzi,
+      vietnamese: vocab.vietnamese,
+      hskLevel: 3,
+      comicSource: `Đấu La Đại Lục IV · Trang ${activePage.pageNumber}`,
+      status: 'needs_review',
+      isStarred: false
+    });
+    setSavedWords(current => current.includes(vocab.hanzi) ? current : [...current, vocab.hanzi]);
+    setSavedSuccessMsg(`Đã lưu “${vocab.hanzi}” vào bộ Flashcard của bạn.`);
     setTimeout(() => setSavedSuccessMsg(null), 3000);
   };
+
+  const handleSaveAllVocab = () => {
+    activePage.vocabulary.forEach(saveVocabulary);
+    setSavedSuccessMsg(`Đã thêm ${activePage.vocabulary.length} từ của trang này vào Flashcard!`);
+    setTimeout(() => setSavedSuccessMsg(null), 3000);
+  };
+
+  const toggleSavePage = () => {
+    const isSaved = savedPages.includes(activePage.id);
+    const updatedPages = isSaved ? savedPages.filter(id => id !== activePage.id) : [...savedPages, activePage.id];
+    setSavedPages(updatedPages);
+    try {
+      localStorage.setItem('yinghua-reader-saved-pages', JSON.stringify(updatedPages));
+    } catch {
+      // Saving remains available for this session if browser storage is disabled.
+    }
+    setSavedSuccessMsg(isSaved ? 'Đã bỏ lưu trang truyện.' : 'Đã lưu trang truyện vào thư viện đọc.');
+    setTimeout(() => setSavedSuccessMsg(null), 3000);
+  };
+
+  const handleBubbleAnnotation = (bubbleId: string) => {
+    if (annotationTool !== 'highlight') return;
+    setPageHighlights(current => {
+      const next = { ...current };
+      if (next[bubbleId]) delete next[bubbleId];
+      else next[bubbleId] = annotationColor;
+      return next;
+    });
+  };
+
+  const getDrawingPoint = (event: React.PointerEvent<SVGSVGElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    return {
+      x: Math.max(0, Math.min(1000, ((event.clientX - rect.left) / rect.width) * 1000)),
+      y: Math.max(0, Math.min(1000, ((event.clientY - rect.top) / rect.height) * 1000))
+    };
+  };
+
+  const startDrawing = (event: React.PointerEvent<SVGSVGElement>) => {
+    if (annotationTool !== 'draw') return;
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    drawingPointerId.current = event.pointerId;
+    setIsDrawing(true);
+    const pageId = activePage.id;
+    const point = getDrawingPoint(event);
+    setPageStrokes(current => ({
+      ...current,
+      [pageId]: [...(current[pageId] || []), { color: annotationColor, points: [point] }]
+    }));
+  };
+
+  const continueDrawing = (event: React.PointerEvent<SVGSVGElement>) => {
+    if (!isDrawing || drawingPointerId.current !== event.pointerId) return;
+    const pageId = activePage.id;
+    const point = getDrawingPoint(event);
+    setPageStrokes(current => {
+      const strokes = [...(current[pageId] || [])];
+      const lastStroke = strokes[strokes.length - 1];
+      if (!lastStroke) return current;
+      strokes[strokes.length - 1] = { ...lastStroke, points: [...lastStroke.points, point] };
+      return { ...current, [pageId]: strokes };
+    });
+  };
+
+  const stopDrawing = (event: React.PointerEvent<SVGSVGElement>) => {
+    if (drawingPointerId.current !== event.pointerId) return;
+    drawingPointerId.current = null;
+    setIsDrawing(false);
+  };
+
+  const clearAnnotations = () => {
+    setPageHighlights(current => {
+      const next = { ...current };
+      activePage.bubbles.forEach(bubble => delete next[bubble.id]);
+      return next;
+    });
+    setPageStrokes(current => ({ ...current, [activePage.id]: [] }));
+  };
+
+  const studyToolsMenu = isStudyMenuOpen ? (
+    <div className="mt-2 w-64 max-h-[min(70vh,34rem)] overflow-y-auto rounded-2xl border border-blue-100 bg-white/95 p-3 shadow-xl backdrop-blur">
+      <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2">
+        <div>
+          <h3 className="text-xs font-extrabold text-slate-800">Công cụ học tập</h3>
+          <p className="text-[10px] text-slate-500">Từ vựng và ghi chú trang truyện</p>
+        </div>
+        <button onClick={toggleSavePage} className="inline-flex shrink-0 items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1.5 text-[10px] font-bold text-blue-700 hover:bg-blue-100">
+          {savedPages.includes(activePage.id) ? <BookmarkCheck size={13}/> : <Bookmark size={13}/>}
+          {savedPages.includes(activePage.id) ? 'Đã lưu trang' : 'Lưu trang'}
+        </button>
+      </div>
+
+      <div className="mt-3 flex items-center justify-between gap-2">
+        <span className="text-[10px] font-bold text-slate-600">Từ vựng · {activePage.vocabulary.length}</span>
+        <button onClick={handleSaveAllVocab} className="inline-flex items-center gap-1 rounded-full bg-pink-50 px-2.5 py-1.5 text-[10px] font-bold text-[#a43073] hover:bg-pink-100">
+          <span className="material-symbols-outlined text-[13px]">style</span>Lưu tất cả
+        </button>
+      </div>
+      <div className="mt-2 space-y-1.5">
+        {activePage.vocabulary.map(vocab => (
+          <div key={vocab.hanzi} className="flex items-center justify-between gap-2 rounded-xl bg-slate-50 px-2.5 py-2">
+            <div className="min-w-0">
+              <span className="font-['Noto_Serif_SC'] text-sm font-bold text-slate-800">{vocab.hanzi}</span>
+              <span className="ml-2 text-[10px] text-slate-500">{vocab.pinyin}</span>
+              <div className="truncate text-[10px] text-slate-500">{vocab.vietnamese}</div>
+            </div>
+            <button onClick={() => saveVocabulary(vocab)} disabled={savedWords.includes(vocab.hanzi)} className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold disabled:bg-emerald-50 disabled:text-emerald-700 enabled:bg-white enabled:text-blue-700 enabled:hover:bg-blue-100">
+              {savedWords.includes(vocab.hanzi) ? 'Đã lưu' : '+ Flashcard'}
+            </button>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-3 border-t border-slate-100 pt-3">
+        <div className="mb-2 text-[10px] font-bold text-slate-600">Bút ghi chú</div>
+        <div className="grid grid-cols-2 gap-2">
+          <button onClick={() => setAnnotationTool(annotationTool === 'highlight' ? 'none' : 'highlight')} className={`flex items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-[10px] font-bold ${annotationTool === 'highlight' ? 'bg-pink-500 text-white' : 'bg-pink-50 text-pink-700'}`}><Highlighter size={14}/>Tô nền thoại</button>
+          <button onClick={() => setAnnotationTool(annotationTool === 'draw' ? 'none' : 'draw')} className={`flex items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-[10px] font-bold ${annotationTool === 'draw' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-700'}`}><PenLine size={14}/>Bút vẽ</button>
+        </div>
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-600"><Palette size={13}/>Màu bút</span>
+          <label className="relative h-7 w-7 cursor-pointer overflow-hidden rounded-full border-2 border-white shadow ring-1 ring-slate-200" style={{ backgroundColor: annotationColor }} title="Chọn màu tùy chỉnh">
+            <input type="color" value={annotationColor} onChange={event => setAnnotationColor(event.target.value)} aria-label="Chọn màu tùy chỉnh" className="absolute inset-0 h-full w-full cursor-pointer opacity-0" />
+          </label>
+        </div>
+        <div className="mt-2 flex items-center gap-2">
+          {['#f472b6', '#facc15', '#4ade80', '#38bdf8', '#a78bfa', '#fb7185', '#1e293b'].map(color => <button key={color} onClick={() => setAnnotationColor(color)} aria-label={`Chọn màu ${color}`} aria-pressed={annotationColor === color} className={`h-6 w-6 rounded-full border-2 ${annotationColor === color ? 'border-slate-700 ring-2 ring-slate-200' : 'border-white shadow'}`} style={{ backgroundColor: color }} />)}
+        </div>
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <span className="text-[9px] text-slate-400">{annotationTool === 'highlight' ? 'Chạm khung thoại để tô màu' : annotationTool === 'draw' ? 'Vẽ trực tiếp lên ảnh truyện' : 'Chọn loại bút để bắt đầu'}</span>
+          <button onClick={clearAnnotations} className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-[9px] font-semibold text-slate-500 hover:bg-slate-100"><Eraser size={12}/>Xóa ghi chú</button>
+        </div>
+      </div>
+    </div>
+  ) : null;
 
   const cycleSpeed = () => {
     if (speechRate === 1.0) setSpeechRate(1.2);
@@ -94,7 +291,7 @@ export const ComicReader: React.FC<ComicReaderProps> = ({ onOpenUpload, onSaveVo
             <span>Tải ảnh dịch</span>
           </button>
 
-          {/* Mode Switcher */}
+          {/* Overlay control */}
           <div className="flex items-center bg-slate-100 p-1 rounded-2xl border border-slate-200/60 text-xs font-medium">
             <button
               onClick={() => setViewMode('bubble')}
@@ -104,32 +301,17 @@ export const ComicReader: React.FC<ComicReaderProps> = ({ onOpenUpload, onSaveVo
                   : 'text-slate-500 hover:text-slate-800'
               }`}
             >
-              <span className="material-symbols-outlined text-[16px] text-pink-400">
-                chat_bubble
-              </span>
+              <span className="material-symbols-outlined text-[16px] text-pink-400">chat_bubble</span>
               <span>Bóng Thoại (Overlay)</span>
-            </button>
-            <button
-              onClick={() => setViewMode('study')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all ${
-                viewMode === 'study'
-                  ? 'bg-white text-[#0060ac] shadow-xs font-bold'
-                  : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[16px] text-blue-400">
-                menu_book
-              </span>
-              <span>Góc Học Tập (Study)</span>
             </button>
           </div>
 
           <button
-            onClick={handleSaveAllVocab}
+            onClick={toggleSavePage}
             className="w-9 h-9 rounded-xl bg-white border border-pink-100 text-slate-500 hover:text-[#a43073] hover:border-pink-300 flex items-center justify-center shadow-xs transition-all"
-            title="Lưu trang này"
+            title={savedPages.includes(activePage.id) ? 'Bỏ lưu trang này' : 'Lưu trang này'}
           >
-            <span className="material-symbols-outlined text-[18px]">bookmark</span>
+            {savedPages.includes(activePage.id) ? <BookmarkCheck size={18} className="text-[#a43073]"/> : <Bookmark size={18}/>}
           </button>
         </div>
 
@@ -228,11 +410,32 @@ export const ComicReader: React.FC<ComicReaderProps> = ({ onOpenUpload, onSaveVo
 
             {/* Comic Canvas Wrapper */}
             <div id="canvas-wrapper" className="relative rounded-2xl overflow-hidden border border-slate-100 shadow-inner bg-slate-50">
+              <div className="absolute left-3 top-3 z-50">
+                <button type="button" onClick={() => setIsStudyMenuOpen(open => !open)} aria-expanded={isStudyMenuOpen} aria-label="Mở công cụ ghi chú" title="Công cụ học tập và ghi chú" className={`flex h-10 w-10 items-center justify-center rounded-full border shadow-lg transition ${annotationTool !== 'none' ? 'border-pink-300 bg-pink-500 text-white' : 'border-white bg-white/95 text-slate-700 hover:text-pink-600'}`}>
+                  <PenLine size={18}/>
+                </button>
+                {studyToolsMenu}
+              </div>
               <img
                 src={activePage.imageSrc}
                 alt={activePage.title}
                 className="w-full h-auto block select-none"
               />
+
+              <svg
+                className={`absolute inset-0 z-40 h-full w-full ${annotationTool === 'draw' ? 'touch-none cursor-crosshair pointer-events-auto' : 'pointer-events-none'}`}
+                viewBox="0 0 1000 1000"
+                preserveAspectRatio="none"
+                onPointerDown={startDrawing}
+                onPointerMove={continueDrawing}
+                onPointerUp={stopDrawing}
+                onPointerCancel={stopDrawing}
+                aria-label="Lớp ghi chú trên trang truyện"
+              >
+                {(pageStrokes[activePage.id] || []).map((stroke, index) => (
+                  <polyline key={`${activePage.id}-stroke-${index}`} points={stroke.points.map(point => `${point.x},${point.y}`).join(' ')} fill="none" stroke={stroke.color} strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+                ))}
+              </svg>
 
               {/* Speech Bubble Interactive Pins */}
               {overlaysVisible && activePage.bubbles.map((bubble, bIdx) => {
@@ -256,11 +459,14 @@ export const ComicReader: React.FC<ComicReaderProps> = ({ onOpenUpload, onSaveVo
                     }}
                     onMouseEnter={() => setActiveBubbleId(bubble.id)}
                     onMouseLeave={() => setActiveBubbleId(null)}
-                    onClick={() => handlePlayVoice(bubble.hanzi)}
+                    onClick={() => {
+                      if (annotationTool === 'highlight') handleBubbleAnnotation(bubble.id);
+                      else handlePlayVoice(bubble.hanzi);
+                    }}
                     className={`bubble-pin group absolute cursor-pointer z-30`}
                   >
                     {/* Highlight Box inside bubble */}
-                    <div className={`w-full h-full rounded-xl border-2 ${borderColor} ${bgColor} ${shadowGlow} transition-all flex flex-col justify-between p-1.5`}>
+                    <div style={pageHighlights[bubble.id] ? { backgroundColor: `${pageHighlights[bubble.id]}33`, borderColor: pageHighlights[bubble.id] } : undefined} className={`w-full h-full rounded-xl border-2 ${borderColor} ${bgColor} ${shadowGlow} transition-all flex flex-col justify-between p-1.5`}>
                       <div className="flex items-center justify-between">
                         <span className={`${badgeColor} text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-xs flex items-center gap-1`}>
                           <span className="material-symbols-outlined text-[12px]">translate</span>
@@ -398,16 +604,26 @@ export const ComicReader: React.FC<ComicReaderProps> = ({ onOpenUpload, onSaveVo
                       </div>
                     </div>
 
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handlePlayVoice(vocab.hanzi);
-                      }}
-                      className="w-7 h-7 rounded-lg bg-white group-hover:bg-pink-200/60 text-slate-400 group-hover:text-pink-600 flex items-center justify-center text-xs transition-colors"
-                      title="Phát âm"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">volume_up</span>
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePlayVoice(vocab.hanzi);
+                        }}
+                        className="w-7 h-7 rounded-lg bg-white group-hover:bg-pink-200/60 text-slate-400 group-hover:text-pink-600 flex items-center justify-center text-xs transition-colors"
+                        title="Phát âm"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">volume_up</span>
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); saveVocabulary(vocab); }}
+                        disabled={savedWords.includes(vocab.hanzi)}
+                        className="w-7 h-7 rounded-lg bg-white text-slate-400 hover:bg-blue-100 hover:text-blue-700 disabled:text-emerald-600 disabled:bg-emerald-50 flex items-center justify-center transition-colors"
+                        title={savedWords.includes(vocab.hanzi) ? 'Đã lưu vào Flashcard' : 'Lưu từ vào Flashcard'}
+                      >
+                        <span className="material-symbols-outlined text-[16px]">{savedWords.includes(vocab.hanzi) ? 'check' : 'style'}</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -418,7 +634,7 @@ export const ComicReader: React.FC<ComicReaderProps> = ({ onOpenUpload, onSaveVo
               className="w-full mt-3 py-2 bg-pink-50 hover:bg-pink-100 text-[#a43073] text-xs font-bold rounded-2xl border border-pink-200 transition-colors flex items-center justify-center gap-1.5"
             >
               <span className="material-symbols-outlined text-[14px]">add</span>
-              <span>+ Lưu toàn bộ vào Flashcard</span>
+              <span>Lưu toàn bộ vào Flashcard</span>
             </button>
           </div>
 

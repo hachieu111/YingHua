@@ -8,7 +8,15 @@ interface FlashcardsPageProps {
 }
 
 export const FlashcardsPage: React.FC<FlashcardsPageProps> = ({ onNavigateToReader }) => {
-  const [vocabList, setVocabList] = useState<VocabularyItem[]>(VOCABULARY_LIST);
+  const [vocabList, setVocabList] = useState<VocabularyItem[]>(() => {
+    try {
+      const readerWords = JSON.parse(localStorage.getItem('yinghua-reader-flashcards') || '[]') as VocabularyItem[];
+      const existingHanzi = new Set(VOCABULARY_LIST.map(item => item.hanzi));
+      return [...VOCABULARY_LIST, ...readerWords.filter(item => !existingHanzi.has(item.hanzi))];
+    } catch {
+      return VOCABULARY_LIST;
+    }
+  });
   const [currentCardIndex, setCurrentCardIndex] = useState<number>(0);
   const [isFlipped, setIsFlipped] = useState<boolean>(false);
   const [searchFilter, setSearchFilter] = useState<string>('');

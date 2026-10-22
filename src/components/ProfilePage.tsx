@@ -96,14 +96,18 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
 
               {/* Metadata chips */}
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-slate-500 text-xs pt-1">
-                <span className="flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[16px] text-[#a43073]">calendar_today</span>
-                  Tham gia: {userProfile.joinDate}
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[16px] text-[#0060ac]">mail</span>
-                  {userProfile.email}
-                </span>
+                {userProfile.showJoinDate !== false && (
+                  <span className="flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[16px] text-[#a43073]">calendar_today</span>
+                    Tham gia: {userProfile.joinDate}
+                  </span>
+                )}
+                {userProfile.showEmail !== false && (
+                  <span className="flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[16px] text-[#0060ac]">mail</span>
+                    {userProfile.email}
+                  </span>
+                )}
               </div>
             </div>
 

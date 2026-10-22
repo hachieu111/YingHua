@@ -4,7 +4,8 @@ export type NavigationTab =
   | 'library' 
   | 'flashcards' 
   | 'leaderboard' 
-  | 'profile';
+  | 'profile'
+  | 'admin';
 
 export interface VocabularyItem {
   id: string;
@@ -115,6 +116,8 @@ export interface UserProfileData {
   vipExpiry: string;
   joinDate: string;
   email: string;
+  showEmail?: boolean;
+  showJoinDate?: boolean;
   avatar: string;
   streak: number;
   totalVocab: number;

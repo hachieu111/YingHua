@@ -4,6 +4,9 @@ interface AccountSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentEmail: string;
+  showEmail: boolean;
+  showJoinDate: boolean;
+  onUpdateVisibility: (setting: 'showEmail' | 'showJoinDate', visible: boolean) => void;
   onUpdateEmail: (newEmail: string) => void;
   onLogout: () => void;
   showToast: (msg: string) => void;
@@ -13,11 +16,14 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
   isOpen,
   onClose,
   currentEmail,
+  showEmail,
+  showJoinDate,
+  onUpdateVisibility,
   onUpdateEmail,
   onLogout,
   showToast
 }) => {
-  const [activeTab, setActiveTab] = useState<'email' | 'password' | 'logout'>('email');
+  const [activeTab, setActiveTab] = useState<'email' | 'password' | 'privacy' | 'logout'>('email');
 
   // Change Email state
   const [newEmail, setNewEmail] = useState<string>('');
@@ -105,7 +111,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
         </div>
 
         {/* Tab Pills */}
-        <div className="flex items-center gap-2 p-3 bg-[#eff4ff] border-b border-blue-100 text-xs font-semibold">
+        <div className="grid grid-cols-2 sm:grid-cols-4 items-center gap-2 p-3 bg-[#eff4ff] border-b border-blue-100 text-xs font-semibold">
           <button
             onClick={() => setActiveTab('email')}
             className={`flex-1 py-2 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 ${
@@ -128,6 +134,18 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
           >
             <span className="material-symbols-outlined text-[16px]">lock_reset</span>
             <span>Đổi Mật Khẩu</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('privacy')}
+            className={`flex-1 py-2 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+              activeTab === 'privacy'
+                ? 'bg-[#f472b6] text-white shadow-xs font-bold'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[16px]">visibility</span>
+            <span>Riêng tư</span>
           </button>
 
           <button
@@ -320,7 +338,45 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
             </form>
           )}
 
-          {/* TAB 3: LOGOUT */}
+          {/* TAB 3: PROFILE VISIBILITY */}
+          {activeTab === 'privacy' && (
+            <div className="flex flex-col gap-4">
+              <div>
+                <h4 className="text-sm font-bold text-slate-800">Thông tin hiển thị trên hồ sơ</h4>
+                <p className="text-xs text-slate-500 mt-1">Chọn thông tin bạn muốn người khác nhìn thấy trên trang cá nhân.</p>
+              </div>
+
+              {([
+                { key: 'showEmail', label: 'Địa chỉ email', detail: currentEmail, visible: showEmail, icon: 'mail' },
+                { key: 'showJoinDate', label: 'Ngày tham gia', detail: 'Ngày bạn bắt đầu sử dụng Yinghua', visible: showJoinDate, icon: 'calendar_today' }
+              ] as const).map(({ key, label, detail, visible, icon }) => (
+                <div key={key} className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="w-9 h-9 rounded-xl bg-blue-100 text-[#0060ac] flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-[18px]">{icon}</span>
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-xs font-bold text-slate-800">{label}</span>
+                      <span className="block text-[11px] text-slate-500 truncate">{detail}</span>
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={visible}
+                    aria-label={`${visible ? 'Ẩn' : 'Hiện'} ${label}`}
+                    onClick={() => onUpdateVisibility(key, !visible)}
+                    className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${visible ? 'bg-[#0060ac]' : 'bg-slate-300'}`}
+                  >
+                    <span className={`absolute left-1 top-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${visible ? 'translate-x-5' : 'translate-x-0'}`} />
+                  </button>
+                </div>
+              ))}
+              <p className="text-[11px] text-slate-400">Thay đổi được lưu tự động và áp dụng ngay trên hồ sơ của bạn.</p>
+            </div>
+          )}
+
+          {/* TAB 4: LOGOUT */}
           {activeTab === 'logout' && (
             <div className="flex flex-col items-center text-center gap-4 py-2">
               <div className="w-16 h-16 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center text-2xl shadow-inner">

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { BookOpen, Flame, Layers, Star } from 'lucide-react';
 import { LEADERBOARD_USERS } from '../data/mockData';
 
 export const LeaderboardPage: React.FC = () => {
@@ -7,10 +8,29 @@ export const LeaderboardPage: React.FC = () => {
   const [showExtendedRanks, setShowExtendedRanks] = useState<boolean>(false);
   const [completedQuests, setCompletedQuests] = useState<number[]>([1, 2]);
 
-  const top1 = LEADERBOARD_USERS[0];
-  const top2 = LEADERBOARD_USERS[1];
-  const top3 = LEADERBOARD_USERS[2];
-  const currentUser = LEADERBOARD_USERS.find(u => u.isCurrentUser) || LEADERBOARD_USERS[LEADERBOARD_USERS.length - 1];
+  const metricConfig = {
+    streak: { label: 'Chuỗi Streak', unit: 'ngày streak', getValue: (user: typeof LEADERBOARD_USERS[number]) => user.streakDays },
+    exp: { label: 'Điểm EXP Học Tập', unit: 'EXP', getValue: (user: typeof LEADERBOARD_USERS[number]) => user.exp },
+    vocab: { label: 'Từ vựng ghi nhớ', unit: 'từ', getValue: (user: typeof LEADERBOARD_USERS[number]) => user.vocabCount ?? 100 },
+    pages: { label: 'Trang Manhua đã đọc', unit: 'trang', getValue: (user: typeof LEADERBOARD_USERS[number]) => user.pagesRead }
+  };
+  const timeConfig = {
+    week: { label: 'Tuần này', multiplier: 0.12 },
+    month: { label: 'Tháng này', multiplier: 0.4 },
+    all: { label: 'Toàn thời gian', multiplier: 1 }
+  };
+  const activeMetric = metricConfig[metricFilter];
+  const activeTime = timeConfig[timeFilter];
+  const getScore = (user: typeof LEADERBOARD_USERS[number]) =>
+    Math.max(1, Math.round(activeMetric.getValue(user) * activeTime.multiplier));
+  const rankedUsers = [...LEADERBOARD_USERS]
+    .sort((a, b) => getScore(b) - getScore(a))
+    .map((user, index) => ({ ...user, rank: index + 1 }));
+  const top1 = rankedUsers[0];
+  const top2 = rankedUsers[1];
+  const top3 = rankedUsers[2];
+  const currentUser = rankedUsers.find((user) => user.isCurrentUser) || rankedUsers[rankedUsers.length - 1];
+  const formatScore = (user: typeof currentUser) => getScore(user).toLocaleString();
 
   const handleDoQuest3 = () => {
     if (!completedQuests.includes(3)) {
@@ -64,75 +84,50 @@ export const LeaderboardPage: React.FC = () => {
 
       {/* FILTER CONTROLS BAR */}
       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 p-2 bg-[#eff4ff] rounded-2xl border border-blue-100">
-        
-        {/* Time Tabs */}
-        <div className="flex items-center p-1 rounded-full bg-white shadow-xs gap-1">
-          <button
-            onClick={() => setTimeFilter('week')}
-            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
-              timeFilter === 'week' ? 'bg-[#f472b6] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Tuần này
-          </button>
-          <button
-            onClick={() => setTimeFilter('month')}
-            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
-              timeFilter === 'month' ? 'bg-[#f472b6] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Tháng này
-          </button>
-          <button
-            onClick={() => setTimeFilter('all')}
-            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
-              timeFilter === 'all' ? 'bg-[#f472b6] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Mọi thời đại
-          </button>
+        {/* Time filter */}
+        <div role="group" aria-label="Lọc theo thời gian" className="flex items-center p-1 rounded-full bg-white shadow-xs gap-1 shrink-0">
+          {([
+            { id: 'week', label: 'Tuần này' },
+            { id: 'month', label: 'Tháng này' },
+            { id: 'all', label: 'Toàn thời gian' }
+          ] as const).map(({ id, label }) => (
+            <button
+              key={id}
+              onClick={() => setTimeFilter(id)}
+              aria-pressed={timeFilter === id}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+                timeFilter === id ? 'bg-[#f472b6] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
 
-        {/* Metric Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 custom-scrollbar">
-          <button
-            onClick={() => setMetricFilter('exp')}
-            className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
-              metricFilter === 'exp' ? 'bg-[#0060ac] text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[15px]">stars</span>
-            <span>Điểm EXP Học Tập</span>
-          </button>
-          <button
-            onClick={() => setMetricFilter('vocab')}
-            className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
-              metricFilter === 'vocab' ? 'bg-[#0060ac] text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[15px]">style</span>
-            <span>Từ vựng ghi nhớ</span>
-          </button>
-          <button
-            onClick={() => setMetricFilter('pages')}
-            className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
-              metricFilter === 'pages' ? 'bg-[#0060ac] text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[15px]">menu_book</span>
-            <span>Trang Manhua đã đọc</span>
-          </button>
-          <button
-            onClick={() => setMetricFilter('streak')}
-            className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
-              metricFilter === 'streak' ? 'bg-[#0060ac] text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[15px]">local_fire_department</span>
-            <span>Chuỗi Streak</span>
-          </button>
+        {/* Metric tabs: each selection displays its own ranking view */}
+        <div role="tablist" aria-label="Chọn bảng xếp hạng" className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 custom-scrollbar">
+          {([
+            { id: 'streak', label: 'Chuỗi Streak', Icon: Flame },
+            { id: 'exp', label: 'Điểm EXP Học Tập', Icon: Star },
+            { id: 'vocab', label: 'Từ vựng ghi nhớ', Icon: Layers },
+            { id: 'pages', label: 'Trang Manhua đã đọc', Icon: BookOpen }
+          ] as const).map(({ id, label, Icon }) => (
+            <button
+              key={id}
+              role="tab"
+              aria-selected={metricFilter === id}
+              onClick={() => setMetricFilter(id)}
+              className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+                metricFilter === id
+                  ? 'bg-[#0060ac] text-white shadow-xs'
+                  : 'bg-white text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              <Icon className="w-4 h-4 shrink-0" strokeWidth={2} aria-hidden="true" />
+              <span>{label}</span>
+            </button>
+          ))}
         </div>
-
       </div>
 
       {/* MAIN TWO-COLUMN BODY (8 Cols Left, 4 Cols Right) */}
@@ -150,7 +145,7 @@ export const LeaderboardPage: React.FC = () => {
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-[#a43073] text-[24px]">workspace_premium</span>
                 <span className="text-xl font-bold text-slate-800 font-['Plus_Jakarta_Sans']">
-                  Bục Vinh Danh Tam Kiệt
+                  Top 3 · {activeMetric.label}
                 </span>
               </div>
               <span className="text-xs text-slate-500 flex items-center gap-1.5 font-medium">
@@ -190,10 +185,10 @@ export const LeaderboardPage: React.FC = () => {
                 {/* Pedestal Box 2 */}
                 <div className="w-full h-32 sm:h-36 md:h-44 rounded-2xl bg-gradient-to-t from-slate-200 via-slate-100 to-white p-3 flex flex-col items-center justify-between shadow-xs border-t-2 border-slate-300">
                   <span className="text-lg sm:text-xl font-extrabold text-slate-700">
-                    {top2.exp.toLocaleString()}
+                    {formatScore(top2)}
                   </span>
                   <div className="w-full flex flex-col items-center gap-1">
-                    <span className="text-[10px] text-slate-500 font-bold uppercase">EXP</span>
+                    <span className="text-[10px] text-slate-500 font-bold uppercase">{activeMetric.unit}</span>
                     <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-900 text-[10px] font-bold">
                       🔥 {top2.streakDays} ngày
                     </span>
@@ -233,10 +228,10 @@ export const LeaderboardPage: React.FC = () => {
                 <div className="w-full h-44 sm:h-52 md:h-60 rounded-3xl bg-gradient-to-t from-amber-100 via-amber-50 to-white p-4 flex flex-col items-center justify-between shadow-lg border-t-4 border-amber-300 relative overflow-hidden">
                   <div className="flex flex-col items-center">
                     <span className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-['Plus_Jakarta_Sans']">
-                      {top1.exp.toLocaleString()}
+                      {formatScore(top1)}
                     </span>
                     <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider">
-                      ĐIỂM EXP
+                      {activeMetric.label}
                     </span>
                   </div>
                   <div className="w-full flex flex-col items-center gap-1.5">
@@ -278,10 +273,10 @@ export const LeaderboardPage: React.FC = () => {
                 {/* Pedestal Box 3 */}
                 <div className="w-full h-28 sm:h-32 md:h-40 rounded-2xl bg-gradient-to-t from-amber-200/50 via-amber-100/50 to-white p-3 flex flex-col items-center justify-between shadow-xs border-t-2 border-amber-400">
                   <span className="text-lg sm:text-xl font-extrabold text-amber-900">
-                    {top3.exp.toLocaleString()}
+                    {formatScore(top3)}
                   </span>
                   <div className="w-full flex flex-col items-center gap-1">
-                    <span className="text-[10px] text-slate-500 font-bold uppercase">EXP</span>
+                    <span className="text-[10px] text-slate-500 font-bold uppercase">{activeMetric.unit}</span>
                     <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-900 text-[10px] font-bold">
                       🔥 {top3.streakDays} ngày
                     </span>
@@ -319,11 +314,9 @@ export const LeaderboardPage: React.FC = () => {
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-slate-500 text-xs mt-0.5">
-                  <span className="font-bold text-[#a43073]">🔥 {currentUser.streakDays} ngày Streak</span>
+                  <span className="font-bold text-[#a43073]">{formatScore(currentUser)} {activeMetric.unit}</span>
                   <span>•</span>
-                  <span>{currentUser.exp} EXP</span>
-                  <span>•</span>
-                  <span>Đã đọc {currentUser.pagesRead} trang</span>
+                  <span>{activeTime.label}</span>
                 </div>
               </div>
             </div>
@@ -351,13 +344,13 @@ export const LeaderboardPage: React.FC = () => {
               <div className="hidden sm:flex items-center gap-10">
                 <span className="w-24 text-center">Tiến độ HSK</span>
                 <span className="w-24 text-center">Trang Manhua</span>
-                <span className="w-24 text-right">Tổng EXP</span>
+                <span className="w-24 text-right">{activeMetric.unit}</span>
               </div>
-              <span className="sm:hidden">Điểm</span>
+              <span className="sm:hidden">{activeMetric.unit}</span>
             </div>
 
             <div className="divide-y divide-slate-100">
-              {LEADERBOARD_USERS.slice(3, showExtendedRanks ? 15 : 10).map((user) => (
+              {rankedUsers.slice(3, showExtendedRanks ? 15 : 10).map((user) => (
                 <div
                   key={user.rank}
                   className="flex items-center justify-between p-3.5 hover:bg-slate-50/70 transition-colors rounded-2xl"
@@ -398,12 +391,12 @@ export const LeaderboardPage: React.FC = () => {
                       {user.pagesRead} trang
                     </span>
                     <span className="w-24 text-right text-sm font-bold text-[#a43073]">
-                      {user.exp.toLocaleString()}
+                      {formatScore(user)}
                     </span>
                   </div>
 
                   <span className="sm:hidden text-xs font-bold text-[#a43073]">
-                    {user.exp.toLocaleString()}
+                    {formatScore(user)}
                   </span>
                 </div>
               ))}

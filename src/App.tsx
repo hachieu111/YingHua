@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { NavigationTab, UserProfileData } from './types';
+import { NavigationTab, UserProfileData, VocabularyItem } from './types';
 import { CURRENT_USER } from './data/mockData';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
@@ -13,12 +13,34 @@ import { AuthModals } from './components/AuthModals';
 import { UploadModal } from './components/UploadModal';
 import { AccountSettingsModal } from './components/AccountSettingsModal';
 import { EditProfileModal } from './components/EditProfileModal';
+import { AdminDashboard } from './components/AdminDashboard';
+
+const PROFILE_VISIBILITY_STORAGE_KEY = 'yinghua-profile-visibility';
+
+const getSavedProfileVisibility = (): Pick<UserProfileData, 'showEmail' | 'showJoinDate'> => {
+  try {
+    const saved = localStorage.getItem(PROFILE_VISIBILITY_STORAGE_KEY);
+    if (saved) {
+      const visibility = JSON.parse(saved) as Partial<Pick<UserProfileData, 'showEmail' | 'showJoinDate'>>;
+      return {
+        showEmail: typeof visibility.showEmail === 'boolean' ? visibility.showEmail : true,
+        showJoinDate: typeof visibility.showJoinDate === 'boolean' ? visibility.showJoinDate : true
+      };
+    }
+  } catch {
+    // Fall back to visible profile details if saved preferences are unavailable.
+  }
+  return { showEmail: true, showJoinDate: true };
+};
 
 export default function App() {
   // Trang Chủ (catalog) is default home page
   const [activeTab, setActiveTab] = useState<NavigationTab>('catalog');
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  const [userProfile, setUserProfile] = useState<UserProfileData>(CURRENT_USER);
+  const [userProfile, setUserProfile] = useState<UserProfileData>(() => ({
+    ...CURRENT_USER,
+    ...getSavedProfileVisibility()
+  }));
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register' | null>(null);
   const [authPrompt, setAuthPrompt] = useState<string | null>(null);
   const [uploadModalOpen, setUploadModalOpen] = useState<boolean>(false);
@@ -32,7 +54,7 @@ export default function App() {
   };
 
   // Only Trang Chủ and Bảng Vàng Danh Dự are publicly viewable without authentication
-  const isPublicTab = (tab: NavigationTab) => tab === 'catalog' || tab === 'leaderboard';
+  const isPublicTab = (tab: NavigationTab) => tab === 'catalog' || tab === 'leaderboard' || tab === 'admin';
 
   const handleNavigate = (tab: NavigationTab) => {
     if (!isLoggedIn && !isPublicTab(tab)) {
@@ -82,6 +104,20 @@ export default function App() {
     setUserProfile(prev => ({ ...prev, email: newEmail }));
   };
 
+  const handleUpdateProfileVisibility = (setting: 'showEmail' | 'showJoinDate', visible: boolean) => {
+    const updatedVisibility = {
+      showEmail: setting === 'showEmail' ? visible : userProfile.showEmail !== false,
+      showJoinDate: setting === 'showJoinDate' ? visible : userProfile.showJoinDate !== false
+    };
+    setUserProfile(prev => ({ ...prev, ...updatedVisibility }));
+    try {
+      localStorage.setItem(PROFILE_VISIBILITY_STORAGE_KEY, JSON.stringify(updatedVisibility));
+    } catch {
+      // The current session still updates if browser storage is unavailable.
+    }
+    showToast(`${setting === 'showEmail' ? 'Email' : 'Ngày tham gia'} đã được ${visible ? 'hiển thị' : 'ẩn'} trên hồ sơ.`);
+  };
+
   const handleSaveProfile = (updated: Partial<UserProfileData>) => {
     setUserProfile(prev => ({ ...prev, ...updated }));
   };
@@ -101,7 +137,7 @@ export default function App() {
     <div className="min-h-screen bg-[#f8f9ff] text-[#0b1c30] flex flex-col font-['Inter'] selection:bg-[#ffd8e7] selection:text-[#3d0026]">
       
       {/* Top Navbar */}
-      <Navbar
+      {activeTab !== 'admin' && <Navbar
         activeTab={activeTab}
         setActiveTab={handleNavigate}
         onOpenUpload={handleOpenUpload}
@@ -112,12 +148,14 @@ export default function App() {
         isLoggedIn={isLoggedIn}
         onToggleLogin={isLoggedIn ? handleLogout : () => setAuthModalMode('login')}
         userAvatar={userProfile.avatar}
-      />
+      />}
 
       {/* Main Screen Content */}
-      <main className="flex-1 pt-20 w-full">
+      <main className={`flex-1 w-full ${activeTab === 'admin' ? '' : 'pt-20'}`}>
         {/* Route Guard Fallback: If not logged in and not on public tab */}
-        {!isLoggedIn && !isPublicTab(activeTab) ? (
+        {activeTab === 'admin' ? (
+          <AdminDashboard onOpenLearnerView={() => handleNavigate('catalog')} />
+        ) : !isLoggedIn && !isPublicTab(activeTab) ? (
           <div className="w-full max-w-[700px] mx-auto px-4 py-16 flex flex-col items-center text-center gap-6">
             <div className="w-20 h-20 rounded-3xl bg-pink-100 flex items-center justify-center text-[#a43073] shadow-md border border-pink-200">
               <span className="material-symbols-outlined text-[42px]">lock</span>
@@ -176,7 +214,18 @@ export default function App() {
             {activeTab === 'reader' && (
               <ComicReader
                 onOpenUpload={handleOpenUpload}
-                onSaveVocab={(word) => showToast(`Đã lưu "${word}" vào bộ Flashcard cá nhân!`)}
+                onSaveVocab={(word: VocabularyItem) => {
+                  try {
+                    const saved = JSON.parse(localStorage.getItem('yinghua-reader-flashcards') || '[]') as VocabularyItem[];
+                    if (!saved.some(item => item.hanzi === word.hanzi)) {
+                      localStorage.setItem('yinghua-reader-flashcards', JSON.stringify([...saved, word]));
+                    }
+                  } catch {
+                    showToast('Không thể lưu từ vựng vào bộ nhớ trình duyệt.');
+                    return;
+                  }
+                  showToast(`Đã lưu "${word.hanzi}" vào bộ Flashcard cá nhân!`);
+                }}
               />
             )}
 
@@ -244,6 +293,9 @@ export default function App() {
         isOpen={accountSettingsOpen}
         onClose={() => setAccountSettingsOpen(false)}
         currentEmail={userProfile.email}
+        showEmail={userProfile.showEmail !== false}
+        showJoinDate={userProfile.showJoinDate !== false}
+        onUpdateVisibility={handleUpdateProfileVisibility}
         onUpdateEmail={handleUpdateEmail}
         onLogout={handleLogout}
         showToast={showToast}
@@ -259,9 +311,9 @@ export default function App() {
       />
 
       {/* Unified Footer */}
-      <Footer
+      {activeTab !== 'admin' && <Footer
         setActiveTab={handleNavigate}
-      />
+      />}
 
     </div>
   );

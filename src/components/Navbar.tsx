@@ -26,10 +26,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <header className="fixed top-0 inset-x-0 z-50 glass-nav border-b border-pink-100/70 shadow-[0_1px_8px_rgba(0,0,0,0.03)] transition-all">
-      <div className="h-20 max-w-[1440px] mx-auto px-4 md:px-8 lg:px-12 flex items-center justify-between gap-4">
+      <div className="h-20 max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8 flex items-center justify-between gap-3">
         
         {/* Brand Logo */}
-        <div className="flex items-center gap-6">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
           <button
             onClick={() => setActiveTab('catalog')}
             className="flex items-center gap-3 group text-left focus:outline-none"
@@ -42,17 +42,17 @@ export const Navbar: React.FC<NavbarProps> = ({
               />
             </div>
             <div className="flex flex-col">
-              <span className="font-bold text-lg text-[#a43073] tracking-tight flex items-center gap-1.5 font-['Plus_Jakarta_Sans']">
-                Yinghua <span className="text-xs text-slate-500 font-normal font-['Noto_Serif_SC']">(樱花)</span>
+              <span className="whitespace-nowrap font-bold text-lg text-[#a43073] tracking-tight flex items-center gap-1.5 font-['Plus_Jakarta_Sans']">
+                Yinghua <span className="whitespace-nowrap text-xs text-[#64a8fe] font-medium font-['Noto_Serif_SC']">(樱花)</span>
               </span>
             </div>
           </button>
 
           {/* Desktop Nav Pills */}
-          <nav className="hidden xl:flex items-center gap-1 p-1 rounded-full bg-[#eff4ff]">
+          <nav className="hidden xl:flex min-w-0 flex-1 items-center justify-center gap-0.5 p-1 rounded-full bg-[#eff4ff] overflow-x-auto">
             <button
               onClick={() => setActiveTab('catalog')}
-              className={`px-4 py-2 rounded-full text-xs font-semibold transition-all ${
+              className={`shrink-0 whitespace-nowrap px-3 py-2 rounded-full text-xs font-semibold transition-all ${
                 activeTab === 'catalog'
                   ? 'bg-[#f472b6] text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900'
@@ -62,7 +62,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
             <button
               onClick={() => setActiveTab('leaderboard')}
-              className={`px-4 py-2 rounded-full text-xs font-semibold transition-all ${
+              className={`shrink-0 whitespace-nowrap px-3 py-2 rounded-full text-xs font-semibold transition-all ${
                 activeTab === 'leaderboard'
                   ? 'bg-[#f472b6] text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900'
@@ -72,7 +72,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
             <button
               onClick={() => setActiveTab('reader')}
-              className={`px-4 py-2 rounded-full text-xs font-semibold transition-all ${
+              className={`shrink-0 whitespace-nowrap px-3 py-2 rounded-full text-xs font-semibold transition-all ${
                 activeTab === 'reader'
                   ? 'bg-[#f472b6] text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900'
@@ -82,7 +82,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
             <button
               onClick={() => setActiveTab('library')}
-              className={`px-4 py-2 rounded-full text-xs font-semibold transition-all ${
+              className={`shrink-0 whitespace-nowrap px-3 py-2 rounded-full text-xs font-semibold transition-all ${
                 activeTab === 'library'
                   ? 'bg-[#f472b6] text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900'
@@ -92,13 +92,23 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
             <button
               onClick={() => setActiveTab('flashcards')}
-              className={`px-4 py-2 rounded-full text-xs font-semibold transition-all ${
+              className={`shrink-0 whitespace-nowrap px-3 py-2 rounded-full text-xs font-semibold transition-all ${
                 activeTab === 'flashcards'
                   ? 'bg-[#f472b6] text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               <span>Từ Vựng & Flashcard</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('admin')}
+              className={`shrink-0 whitespace-nowrap px-3 py-2 rounded-full text-xs font-semibold transition-all ${
+                activeTab === 'admin'
+                  ? 'bg-[#f472b6] text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Quản trị
             </button>
           </nav>
         </div>
@@ -240,6 +250,15 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <span>Hồ Sơ Cá Nhân</span>
             <span className="material-symbols-outlined text-[18px]">person</span>
+          </button>
+          <button
+            onClick={() => { setActiveTab('admin'); setMobileMenuOpen(false); }}
+            className={`px-4 py-2.5 rounded-xl text-left text-sm font-semibold flex items-center justify-between ${
+              activeTab === 'admin' ? 'bg-[#f472b6] text-white' : 'text-slate-700'
+            }`}
+          >
+            <span>Trung Tâm Quản Trị</span>
+            <span className="material-symbols-outlined text-[18px]">admin_panel_settings</span>
           </button>
         </div>
       )}
