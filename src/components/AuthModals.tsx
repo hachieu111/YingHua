@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 
+const ADMIN_EMAIL = 'admin@yinghua.vn';
+const ADMIN_PASSWORD = '123456';
+
 interface AuthModalsProps {
   mode: 'login' | 'register' | null;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (isAdmin: boolean) => void;
   onSwitchMode: (newMode: 'login' | 'register') => void;
   promptMessage?: string | null;
 }
@@ -18,6 +21,7 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
   // Login form controlled state
   const [loginEmail, setLoginEmail] = useState<string>('sakura@yinghua.vn');
   const [loginPassword, setLoginPassword] = useState<string>('12345678');
+  const [loginError, setLoginError] = useState<string | null>(null);
   const [loginShowPassword, setLoginShowPassword] = useState<boolean>(false);
   const [rememberMe, setRememberMe] = useState<boolean>(true);
 
@@ -50,12 +54,18 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
 
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSuccess();
+    const isAdminAccount = loginEmail.trim().toLowerCase() === ADMIN_EMAIL;
+    if (isAdminAccount && loginPassword !== ADMIN_PASSWORD) {
+      setLoginError('Mật khẩu tài khoản quản trị không chính xác.');
+      return;
+    }
+    setLoginError(null);
+    onSuccess(isAdminAccount);
   };
 
   const handleRegisterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSuccess();
+    onSuccess(false);
   };
 
   return (
@@ -140,7 +150,10 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
                       key="login-email-input"
                       type="text"
                       value={loginEmail}
-                      onChange={(e) => setLoginEmail(e.target.value)}
+                      onChange={(e) => {
+                        setLoginEmail(e.target.value);
+                        setLoginError(null);
+                      }}
                       placeholder="ví dụ: sakura@yinghua.vn"
                       className="w-full bg-[#eff4ff] text-slate-800 text-xs pl-10 pr-4 py-2.5 rounded-full outline-none focus:bg-white focus:ring-2 focus:ring-[#f472b6] transition-all"
                     />
@@ -159,7 +172,10 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
                       key="login-password-input"
                       type={loginShowPassword ? 'text' : 'password'}
                       value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
+                      onChange={(e) => {
+                        setLoginPassword(e.target.value);
+                        setLoginError(null);
+                      }}
                       placeholder="••••••••"
                       className="w-full bg-[#eff4ff] text-slate-800 text-xs pl-10 pr-10 py-2.5 rounded-full outline-none focus:bg-white focus:ring-2 focus:ring-[#f472b6] transition-all"
                     />
@@ -174,6 +190,12 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
                     </button>
                   </div>
                 </div>
+
+                {loginError && (
+                  <p role="alert" className="text-xs font-semibold text-rose-600">
+                    {loginError}
+                  </p>
+                )}
 
                 <div className="flex items-center justify-between text-xs pt-1">
                   <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -211,7 +233,7 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
               <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
-                  onClick={onSuccess}
+                  onClick={() => onSuccess(false)}
                   className="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl bg-slate-50 hover:bg-slate-100 transition-all border border-slate-100"
                 >
                   <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -225,7 +247,7 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
 
                 <button
                   type="button"
-                  onClick={onSuccess}
+                  onClick={() => onSuccess(false)}
                   className="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl bg-slate-50 hover:bg-slate-100 transition-all border border-slate-100"
                 >
                   <span className="material-symbols-outlined text-emerald-600 text-[18px]">chat</span>
@@ -234,7 +256,7 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
 
                 <button
                   type="button"
-                  onClick={onSuccess}
+                  onClick={() => onSuccess(false)}
                   className="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl bg-slate-50 hover:bg-slate-100 transition-all border border-slate-100"
                 >
                   <span className="material-symbols-outlined text-slate-800 text-[18px]">brand_awareness</span>

@@ -37,6 +37,7 @@ export default function App() {
   // Trang Chủ (catalog) is default home page
   const [activeTab, setActiveTab] = useState<NavigationTab>('catalog');
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [userProfile, setUserProfile] = useState<UserProfileData>(() => ({
     ...CURRENT_USER,
     ...getSavedProfileVisibility()
@@ -54,9 +55,14 @@ export default function App() {
   };
 
   // Only Trang Chủ and Bảng Vàng Danh Dự are publicly viewable without authentication
-  const isPublicTab = (tab: NavigationTab) => tab === 'catalog' || tab === 'leaderboard' || tab === 'admin';
+  const isPublicTab = (tab: NavigationTab) => tab === 'catalog' || tab === 'leaderboard';
 
   const handleNavigate = (tab: NavigationTab) => {
+    if (tab === 'admin' && !isAdmin) {
+      showToast(isLoggedIn ? 'Chỉ quản trị viên mới có quyền truy cập.' : 'Vui lòng đăng nhập bằng tài khoản quản trị viên.');
+      if (!isLoggedIn) setAuthModalMode('login');
+      return;
+    }
     if (!isLoggedIn && !isPublicTab(tab)) {
       const featureNames: Record<string, string> = {
         reader: 'đọc truyện tranh và tra cứu tương tác',
@@ -125,6 +131,7 @@ export default function App() {
   // Logout handler: Immediately redirects to Trang Chủ (catalog)
   const handleLogout = () => {
     setIsLoggedIn(false);
+    setIsAdmin(false);
     setAccountSettingsOpen(false);
     setAuthModalMode(null);
     setAuthPrompt(null);
@@ -146,6 +153,7 @@ export default function App() {
           setAuthModalMode(mode);
         }}
         isLoggedIn={isLoggedIn}
+        isAdmin={isAdmin}
         onToggleLogin={isLoggedIn ? handleLogout : () => setAuthModalMode('login')}
         userAvatar={userProfile.avatar}
       />}
@@ -153,8 +161,10 @@ export default function App() {
       {/* Main Screen Content */}
       <main className={`flex-1 w-full ${activeTab === 'admin' ? '' : 'pt-20'}`}>
         {/* Route Guard Fallback: If not logged in and not on public tab */}
-        {activeTab === 'admin' ? (
+        {activeTab === 'admin' && isAdmin ? (
           <AdminDashboard onOpenLearnerView={() => handleNavigate('catalog')} />
+        ) : activeTab === 'admin' ? (
+          <div className="mx-auto max-w-xl px-4 py-20 text-center text-slate-600">Bạn không có quyền truy cập khu vực quản trị.</div>
         ) : !isLoggedIn && !isPublicTab(activeTab) ? (
           <div className="w-full max-w-[700px] mx-auto px-4 py-16 flex flex-col items-center text-center gap-6">
             <div className="w-20 h-20 rounded-3xl bg-pink-100 flex items-center justify-center text-[#a43073] shadow-md border border-pink-200">
@@ -272,8 +282,19 @@ export default function App() {
           setAuthModalMode(null);
           setAuthPrompt(null);
         }}
-        onSuccess={() => {
+        onSuccess={(adminAccess) => {
           setIsLoggedIn(true);
+          setIsAdmin(adminAccess);
+          setUserProfile(adminAccess
+            ? {
+                ...CURRENT_USER,
+                name: 'Yun Yun',
+                chineseName: '云云',
+                email: 'admin@yinghua.vn',
+                ...getSavedProfileVisibility()
+              }
+            : { ...CURRENT_USER, ...getSavedProfileVisibility() }
+          );
           setAuthModalMode(null);
           setAuthPrompt(null);
           showToast('Đăng nhập thành công! Chào mừng bạn đến với Yinghua.');
@@ -313,6 +334,7 @@ export default function App() {
       {/* Unified Footer */}
       {activeTab !== 'admin' && <Footer
         setActiveTab={handleNavigate}
+        isLoggedIn={isLoggedIn}
       />}
 
     </div>

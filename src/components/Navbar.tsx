@@ -7,6 +7,7 @@ interface NavbarProps {
   onOpenUpload: () => void;
   onOpenAuth: (mode: 'login' | 'register') => void;
   isLoggedIn: boolean;
+  isAdmin: boolean;
   onToggleLogin: () => void;
   streakDays?: number;
   userAvatar?: string;
@@ -18,6 +19,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenUpload,
   onOpenAuth,
   isLoggedIn,
+  isAdmin,
   streakDays = 7,
   userAvatar
 }) => {
@@ -49,7 +51,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           {/* Desktop Nav Pills */}
-          <nav className="hidden xl:flex min-w-0 flex-1 items-center justify-center gap-0.5 p-1 rounded-full bg-[#eff4ff] overflow-x-auto">
+          <nav className="hidden 2xl:flex min-w-0 flex-1 items-center justify-center gap-0.5 p-1 rounded-full bg-[#eff4ff]">
             <button
               onClick={() => setActiveTab('catalog')}
               className={`shrink-0 whitespace-nowrap px-3 py-2 rounded-full text-xs font-semibold transition-all ${
@@ -80,7 +82,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <span>Đọc Truyện</span>
             </button>
-            <button
+            {isLoggedIn && <button
               onClick={() => setActiveTab('library')}
               className={`shrink-0 whitespace-nowrap px-3 py-2 rounded-full text-xs font-semibold transition-all ${
                 activeTab === 'library'
@@ -89,7 +91,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               <span>Thư Viện</span>
-            </button>
+            </button>}
             <button
               onClick={() => setActiveTab('flashcards')}
               className={`shrink-0 whitespace-nowrap px-3 py-2 rounded-full text-xs font-semibold transition-all ${
@@ -100,7 +102,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <span>Từ Vựng & Flashcard</span>
             </button>
-            <button
+            {isAdmin && <button
               onClick={() => setActiveTab('admin')}
               className={`shrink-0 whitespace-nowrap px-3 py-2 rounded-full text-xs font-semibold transition-all ${
                 activeTab === 'admin'
@@ -109,7 +111,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               Quản trị
-            </button>
+            </button>}
           </nav>
         </div>
 
@@ -185,7 +187,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Mobile hamburger */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="xl:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100"
+            className="2xl:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100"
           >
             <span className="material-symbols-outlined text-[24px]">
               {mobileMenuOpen ? 'close' : 'menu'}
@@ -196,7 +198,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div className="xl:hidden bg-white/95 backdrop-blur-xl border-b border-pink-100 px-6 py-4 flex flex-col gap-2">
+        <div className="2xl:hidden bg-white/95 backdrop-blur-xl border-b border-pink-100 px-6 py-4 flex flex-col gap-2">
           <button
             onClick={() => { setActiveTab('catalog'); setMobileMenuOpen(false); }}
             className={`px-4 py-2.5 rounded-xl text-left text-sm font-semibold flex items-center justify-between ${
@@ -224,7 +226,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span>Đọc Truyện Tranh</span>
             <span className="material-symbols-outlined text-[18px]">menu_book</span>
           </button>
-          <button
+          {isLoggedIn && <button
             onClick={() => { setActiveTab('library'); setMobileMenuOpen(false); }}
             className={`px-4 py-2.5 rounded-xl text-left text-sm font-semibold flex items-center justify-between ${
               activeTab === 'library' ? 'bg-[#f472b6] text-white' : 'text-slate-700'
@@ -232,7 +234,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <span>Thư Viện Của Bạn</span>
             <span className="material-symbols-outlined text-[18px]">collections_bookmark</span>
-          </button>
+          </button>}
           <button
             onClick={() => { setActiveTab('flashcards'); setMobileMenuOpen(false); }}
             className={`px-4 py-2.5 rounded-xl text-left text-sm font-semibold flex items-center justify-between ${
@@ -251,7 +253,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span>Hồ Sơ Cá Nhân</span>
             <span className="material-symbols-outlined text-[18px]">person</span>
           </button>
-          <button
+          {isAdmin && <button
             onClick={() => { setActiveTab('admin'); setMobileMenuOpen(false); }}
             className={`px-4 py-2.5 rounded-xl text-left text-sm font-semibold flex items-center justify-between ${
               activeTab === 'admin' ? 'bg-[#f472b6] text-white' : 'text-slate-700'
@@ -259,7 +261,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <span>Trung Tâm Quản Trị</span>
             <span className="material-symbols-outlined text-[18px]">admin_panel_settings</span>
-          </button>
+          </button>}
         </div>
       )}
     </header>

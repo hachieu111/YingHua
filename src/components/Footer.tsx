@@ -3,9 +3,10 @@ import { NavigationTab } from '../types';
 
 interface FooterProps {
   setActiveTab: (tab: NavigationTab) => void;
+  isLoggedIn: boolean;
 }
 
-export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
+export const Footer: React.FC<FooterProps> = ({ setActiveTab, isLoggedIn }) => {
   return (
     <footer className="w-full bg-white mt-16 border-t border-pink-100/60 shadow-[0_-1px_6px_rgba(0,0,0,0.02)]">
       <div className="max-w-[1440px] mx-auto px-4 md:px-8 lg:px-12 py-8 flex flex-col md:flex-row items-center justify-between gap-5">
@@ -47,12 +48,12 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
           >
             Đọc Truyện
           </button>
-          <button
+          {isLoggedIn && <button
             onClick={() => setActiveTab('library')}
             className="hover:text-[#a43073] transition-colors"
           >
             Thư Viện
-          </button>
+          </button>}
           <button
             onClick={() => setActiveTab('flashcards')}
             className="hover:text-[#a43073] transition-colors"

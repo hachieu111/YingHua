@@ -54,6 +54,15 @@ Sau đó mở trình duyệt tại:
 
 - http://localhost:3000
 
+## Tài khoản đăng nhập demo
+
+| Vai trò | Email | Mật khẩu |
+| --- | --- | --- |
+| Học viên (Lam Hiên Vũ) | `sakura@yinghua.vn` | `12345678` |
+| Quản trị viên | `admin@yinghua.vn` | `123456` |
+
+Đây là thông tin đăng nhập mô phỏng dùng để thử giao diện. Ứng dụng hiện chưa xác thực tài khoản qua máy chủ.
+
 ## Build production
 
 ```bash
