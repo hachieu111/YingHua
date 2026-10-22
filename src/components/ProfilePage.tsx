@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { UserProfileData } from '../types';
 import { speakChinese } from '../utils/speech';
+import { AVAILABLE_BADGES } from '../data/achievements';
 
 interface ProfilePageProps {
   onNavigateToReader: () => void;
@@ -22,6 +23,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   const handlePlayVoice = (text: string) => {
     speakChinese(text, 0.85);
   };
+
+  const equippedBadge = AVAILABLE_BADGES.find((badge) => badge.title === userProfile.badge) ?? AVAILABLE_BADGES[0];
+  const EquippedBadgeIcon = equippedBadge.icon;
 
   return (
     <div className="w-full max-w-[1440px] mx-auto px-4 md:px-8 lg:px-12 py-6 flex flex-col gap-8">
@@ -72,13 +76,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                   ({userProfile.chineseName})
                 </span>
                 
-                {/* VIP Sakura Badge */}
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#ffd8e7] text-[#85145a] shadow-xs">
-                  <img
-                    src="/assets/aistudio/image_638c8baa.png"
-                    alt="Logo"
-                    className="w-3.5 h-3.5 object-contain rounded-full"
-                  />
+                {/* Equipped Achievement Badge */}
+                <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full shadow-xs ${equippedBadge.color}`}>
+                  <EquippedBadgeIcon className="w-3.5 h-3.5" strokeWidth={2.2} aria-hidden="true" />
                   <span className="text-[11px] font-bold tracking-wide uppercase">
                     {userProfile.badge}
                   </span>

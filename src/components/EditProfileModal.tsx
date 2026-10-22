@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { UserProfileData } from '../types';
+import { AVAILABLE_BADGES } from '../data/achievements';
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -39,51 +40,6 @@ const PRESET_AVATARS = [
     id: 'lac_ly',
     name: 'Lạc Ly',
     url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA9DFVyAwp3qs6bCCAS8H7_nzT-vbOYDPJDn1sNqw2e5llwn6Uto6fdyGaQKtiWpeJBD07ciJ_TsXHxC_7piD5Mb4fO5S3MIAIWQPQsagQhycr6kl0mfSytJWJ3I1ik8Bu9TPR-bvLR4y9YezoQpbtLX9ir-kDT0dKus1c04xqvISFIQWbYsZ-l5T0KOSCsSCNoPqxw5lOdQofxtc9g1tSnZlOZgE_5h1ddlLI2IfB1P52BGomg0e5T'
-  }
-];
-
-const AVAILABLE_BADGES = [
-  {
-    title: 'Thành viên Hoa Anh Đào',
-    desc: 'Thành viên thân thiết gắn bó với Yinghua',
-    color: 'bg-[#ffd8e7] text-[#85145a] border-pink-300',
-    icon: '🌸'
-  },
-  {
-    title: 'Đệ Nhất Học Giả',
-    desc: 'Top 1 mùa giải điểm EXP cao nhất',
-    color: 'bg-amber-100 text-amber-950 border-amber-300',
-    icon: '👑'
-  },
-  {
-    title: 'Tinh Anh Manhua',
-    desc: 'Độc giả đọc hơn 100 trang truyện',
-    color: 'bg-blue-100 text-blue-900 border-blue-300',
-    icon: '⭐'
-  },
-  {
-    title: 'Người Gieo Hạt',
-    desc: 'Tích luỹ hơn 300 từ vựng tiếng Trung',
-    color: 'bg-emerald-100 text-emerald-900 border-emerald-300',
-    icon: '🌱'
-  },
-  {
-    title: 'Vua Từ Vựng HSK 3',
-    desc: 'Thành thạo trọn bộ 300 thẻ từ HSK 3',
-    color: 'bg-purple-100 text-purple-900 border-purple-300',
-    icon: '🏆'
-  },
-  {
-    title: 'Cú Đêm Cày Truyện',
-    desc: 'Chăm chỉ học và đọc truyện sau 23:00',
-    color: 'bg-indigo-100 text-indigo-900 border-indigo-300',
-    icon: '🌙'
-  },
-  {
-    title: 'Dịch Giả Tập Sự',
-    desc: 'Tra cứu hơn 150 bong bóng thoại manhua',
-    color: 'bg-rose-100 text-rose-900 border-rose-300',
-    icon: '📜'
   }
 ];
 
@@ -298,6 +254,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {AVAILABLE_BADGES.map((b) => {
                 const isSelected = selectedBadge.includes(b.title);
+                const BadgeIcon = b.icon;
                 return (
                   <div
                     key={b.title}
@@ -308,7 +265,9 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                         : 'bg-slate-50/70 border-slate-200 hover:bg-slate-100'
                     }`}
                   >
-                    <span className="text-xl shrink-0 mt-0.5">{b.icon}</span>
+                    <span className={`w-10 h-10 rounded-xl border shrink-0 flex items-center justify-center ${b.color}`}>
+                      <BadgeIcon className="w-5 h-5" strokeWidth={2.2} aria-hidden="true" />
+                    </span>
                     <div className="flex flex-col min-w-0 flex-1">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-slate-800 truncate">

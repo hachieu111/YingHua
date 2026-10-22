@@ -17,7 +17,7 @@ import { EditProfileModal } from './components/EditProfileModal';
 export default function App() {
   // Trang Chủ (catalog) is default home page
   const [activeTab, setActiveTab] = useState<NavigationTab>('catalog');
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [userProfile, setUserProfile] = useState<UserProfileData>(CURRENT_USER);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register' | null>(null);
   const [authPrompt, setAuthPrompt] = useState<string | null>(null);

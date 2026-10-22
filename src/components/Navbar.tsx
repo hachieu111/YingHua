@@ -45,9 +45,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="font-bold text-lg text-[#a43073] tracking-tight flex items-center gap-1.5 font-['Plus_Jakarta_Sans']">
                 Yinghua <span className="text-xs text-slate-500 font-normal font-['Noto_Serif_SC']">(樱花)</span>
               </span>
-              <span className="text-[11px] text-slate-500 font-medium hidden sm:inline leading-none">
-                Học Tiếng Trung Manhua
-              </span>
             </div>
           </button>
 
