@@ -1,0 +1,64 @@
+A. Tác nhân chính
+1. Khách (Guest): chưa đăng nhập
+Hành vi	Nguồn
+Xem trang giới thiệu YingHua	[Đề xuất]
+Đăng ký tài khoản (/api/auth/register)	[Code]
+Đăng nhập (/api/auth/login)	[Code]
+Đọc thử truyện công khai, tra từ có giới hạn	[Đề xuất]: hiện mọi API khác đều bắt buộc đăng nhập
+Quên mật khẩu, lấy lại qua email	[Đề xuất]
+
+2. Người học (Learner, role = user)
+
+Đây là tác nhân trung tâm, thực hiện chuỗi Đọc → Nhận diện → Tra cứu → Lưu từ → Ôn tập → Nghe.
+
+Nhóm	Hành vi	Nguồn
+Tài khoản	Làm mới phiên (refresh token), đăng xuất, đăng xuất mọi thiết bị, xem/sửa hồ sơ, đổi mật khẩu	[Code]
+Cài đặt cá nhân	Khai báo trình độ HSK, chọn chế độ mặc định Đọc/Học, chọn giọng TTS	[Code]
+Thư viện	Duyệt/tìm truyện công khai; tạo truyện riêng tư, thêm chương, tải trang ảnh lên, tải nhanh 1 ảnh; sửa/xóa truyện, chương, trang của mình; lưu tiến độ đọc	[TM] tải ảnh, [Code] phần còn lại
+Đọc & nhận diện	Xem trang theo 3 dạng (ảnh gốc / ảnh đã xóa chữ / ảnh đã đắp bản dịch); theo dõi trạng thái xử lý; yêu cầu dịch lại; tải ảnh về	[TM]
+Hover & Dịch	Rê chuột hoặc chạm vào từ/câu trong bong bóng để xem nghĩa và bản dịch ngay trên ảnh	[TM]
+Sửa bản dịch	Sửa bản dịch một bong bóng (chỉ áp dụng cho chính mình), hoàn tác bản sửa	[Code]
+Tra cứu đa chiều	Tra từ (chữ Hán, Pinyin, nghĩa Việt, từ loại, ví dụ), tìm kiếm, tra từ điển tu tiên, tách câu thành từ	[TM]
+Phân rã chữ Hán	Xem bộ thủ và thành phần cấu tạo của một chữ (/dict/hanzi/{ch})	[TM]
+Sổ tay cá nhân	Lưu từ (từ highlight, tra cứu, gợi ý hoặc nhập tay); đổi trạng thái đang học / đã thuộc / bỏ qua; ghi chú; thêm/xóa ngữ cảnh kèm ảnh cắt bong bóng; xóa từ	[TM]
+Flashcard & SRS	Xem thẻ đến hạn; chấm Again/Hard/Good/Easy (thuật toán SM-2); ôn 3 loại thẻ nhận diện, nhớ lại, nghe; sửa, tạm ngưng hoặc đặt lại thẻ; xem lịch sử ôn	[TM]
+Gợi ý từ theo chương	Xem danh sách từ nên học trong chương, chấp nhận hoặc bỏ qua gợi ý	[Code]: đây là phần hiện thực “cá nhân hóa” trong thuyết minh
+TTS	Nghe phát âm từ, câu hoặc cả đoạn hội thoại	[TM]
+Theo dõi tiến trình	Xem tiến độ đọc và thống kê học tập cá nhân	[TM]
+Mở rộng	Báo lỗi nhận diện/dịch cho Admin; chuỗi ngày học (streak) và nhắc ôn; xuất sổ tay ra CSV hoặc Anki	[Đề xuất]
+
+Lưu ý: khi tự đăng truyện riêng, Người học đóng vai chủ sở hữu nội dung và có quyền sửa/xóa truyện đó (can_edit). Đây vẫn là cùng một tác nhân, không cần tách riêng.
+
+3. Quản trị viên (Admin, role = admin)
+
+Admin kế thừa toàn bộ hành vi của Người học (quan hệ tổng quát hóa trong biểu đồ Use Case), và có thêm các hành vi sau:
+
+Hành vi	Nguồn
+Quản lý người dùng: xem/tìm, đổi vai trò, khóa/mở khóa tài khoản (không được tự hạ quyền hoặc tự khóa mình)	[Code]
+Quản lý thư viện chung: đăng truyện công khai, sửa/xóa bất kỳ truyện nào	[Code]
+Giám sát quá trình xử lý ảnh: xem danh sách bản dịch theo trạng thái, chạy lại bản dịch bị lỗi	[Code]
+Xem thống kê toàn hệ thống	[Code]
+Nạp/cập nhật dữ liệu từ điển (scripts/import_dictionaries.py)	[Code]
+Được cấp quyền Admin tự động khi email nằm trong ADMIN_EMAILS	[Code]
+Xử lý báo lỗi từ người học; kiểm duyệt ảnh tải lên	[Đề xuất]
+B. Tác nhân hệ thống / bên ngoài (tác nhân phụ)
+4. Hệ thống xử lý ảnh (Pipeline Worker)
+
+Một luồng chạy nền, lấy yêu cầu từ hàng đợi và xử lý tuần tự:
+
+Phát hiện bong bóng bằng YOLO, phân 4 loại: hội thoại, hiệu ứng âm thanh, thư pháp, chữ nổi. [TM]
+Nhận diện chữ bằng PaddleOCR. [TM]
+Tách từ bằng jieba và gắn mục từ điển cho từng từ, phục vụ Hover và tra cứu. [Code]
+Dịch Trung → Việt offline bằng VietPhrase, LuatNhan, Names và PhienAm. [TM]
+Xóa chữ gốc (inpaint) rồi đắp chữ Việt lên ảnh (render). [Code]
+Cập nhật trạng thái queued → running → done/failed. [Code]
+Thống kê từ vựng của chương để làm dữ liệu cho chức năng gợi ý. [Code]
+
+Ngoài ra, khi người dùng tải ảnh lên, hệ thống chống trùng ảnh bằng sha256 và pHash. [Code]
+
+5. Dịch vụ Text-to-Speech bên ngoài (Microsoft Edge TTS)
+Nhận văn bản và giọng đọc, trả về file âm thanh. Hệ thống lưu cache (tts_cache) để không phải gọi lại. [TM, Code]
+6. Bộ hẹn giờ hệ thống (Scheduler / Thời gian)
+Chạy mỗi 60 phút: xóa ảnh tải lên đã quá hạn lưu 7 ngày và dọn refresh token hết hạn. [Code]
+Làm “đến hạn” các thẻ flashcard theo lịch SRS. [TM]
+Gửi nhắc ôn tập hằng ngày. [Đề xuất]

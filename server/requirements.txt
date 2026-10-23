@@ -1,0 +1,18 @@
+# Server YingHua — phiên bản ghim theo môi trường đã kiểm thử (Python 3.10)
+fastapi==0.141.1
+uvicorn==0.24.0
+pydantic==2.13.5
+pydantic-settings==2.1.0
+email-validator==2.3.0
+python-multipart==0.0.32
+SQLAlchemy==2.0.45
+asyncpg==0.32.0
+alembic==1.20.1
+PyJWT==2.15.1
+argon2-cffi==25.1.0
+bcrypt==5.0.0          # chỉ để xác minh hash cũ khi chép người dùng từ ptud_db
+fsrs==6.3.2
+jieba==0.42.1
+pypinyin==0.55.0
+edge-tts==7.3.1
+httpx==0.28.1

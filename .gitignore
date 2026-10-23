@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Backend secrets & runtime data
+Backend/.env
+Backend/storage/
+
+# Server mới
+server/.env
+server/storage/
+
+# Công cụ
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
