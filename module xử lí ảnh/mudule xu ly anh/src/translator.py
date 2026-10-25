@@ -22,13 +22,29 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 # ======================== ĐƯỜNG DẪN TỪ ĐIỂN ========================
-_BASE    = Path(__file__).parent.parent.parent  # d:\PTUD
-DICT_DIR = _BASE / "từ điển"
+_BASE    = Path(__file__).resolve().parent.parent.parent  # module xử lí ảnh
 
-NAMES_FILE      = DICT_DIR / "Names.txt"
-VIETPHRASE_FILE = DICT_DIR / "VietPhrase.txt"
-LUATNHAN_FILE   = DICT_DIR / "LuatNhan.txt"
-PHIENAM_FILE    = DICT_DIR / "PhienAm.txt"
+def _find_dict_file(filename: str) -> Path:
+    candidates = [
+        _BASE / "từ điển tu tiên" / filename,
+        _BASE / "từ điển" / filename,
+        Path(__file__).resolve().parent.parent / "từ điển tu tiên" / filename,
+        Path(__file__).resolve().parent.parent / "từ điển" / filename,
+        Path(r"D:\PTUD\từ điển tu tiên") / filename,
+        Path(r"D:\PTUD\từ điển") / filename,
+    ]
+    for c in candidates:
+        if c.exists():
+            return c
+    return _BASE / "từ điển tu tiên" / filename
+
+NAMES_FILE      = _find_dict_file("Names.txt")
+VIETPHRASE_FILE = _find_dict_file("VietPhrase.txt")
+LUATNHAN_FILE   = _find_dict_file("LuatNhan.txt")
+PHIENAM_FILE    = _find_dict_file("PhienAm.txt")
+
+# Một cụm Latin/số liền nhau (kể cả chữ Việt có dấu) — xem _greedy_translate
+_LATIN_RUN_RE = re.compile(r'[0-9A-Za-z\u00C0-\u024F\u1E00-\u1EFF\u0300-\u036F]+')
 
 # Regex nhận biết ký tự Hán còn sót
 _CHINESE_RE = re.compile(r'[\u4e00-\u9fff\u3400-\u4dbf\U00020000-\U0002a6df]')
@@ -191,6 +207,14 @@ class TranslationEngine:
                     matched = True
                     break
             if matched:
+                continue
+
+            # Cụm Latin/số (chữ Việt do LuatNhan chèn, tên "JXHFN", số "1033") giữ nguyên cả cụm;
+            # tách từng ký tự rồi nối bằng dấu cách sẽ ra "t r ê n n g ư ờ i".
+            latin = _LATIN_RUN_RE.match(text, i)
+            if latin:
+                result.append(latin.group())
+                i = latin.end()
                 continue
 
             # Lớp 4: PhienAm (1 chữ)
