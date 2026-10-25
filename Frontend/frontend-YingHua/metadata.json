@@ -1,0 +1,6 @@
+{
+  "name": "Yinghua (樱花) - Học Tiếng Trung Qua Manhua",
+  "description": "Nền tảng học tiếng Trung tương tác qua truyện tranh Manhua với dịch bóng thoại trực tiếp, Pinyin, Flashcard SRS 3D và bảng xếp hạng thi đua.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

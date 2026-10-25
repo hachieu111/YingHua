@@ -1,0 +1,241 @@
+---
+name: Yinghua Manhua Learning
+colors:
+  surface: '#f8f9ff'
+  surface-dim: '#cbdbf5'
+  surface-bright: '#f8f9ff'
+  surface-container-lowest: '#ffffff'
+  surface-container-low: '#eff4ff'
+  surface-container: '#e5eeff'
+  surface-container-high: '#dce9ff'
+  surface-container-highest: '#d3e4fe'
+  on-surface: '#0b1c30'
+  on-surface-variant: '#544249'
+  inverse-surface: '#213145'
+  inverse-on-surface: '#eaf1ff'
+  outline: '#87717a'
+  outline-variant: '#dac0c9'
+  surface-tint: '#a43073'
+  primary: '#a43073'
+  on-primary: '#ffffff'
+  primary-container: '#f472b6'
+  on-primary-container: '#6d0047'
+  inverse-primary: '#ffafd3'
+  secondary: '#0060ac'
+  on-secondary: '#ffffff'
+  secondary-container: '#64a8fe'
+  on-secondary-container: '#003c70'
+  tertiary: '#6e5e0d'
+  on-tertiary: '#ffffff'
+  tertiary-container: '#b39f4b'
+  on-tertiary-container: '#413600'
+  error: '#ba1a1a'
+  on-error: '#ffffff'
+  error-container: '#ffdad6'
+  on-error-container: '#93000a'
+  primary-fixed: '#ffd8e7'
+  primary-fixed-dim: '#ffafd3'
+  on-primary-fixed: '#3d0026'
+  on-primary-fixed-variant: '#85145a'
+  secondary-fixed: '#d4e3ff'
+  secondary-fixed-dim: '#a4c9ff'
+  on-secondary-fixed: '#001c39'
+  on-secondary-fixed-variant: '#004883'
+  tertiary-fixed: '#f9e287'
+  tertiary-fixed-dim: '#dcc66e'
+  on-tertiary-fixed: '#221b00'
+  on-tertiary-fixed-variant: '#534600'
+  background: '#f8f9ff'
+  on-background: '#0b1c30'
+  surface-variant: '#d3e4fe'
+typography:
+  display-hero:
+    fontFamily: Plus Jakarta Sans
+    fontSize: 48px
+    fontWeight: '700'
+    lineHeight: 56px
+    letterSpacing: -0.02em
+  display-hero-mobile:
+    fontFamily: Plus Jakarta Sans
+    fontSize: 32px
+    fontWeight: '700'
+    lineHeight: 40px
+    letterSpacing: -0.01em
+  headline-lg:
+    fontFamily: Plus Jakarta Sans
+    fontSize: 36px
+    fontWeight: '600'
+    lineHeight: 44px
+    letterSpacing: -0.02em
+  headline-lg-mobile:
+    fontFamily: Plus Jakarta Sans
+    fontSize: 26px
+    fontWeight: '600'
+    lineHeight: 34px
+    letterSpacing: -0.01em
+  headline-md:
+    fontFamily: Plus Jakarta Sans
+    fontSize: 24px
+    fontWeight: '600'
+    lineHeight: 32px
+    letterSpacing: -0.01em
+  headline-sm:
+    fontFamily: Plus Jakarta Sans
+    fontSize: 20px
+    fontWeight: '600'
+    lineHeight: 28px
+  title-md:
+    fontFamily: Plus Jakarta Sans
+    fontSize: 16px
+    fontWeight: '600'
+    lineHeight: 24px
+  body-lg:
+    fontFamily: Inter
+    fontSize: 18px
+    fontWeight: '400'
+    lineHeight: 28px
+  body-md:
+    fontFamily: Inter
+    fontSize: 15px
+    fontWeight: '400'
+    lineHeight: 22px
+  body-sm:
+    fontFamily: Inter
+    fontSize: 13px
+    fontWeight: '400'
+    lineHeight: 18px
+  label-lg:
+    fontFamily: Plus Jakarta Sans
+    fontSize: 14px
+    fontWeight: '600'
+    lineHeight: 20px
+    letterSpacing: 0.01em
+  label-md:
+    fontFamily: Plus Jakarta Sans
+    fontSize: 12px
+    fontWeight: '600'
+    lineHeight: 16px
+    letterSpacing: 0.02em
+  label-sm:
+    fontFamily: Plus Jakarta Sans
+    fontSize: 11px
+    fontWeight: '500'
+    lineHeight: 14px
+    letterSpacing: 0.03em
+rounded:
+  sm: 0.5rem
+  DEFAULT: 1rem
+  md: 1.5rem
+  lg: 2rem
+  xl: 3rem
+  full: 9999px
+spacing:
+  gutter: 1.25rem
+  gutter-tablet: 1.5rem
+  gutter-desktop: 2rem
+  margin: 1rem
+  margin-tablet: 2rem
+  margin-desktop: 3rem
+  space-xs: 0.25rem
+  space-sm: 0.5rem
+  space-md: 1rem
+  space-lg: 1.5rem
+  space-xl: 2.5rem
+---
+
+## Brand & Style
+
+This design system crafts a whimsical, luminous, and culturally grounded language-learning experience tailored for Vietnamese learners immersing themselves in Chinese (Mandarin) via digital manhua (comics). The design bridges modern East Asian visual storytelling with airy, joyful product interfaces.
+
+### Core Philosophy
+- **Approachable Immersion:** Language acquisition should feel like reading your favorite webtoon in a tranquil cafe, not studying a textbook.
+- **Floral Serenity:** Subtle cherry blossom (樱花) motifs, petal-like curvatures, and translucent overlays evoke spring blooms, softness, and fresh beginnings.
+- **Graphic Clarity:** Comic panels require high visual attention; the interface frames and supports reading with unobtrusive pastel tones, high-legibility slate typography, and gentle spatial depth.
+
+### Design Movement
+**Pastel Glassmorphism & Soft Modernism:** A hybrid aesthetic blending high-translucency frosted glass surfaces (`backdrop-filter: blur`), gentle pill-shaped components, warm ambient light, and organic curves. The interface remains feather-light and tactile without sliding into visual clutter.
+
+## Colors
+
+The palette balances vibrant pastels with a grounding slate architecture, engineered specifically for prolonged reading sessions and comic panel readability.
+
+### Key Palettes
+- **Canvas (`#FBF9FE`):** A soft, warm off-white with faint violet-rose undertones, reducing ocular strain compared to pure `#FFFFFF`.
+- **Primary Rose Blossom (`#F472B6` / `#FBCFE8`):** The brand identity anchor used for active highlights, vocabulary bookmarks, call-to-action triggers, and progress tracking.
+- **Secondary Sky Breeze (`#60A5FA` / `#93C5FD`):** Represents pinyin guides, pronunciation tooltips, grammar tags, and audio play states.
+- **Tertiary Sunlight Yellow (`#FDE68A` / `#FEF08A`):** Used for streak indicators, HSK level achievements, review reminders, and contextual comic hints.
+- **Text & Neutral Slate:**
+  - `slate-900` (`#1E293B`): Primary body, hanzi characters, dialogue translation, and prominent titles.
+  - `slate-500` (`#64748B`): Secondary text, pinyin tones, reading metadata, and non-active icons.
+  - `slate-100` (`#F1F5F9`): Structural hairpins, translucent panel dividers, and subtle borders.
+
+### Surface Color Mapping
+- Glass cards leverage semi-transparent whites (`rgba(255, 255, 255, 0.72)`) sitting on `#FBF9FE` with a soft pink ambient blur behind high-priority reading widgets.
+
+## Typography
+
+The type hierarchy harmonizes Latin script (Vietnamese with full tone marks), Chinese Simplified Hanzi glyphs, and Pinyin orthography.
+
+- **Headlines & Labels (`Plus Jakarta Sans`):** Features rounded geometric terminals that evoke friendliness, youthful optimism, and cleanliness.
+- **Body & Manhua Dialogues (`Inter`):** Selected for its neutral, highly optimized micro-legibility and full Unicode diacritic coverage, ensuring Vietnamese translations render without baseline jitters.
+- **Chinese Glyph Pairing:** When rendering Hanzi alongside body or dialogue text, fallback cascades through system-native standard KaiTi/PingFang SC/Noto Sans SC, preserving uniform stroke weight relative to Inter.
+
+## Layout & Spacing
+
+The layout is built on a responsive 12-column grid optimized for continuous comic scrolling, vertical webtoon viewports, and side-by-side split interaction (comic reader on the left, vocabulary/notes drawer on the right).
+
+### Breakpoints & Reflow
+- **Mobile (< 768px):** 4-column single flow. Margin `1rem`. Comics occupy full width edge-to-edge; translation overlays, word lookups, and Pinyin tooltips float over the comic via a bottom sheet drawer.
+- **Tablet (768px – 1024px):** 8-column hybrid layout. Margin `2rem`, gutter `1.5rem`. Reader accommodates comic viewport with interactive collapsible side panels for flashcards and vocabulary lists.
+- **Desktop (> 1024px):** 12-column fixed-maximum grid (`max-width: 1440px`). Center-staged manhua viewport with fixed contextual learning sidebars (audio controls, HSK breakdown, grammar analysis).
+
+## Elevation & Depth
+
+Visual hierarchy does not rely on heavy, dark drop shadows. Instead, it employs **frosted glassmorphism**, soft border tints, and petal-tinted ambient backdrops.
+
+### Elevation Levels
+- **Level 0 (Flat Canvas):** Base background `#FBF9FE`.
+- **Level 1 (Panels & Sub-cards):** Solid or 90% opaque `#FFFFFF` cards with a crisp `1px solid #F1F5F9` boundary and an ultra-soft ambient shadow: `0 2px 10px rgba(30, 41, 59, 0.03)`.
+- **Level 2 (Floating Glass Cards & Popovers):** Translucent white `rgba(255, 255, 255, 0.82)` with `backdrop-filter: blur(12px)`, bordered by `1px solid rgba(241, 245, 249, 0.8)`. Shadow: `0 8px 24px -4px rgba(244, 114, 182, 0.12), 0 4px 12px -2px rgba(30, 41, 59, 0.04)`.
+- **Level 3 (Modal Dialogs & Floating Reading Dictionaries):** `rgba(255, 255, 255, 0.94)` with `backdrop-filter: blur(16px)`, surrounded by a subtle rose-tinted glow: `0 20px 40px -8px rgba(244, 114, 182, 0.18), 0 8px 16px -4px rgba(30, 41, 59, 0.06)`.
+
+## Shapes
+
+The interface embraces a **pill-shaped (level 3)** geometry. Inspired by falling cherry blossom petals and the rounded forms of manhua speech bubbles, sharp edges are systematically eliminated.
+
+- **Buttons, Badges, Search Inputs:** Fully curved pill geometries (`border-radius: 9999px` or `rounded-xl` minimum).
+- **Cards & Readers:** Generous `2rem` (`32px`) corner radiuses that provide an organic, inviting frame to square comic panels.
+- **Interactive Hanzi Tiles:** Rounded square pills (`rounded-lg`, `16px`) providing an optimal finger and mouse target for character tracing and vocabulary tap-to-translate.
+
+## Components
+
+All microcopy and interactive states below are localized into natural Vietnamese.
+
+### 1. Buttons
+- **Primary ("Bắt đầu học", "Tiếp tục đọc"):** Filled gradient from `#F472B6` to `#FB7185`, white text, pill radius (`9999px`), subtle shadow with pink tone. Hover states gently scale (1.02x) with an increased soft glow.
+- **Secondary ("Luyện tập", "Xem từ vựng"):** Semi-transparent `#FBCFE8` at 30% opacity with `#F472B6` text and border `1px solid #FBCFE8`.
+- **Ghost / Tertiary ("Bỏ qua", "Để sau"):** Transparent fill, slate-500 text, slate-100 hover background.
+
+### 2. Chips & Badges
+- **HSK Level Badges ("HSK 1", "HSK 2"):** Butter yellow background (`#FEF08A`), text `#854D0E`, rounded-full, with an optional mini blossom icon.
+- **Grammar & Tone Badges ("Ngữ pháp", "Thanh 1"):** Sky blue tint (`#E0F2FE`), text `#0369A1`, pill radius.
+- **Streak & Reward Chips ("7 ngày liên tục"):** Soft pink pill (`#FCE7F3`), text `#BE185D`.
+
+### 3. Comic Interaction Cards
+- **Speech Bubble Click-to-Translate:** Glassmorphism overlay appearing adjacent to the comic panel. Contains:
+  - Hanzi in `24px` semi-bold.
+  - Pinyin in `#60A5FA` font weight 600.
+  - Vietnamese translation in slate-900 body.
+  - Audio icon button ("Phát âm") with soft blue fill.
+
+### 4. Input Fields & Search
+- **Search ("Tìm truyện manhua, từ vựng..."):** Background `#FFFFFF`, rounded-full (`9999px`), border `1px solid #F1F5F9`, inner icon slate-400. On focus, outline blooms into `rgba(244, 114, 182, 0.4)` with `2px` focus ring.
+
+### 5. Checkboxes & Radio Controls
+- Circular cherry blossom check states: when selected, circles fill with `#F472B6` featuring a crisp white inner checkmark.
+- Radio options for quizzes ("Chọn đáp án đúng") use large pill cards that highlight with a sky-blue border (`#60A5FA`) and soft pastel background when active.
+
+### 6. Specialized Components: Flashcard Deck
+- Dual-sided glassmorphism card (`rounded-2xl`, `p-6`).
+- Top-right bookmark indicator using a cherry blossom petal icon.
+- Bottom actions: "Đã thuộc" (Soft sky blue pill) and "Học lại" (Soft pink pill).

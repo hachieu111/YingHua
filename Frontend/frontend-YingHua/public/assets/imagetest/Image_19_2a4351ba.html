@@ -1,0 +1,402 @@
+<!DOCTYPE html><html lang="vi" style=""><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yinghua - Chinese Manhua Reader</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Noto+Serif+SC:wght@600;700&amp;family=Quicksand:wght@500;600;700&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              bg: '#FBF9FE',
+              pink: '#F472B6',
+              pinkSoft: '#FDF2F8',
+              pinkBorder: '#FBCFE8',
+              yellow: '#FDE68A',
+              yellowSoft: '#FEF9C3',
+              blue: '#60A5FA',
+              blueSoft: '#EFF6FF',
+              blueBorder: '#BFDBFE',
+              purple: '#C084FC',
+              dark: '#1E1B4B'
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            quicksand: ['"Quicksand"', 'sans-serif'],
+            chinese: ['"Noto Serif SC"', 'serif']
+          },
+          boxShadow: {
+            'soft': '0 10px 35px -5px rgba(244, 114, 182, 0.12), 0 8px 16px -6px rgba(96, 165, 250, 0.08)',
+            'floating': '0 20px 40px -15px rgba(30, 27, 75, 0.12)',
+            'glow-pink': '0 0 20px rgba(244, 114, 182, 0.35)',
+            'glow-blue': '0 0 20px rgba(96, 165, 250, 0.35)'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes pulse-subtle {
+      0%, 100% { transform: scale(1); opacity: 0.85; }
+      50% { transform: scale(1.03); opacity: 1; }
+    }
+    .animate-pulse-subtle {
+      animation: pulse-subtle 2.8s ease-in-out infinite;
+    }
+    .glass-nav {
+      background: rgba(255, 255, 255, 0.82);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+    .glass-dock {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      box-shadow: 0 16px 36px -10px rgba(76, 29, 149, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.8);
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #FBCFE8;
+      border-radius: 9999px;
+    }
+    .bubble-pin {
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .bubble-pin:hover {
+      transform: scale(1.05);
+      z-index: 40;
+    }
+  </style>
+</head>
+<body class="bg-brand-bg text-slate-700 min-h-screen font-sans flex flex-col antialiased selection:bg-pink-200 selection:text-pink-900 overflow-x-hidden">
+
+  <!-- TOP BAR -->
+  <header class="sticky top-0 z-50 glass-nav border-b border-pink-100/70 px-6 py-3 flex items-center justify-between shadow-sm transition-all duration-300">
+    <!-- Brand Logo -->
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-2xl overflow-hidden shadow-sm border border-pink-200/80 bg-white flex items-center justify-center cursor-pointer group hover:scale-105 transition-transform duration-300"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAVSpRpe7oJRswQ0mGAYz4VuMi7qrl4oQLpl-VYpuffSAyKCZXWz3h3gj_98Yo5aowDcZvrcJc4zCSscGf238l3kc9oJVFzjt-fha8v25BtUIdLFI6ppfMYndNDDVvFqgeAKZWVC4TEuKe1bm3atOhGEM35jXU3cuQc_GXoZBQJZpQW2e-H-BQ0ox9r5DLK9lVTEDu5A_UwVqyoEm70NHjis5gVoO6WNmN_Q6PAEdXx_EjuJUqIX9tCwzgCuwUmEH8mKQ" alt="Yinghua Logo" class="w-full h-full object-cover"></div>
+      <div>
+        <div class="flex items-center gap-1.5">
+          <span class="font-quicksand font-bold text-xl tracking-tight text-slate-800">Yinghua</span>
+          <span class="text-xs px-2 py-0.5 rounded-full bg-pink-100 font-chinese font-semibold text-pink-600 border border-pink-200">樱花</span>
+        </div>
+        <p class="text-[10px] text-slate-400 font-medium tracking-wide">HỌC TIẾNG TRUNG QUA MANHUA</p>
+      </div>
+    </div>
+
+    <!-- Chapter Navigator & Volume Info -->
+    <div class="flex items-center gap-3 bg-white/90 px-4 py-1.5 rounded-full border border-pink-100 shadow-sm">
+      <button class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-pink-500 hover:bg-pink-50 transition-colors">
+        <i class="fa-solid fa-chevron-left text-xs"></i>
+      </button>
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-semibold text-slate-700">Đấu La Đại Lục IV: Chung Cực Đấu La</span>
+        <span class="text-slate-300">|</span>
+        <span class="text-xs text-pink-500 font-medium bg-pink-50 px-2 py-0.5 rounded-md border border-pink-200/50">Chương 12 · Trang 4/18</span>
+      </div>
+      <button class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-pink-500 hover:bg-pink-50 transition-colors">
+        <i class="fa-solid fa-chevron-right text-xs"></i>
+      </button>
+    </div>
+
+    <!-- View Mode & Study Actions -->
+    <div class="flex items-center gap-3"><button onclick="document.getElementById('upload-modal').classList.remove('hidden')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-gradient-to-r from-pink-500 to-rose-400 text-white shadow-sm hover:shadow-md hover:from-pink-600 hover:to-rose-500 text-xs font-semibold transition-all"><i class="fa-solid fa-cloud-arrow-up text-xs"></i><span class="">Tải ảnh dịch</span></button>
+      <!-- Mode Toggle Switch -->
+      <div class="flex items-center bg-slate-100/90 p-1 rounded-2xl border border-slate-200/60 text-xs font-medium">
+        <button id="mode-bubble" onclick="switchView('bubble')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-pink-600 shadow-sm font-semibold transition-all">
+          <i class="fa-solid fa-comment-dots text-pink-400"></i>
+          <span class="">Bóng Thoại (Overlay)</span>
+        </button>
+        <button id="mode-study" onclick="switchView('study')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-slate-500 hover:text-slate-700 transition-all">
+          <i class="fa-solid fa-book-open-reader text-blue-400"></i>
+          <span class="">Góc Học Tập (Study)</span>
+        </button>
+      </div>
+
+      <!-- Settings & Bookmark -->
+      <div class="flex items-center gap-2">
+        <button class="w-9 h-9 rounded-xl bg-white border border-pink-100 text-slate-500 hover:text-pink-500 hover:border-pink-300 flex items-center justify-center shadow-sm transition-all" title="Từ vựng đã lưu (14)">
+          <i class="fa-regular fa-bookmark text-sm"></i>
+        </button>
+        <button class="w-9 h-9 rounded-xl bg-white border border-pink-100 text-slate-500 hover:text-blue-500 hover:border-blue-300 flex items-center justify-center shadow-sm transition-all" title="Cài đặt">
+          <i class="fa-solid fa-sliders text-sm"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN READER CONTAINER -->
+  <main class="flex-1 max-w-7xl mx-auto w-full px-6 py-6 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pb-28">
+    
+    <!-- LEFT SIDEBAR: THUMBNAILS & PAGE QUICK-SELECT (2 COLS) -->
+    <aside class="hidden lg:flex flex-col gap-3 lg:col-span-2 sticky top-24">
+      <div class="flex items-center justify-between px-1">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Trang truyện</span>
+        <span class="text-[11px] font-medium text-pink-500 bg-pink-50 px-2 py-0.5 rounded-full">4 trang mẫu</span>
+      </div>
+
+      <div class="space-y-3 custom-scrollbar max-h-[72vh] overflow-y-auto pr-1"><div onclick="document.getElementById('upload-modal').classList.remove('hidden')" class="group relative rounded-2xl border-2 border-dashed border-pink-300 hover:border-pink-500 bg-pink-50/50 hover:bg-pink-100/60 p-3 flex flex-col items-center justify-center text-center cursor-pointer transition-all shadow-xs"><div class="w-9 h-9 rounded-xl bg-white shadow-xs flex items-center justify-center text-pink-500 group-hover:scale-110 group-hover:bg-pink-500 group-hover:text-white transition-all mb-1.5"><i class="fa-solid fa-cloud-arrow-up text-sm"></i></div><span class="text-xs font-bold text-pink-600">+ Tải ảnh mới</span><span class="text-[10px] text-slate-400 mt-0.5">PNG, JPG, WebP</span></div>
+        <!-- Thumb 1 (Active) -->
+        <div onclick="selectImage('image4')" id="thumb-image4" class="group relative rounded-2xl overflow-hidden border-2 border-pink-400 shadow-md ring-4 ring-pink-100/70 cursor-pointer transition-all bg-white">
+          <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAOydlzp-Y5DeGe1Y9AT-UivLYt5SIcK908IpjHPW3wvyDUPdHjSlqNaQFNhspUtNu7LyhJ1GpygAaDjOOlhaVBs6w6zvQzth0A9aq6uT_J5Qw5CxjraALsLeeGm2a9r3CV0OAbTGGw3HiL91n_nclRLe7E828EhWXYJcz-OEw7NVQBGHtv-tIAqS8gdxF5ipw7llonfGEqQPxiDYrYVx1VHra4hhZ7a9b7ct3bPukVKdpXJ8VHHfL_uWilOD7Dhgim7w" alt="Trang 4 - Lam Hiên Vũ hào hứng" class="w-full h-32 object-cover object-top opacity-95 group-hover:opacity-100 transition-opacity">
+          <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-900/80 to-transparent p-2 flex items-center justify-between text-white">
+            <span class="text-[11px] font-bold">Trang 04</span>
+            <span class="text-[10px] bg-pink-500/90 px-1.5 py-0.5 rounded text-white font-medium">4 thoại</span>
+          </div>
+        </div>
+
+        <!-- Thumb 2 -->
+        <div onclick="selectImage('image3')" id="thumb-image3" class="group relative rounded-2xl overflow-hidden border-2 border-transparent hover:border-pink-200 shadow-sm cursor-pointer transition-all bg-white hover:shadow-md">
+          <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDEu-DiODDRhIdwxoAKbX-qSvnJSru4Hqo7ZHn6eSJ-5qYgoDJnAdRmt70Zv_iRrBq9k83Wa2T1q0c2wQGkLFh3nwFObMDcHjM1N_gs8zI4-4dgPDyz0zWD6mxlCSTAuVcTo7-4d3aYUG9Y7S-MzQW0Vjm65z36OfJjii8RlhvkOKPv0Kv8sVyu0rq2Z1F7ofMP0APTBq5OheEkmMLsHGS7pLhEFhWYSlK45kmGApoi00YEsJ0cnFaTanQavIW9WCXcgw" alt="Trang 5 - Bắt mẹ hôn" class="w-full h-32 object-cover object-top opacity-80 group-hover:opacity-100 transition-opacity">
+          <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-900/80 to-transparent p-2 flex items-center justify-between text-white">
+            <span class="text-[11px] font-medium">Trang 05</span>
+            <span class="text-[10px] bg-blue-500/80 px-1.5 py-0.5 rounded text-white font-medium">4 thoại</span>
+          </div>
+        </div>
+
+        <!-- Thumb 3 -->
+        <div onclick="selectImage('image2')" id="thumb-image2" class="group relative rounded-2xl overflow-hidden border-2 border-transparent hover:border-pink-200 shadow-sm cursor-pointer transition-all bg-white hover:shadow-md">
+          <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDs1lCAue3S2KeQfR2NdBQT0xa4NcTO-yiRLnBJJSfWZMHWo5SKTBuQShlPOUJf7wWcXJHe5CuMR6-ldbb7TdNhDnPDvYORfMZKeQYSCQ5LfWtSJRfuOmUcjVUBW93p0Bg6Hb2a8ja3ARCedI44L3ZAKV5hibEVmj48LptObpU6jKQrS5hOHx2F7Ba_fzzVvJYYsLQESyy1ads_th-eH-E9jE5-pbO5Bt-K0xAWeehxO8jiVG2SF1c_hLSGt8RnUKxlnQ" alt="Trang 6 - Bữa ăn ngon lành" class="w-full h-32 object-cover object-top opacity-80 group-hover:opacity-100 transition-opacity">
+          <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-900/80 to-transparent p-2 flex items-center justify-between text-white">
+            <span class="text-[11px] font-medium">Trang 06</span>
+            <span class="text-[10px] bg-amber-500/80 px-1.5 py-0.5 rounded text-white font-medium">2 thoại</span>
+          </div>
+        </div>
+
+        <!-- Thumb 4 -->
+        <div onclick="selectImage('image1')" id="thumb-image1" class="group relative rounded-2xl overflow-hidden border-2 border-transparent hover:border-pink-200 shadow-sm cursor-pointer transition-all bg-white hover:shadow-md">
+          <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCvmPvbnWNcP3BHckHLR3j-rywHXt7m3ILeppAgn_YXxIEB79TgXV0CDkiRwiGLxaSBpW-UqZqM4-mi1b_QCjY1FqdSPwkJ-ltTBytQVBx3tsGXPQiMCcgzVveP_Vk6qa3iiENJ_VdghKBwbRkBMdNoMZclRUMTf_xxeq2ZwVvYvceWCNskPzniXYb_lzD5h5TZGbtFHlIBdT1FXBlrrWBHfAke3IpkkiTK8lecgvq9Btvakj_GwVolZ9V76DhRRvVhEQ" alt="Trang 7 - Lớp học kiểm tra" class="w-full h-32 object-cover object-top opacity-80 group-hover:opacity-100 transition-opacity">
+          <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-900/80 to-transparent p-2 flex items-center justify-between text-white">
+            <span class="text-[11px] font-medium">Trang 07</span>
+            <span class="text-[10px] bg-emerald-500/80 px-1.5 py-0.5 rounded text-white font-medium">3 thoại</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Learning tip box -->
+      <div class="mt-2 p-3 rounded-2xl bg-amber-50 border border-amber-200/70 text-slate-700 shadow-sm">
+        <div class="flex items-center gap-1.5 text-amber-600 font-semibold text-xs mb-1">
+          <i class="fa-solid fa-lightbulb"></i>
+          <span class="">Mẹo học nhanh:</span>
+        </div>
+        <p class="text-[11px] text-slate-600 leading-relaxed">
+          Rê chuột vào các khung phát sáng <span class="inline-block w-2 h-2 rounded-full bg-pink-400"></span> trên ảnh để xem Pinyin, nghĩa tiếng Việt và bấm nghe phát âm nhé!
+        </p>
+      </div>
+    </aside>
+
+    <!-- CENTRAL MANHUA CANVAS WITH INTERACTIVE OVERLAYS (7 COLS) -->
+    <section class="col-span-1 lg:col-span-7 flex flex-col items-center">
+      <!-- Comic Page Paper Container -->
+      <div class="relative w-full max-w-2xl bg-white p-3 sm:p-4 rounded-3xl shadow-soft border border-pink-100 transition-all duration-300">
+        
+        <!-- Status Pill Top right inside canvas -->
+        <div class="absolute top-6 right-6 z-20 flex items-center gap-2 bg-white/95 backdrop-blur-md px-3 py-1 rounded-full shadow-md border border-pink-100 text-xs font-semibold text-slate-600">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+          <span class="">Dịch trực tiếp: Tiếng Việt</span>
+        </div>
+
+        <!-- Image Canvas Wrapper -->
+        <div id="canvas-wrapper" class="relative rounded-2xl overflow-hidden border border-slate-100 shadow-inner bg-slate-50"><img id="active-comic-img" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBESpdrBLV4x97AFqVltVvpglpS7gNE85FMMGGMoKgtDJhvE6FiBMp72ZjAs0dTACp8pLzgbiIwzRXPMN9uqi3oErbCyPSYiIcmyKpZ3upwws_iKV4kMblYgGtKe04705iGH-qfzQiYTY6Oq9LoR9alNMGsObqFkCuA7oIWcpMs5OfCwlZdB-cuU5AY7kHufMMEz2edhZP3-pk78itZagvgLLxL_fqyuBCTaXe-yjkrpQmTjaY4MDu7pAGjNkxjEhAZrg" alt="Manhua Page 04 - Đấu La Đại Lục IV" class="w-full h-auto block select-none"><div class="bubble-pin group absolute top-[14.5%] right-[5.5%] w-[36%] h-[9.8%] cursor-pointer z-30"><div class="w-full h-full rounded-xl border-2 border-pink-500 bg-pink-400/10 hover:bg-pink-400/25 transition-all shadow-glow-pink flex flex-col justify-between p-1.5"><div class="flex items-center justify-between"><span class="bg-pink-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm flex items-center gap-1"><i class="fa-solid fa-language"></i> Thoại 1</span><button onclick="event.stopPropagation(); playVoice('期末考试即将面临。')" class="w-5 h-5 rounded-full bg-white/90 hover:bg-pink-100 text-pink-600 flex items-center justify-center text-[10px] shadow-xs"><i class="fa-solid fa-volume-high"></i></button></div><div class="bubble-direct-trans bg-white/95 backdrop-blur-sm px-1.5 py-1 rounded text-[11px] font-semibold text-pink-900 border border-pink-200 leading-tight">Kỳ thi cuối kỳ sắp diễn ra rồi.</div></div><div class="opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-300 transform -translate-y-2 group-hover:translate-y-0 absolute top-full right-0 mt-2 w-80 bg-white/95 backdrop-blur-xl p-4 rounded-2xl shadow-floating border border-pink-200 z-50"><div class="flex items-center justify-between border-b border-pink-100 pb-2 mb-2"><span class="text-[11px] font-bold text-pink-500 uppercase tracking-wider flex items-center gap-1"><i class="fa-solid fa-quote-left"></i> Lời thoại 01</span><span class="text-[10px] bg-pink-100 text-pink-600 px-2 py-0.5 rounded-full font-medium">Góc trên phải</span></div><div class="mb-2"><div class="text-xs font-mono text-slate-400">qī mò kǎo shì jí jiāng miàn lín</div><div class="text-base font-chinese font-bold text-slate-800">期末考试即将面临。</div></div><div class="p-2 rounded-xl bg-pink-50/80 border border-pink-200 text-pink-900 text-xs font-semibold leading-relaxed flex items-start gap-1.5"><i class="fa-solid fa-feather text-pink-500 mt-0.5"></i><span class="">"Kỳ thi cuối kỳ sắp diễn ra rồi."</span></div><div class="mt-2 pt-2 border-t border-slate-100 flex flex-wrap gap-1.5 text-[10px]"><span class="bg-slate-100 px-2 py-0.5 rounded-md text-slate-600 font-medium">期末 (cuối kỳ)</span><span class="bg-slate-100 px-2 py-0.5 rounded-md text-slate-600 font-medium">考试 (kỳ thi)</span><span class="bg-slate-100 px-2 py-0.5 rounded-md text-slate-600 font-medium">即将 (sắp sửa)</span><span class="bg-slate-100 px-2 py-0.5 rounded-md text-slate-600 font-medium">面临 (đối mặt / diễn ra)</span></div></div></div><div class="bubble-pin group absolute top-[37.5%] left-[18.2%] w-[26%] h-[13.5%] cursor-pointer z-30"><div class="w-full h-full rounded-xl border-2 border-blue-500 bg-blue-400/10 hover:bg-blue-400/25 transition-all shadow-glow-blue flex flex-col justify-between p-1.5"><div class="flex items-center justify-between"><span class="bg-blue-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm flex items-center gap-1"><i class="fa-solid fa-language"></i> Thoại 2</span><button onclick="event.stopPropagation(); playVoice('今天蓝轩宇心情很好，')" class="w-5 h-5 rounded-full bg-white/90 hover:bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] shadow-xs"><i class="fa-solid fa-volume-high"></i></button></div><div class="bubble-direct-trans bg-white/95 backdrop-blur-sm px-1.5 py-1 rounded text-[11px] font-semibold text-blue-900 border border-blue-200 leading-tight">Hôm nay Lam Hiên Vũ tâm trạng rất tốt,</div></div><div class="opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-300 transform -translate-y-2 group-hover:translate-y-0 absolute top-full left-0 mt-2 w-80 bg-white/95 backdrop-blur-xl p-4 rounded-2xl shadow-floating border border-blue-200 z-50"><div class="flex items-center justify-between border-b border-blue-100 pb-2 mb-2"><span class="text-[11px] font-bold text-blue-500 uppercase tracking-wider flex items-center gap-1"><i class="fa-solid fa-quote-left"></i> Lời thoại 02</span><span class="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-medium">Giữa bên trái</span></div><div class="mb-2"><div class="text-xs font-mono text-slate-400">jīn tiān lán xuān yǔ xīn qíng hěn hǎo</div><div class="text-base font-chinese font-bold text-slate-800">今天蓝轩宇心情很好，</div></div><div class="p-2 rounded-xl bg-blue-50/80 border border-blue-200 text-blue-900 text-xs font-semibold leading-relaxed flex items-start gap-1.5"><i class="fa-solid fa-feather text-blue-500 mt-0.5"></i><span class="">"Hôm nay Lam Hiên Vũ tâm trạng rất tốt,"</span></div><div class="mt-2 pt-2 border-t border-slate-100 flex flex-wrap gap-1.5 text-[10px]"><span class="bg-slate-100 px-2 py-0.5 rounded-md text-slate-600 font-medium">今天 (hôm nay)</span><span class="bg-slate-100 px-2 py-0.5 rounded-md text-slate-600 font-medium">蓝轩宇 (Lam Hiên Vũ)</span><span class="bg-slate-100 px-2 py-0.5 rounded-md text-slate-600 font-medium">心情 (tâm trạng)</span><span class="bg-slate-100 px-2 py-0.5 rounded-md text-slate-600 font-medium">很好 (rất tốt)</span></div></div></div><div class="bubble-pin group absolute bottom-[24%] right-[23.5%] w-[33%] h-[21.5%] cursor-pointer z-30"><div class="w-full h-full rounded-xl border-2 border-pink-500 bg-pink-400/10 hover:bg-pink-400/25 transition-all shadow-glow-pink flex flex-col justify-between p-1.5"><div class="flex items-center justify-between"><span class="bg-pink-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm flex items-center gap-1"><i class="fa-solid fa-sparkles"></i> Thoại 3 &amp; Cấu trúc</span><button onclick="event.stopPropagation(); playVoice('因为爸爸答应他，如果考试成绩好。')" class="w-5 h-5 rounded-full bg-white/90 hover:bg-pink-100 text-pink-600 flex items-center justify-center text-[10px] shadow-xs"><i class="fa-solid fa-volume-high"></i></button></div><div class="bubble-direct-trans bg-white/95 backdrop-blur-sm px-1.5 py-1 rounded text-[11px] font-semibold text-pink-900 border border-pink-200 leading-tight">Bởi vì bố đã hứa với cậu ấy, nếu kết quả thi tốt,</div></div><div class="opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-300 transform -translate-y-2 group-hover:translate-y-0 absolute bottom-full right-0 mb-2 w-88 bg-white/95 backdrop-blur-xl p-4 rounded-2xl shadow-floating border border-pink-200 z-50"><div class="flex items-center justify-between border-b border-pink-100 pb-2 mb-2"><span class="text-[11px] font-bold text-pink-500 uppercase tracking-wider flex items-center gap-1"><i class="fa-solid fa-quote-left"></i> Lời thoại 03</span><span class="text-[10px] bg-pink-100 text-pink-600 px-2 py-0.5 rounded-full font-medium">Dưới phải (trên)</span></div><div class="mb-2"><div class="text-[11px] font-mono text-slate-400 leading-tight">yīn wèi bà ba dā ying tā, rú guǒ kǎo shì chéng jì hǎo</div><div class="text-sm font-chinese font-bold text-slate-800 mt-1">因为爸爸答应他，如果考试成绩好。</div></div><div class="p-2 rounded-xl bg-pink-50/90 border border-pink-200 text-pink-900 text-xs font-semibold leading-relaxed flex items-start gap-1.5"><i class="fa-solid fa-feather text-pink-500 mt-0.5"></i><span class="">"Bởi vì bố đã hứa với cậu ấy, nếu kết quả thi tốt,"</span></div><div class="mt-2 pt-2 border-t border-slate-100 flex flex-wrap gap-1.5 text-[10px]"><span class="bg-slate-100 px-2 py-0.5 rounded-md text-slate-600 font-medium">因为 (bởi vì)</span><span class="bg-slate-100 px-2 py-0.5 rounded-md text-slate-600 font-medium">答应 (hứa hẹn/đồng ý)</span><span class="bg-slate-100 px-2 py-0.5 rounded-md text-slate-600 font-medium">如果 (nếu)</span><span class="bg-slate-100 px-2 py-0.5 rounded-md text-slate-600 font-medium">成绩 (thành tích/kết quả)</span></div></div></div><div class="bubble-pin group absolute bottom-[3.2%] right-[14.8%] w-[33%] h-[20.8%] cursor-pointer z-30"><div class="w-full h-full rounded-xl border-2 border-pink-500 bg-pink-400/10 hover:bg-pink-400/25 transition-all shadow-glow-pink flex flex-col justify-between p-1.5"><div class="flex items-center justify-between"><span class="bg-pink-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm flex items-center gap-1"><i class="fa-solid fa-language"></i> Thoại 4</span><button onclick="event.stopPropagation(); playVoice('就带他坐星际飞船，去天斗星玩。')" class="w-5 h-5 rounded-full bg-white/90 hover:bg-pink-100 text-pink-600 flex items-center justify-center text-[10px] shadow-xs"><i class="fa-solid fa-volume-high"></i></button></div><div class="bubble-direct-trans bg-white/95 backdrop-blur-sm px-1.5 py-1 rounded text-[11px] font-semibold text-pink-900 border border-pink-200 leading-tight">Thì sẽ đưa cậu đi tàu vũ trụ đến sao Thiên Đấu chơi.</div></div><div class="opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-300 transform -translate-y-2 group-hover:translate-y-0 absolute bottom-full right-0 mb-2 w-88 bg-white/95 backdrop-blur-xl p-4 rounded-2xl shadow-floating border border-pink-200 z-50"><div class="flex items-center justify-between border-b border-pink-100 pb-2 mb-2"><span class="text-[11px] font-bold text-pink-500 uppercase tracking-wider flex items-center gap-1"><i class="fa-solid fa-quote-left"></i> Lời thoại 04</span><span class="text-[10px] bg-pink-100 text-pink-600 px-2 py-0.5 rounded-full font-medium">Dưới cùng phải</span></div><div class="mb-2"><div class="text-[11px] font-mono text-slate-400 leading-tight">jiù dài tā zuò xīng jì fēi chuán, qù tiān dǒu xīng wán</div><div class="text-sm font-chinese font-bold text-slate-800 mt-1">就带他坐星际飞船，去天斗星玩。</div></div><div class="p-2 rounded-xl bg-pink-50/90 border border-pink-200 text-pink-900 text-xs font-semibold leading-relaxed flex items-start gap-1.5"><i class="fa-solid fa-feather text-pink-500 mt-0.5"></i><span class="">"Thì sẽ đưa cậu đi tàu vũ trụ đến sao Thiên Đấu chơi."</span></div><div class="mt-2 pt-2 border-t border-slate-100 flex flex-wrap gap-1.5 text-[10px]"><span class="bg-slate-100 px-2 py-0.5 rounded-md text-slate-600 font-medium">就 (thì)</span><span class="bg-slate-100 px-2 py-0.5 rounded-md text-slate-600 font-medium">星际飞船 (tàu vũ trụ / phi thuyền liên sao)</span><span class="bg-slate-100 px-2 py-0.5 rounded-md text-slate-600 font-medium">天斗星 (sao Thiên Đấu)</span><span class="bg-slate-100 px-2 py-0.5 rounded-md text-slate-600 font-medium">玩 (chơi)</span></div></div></div></div>
+
+        <!-- Hint bar at bottom of canvas -->
+        <div class="mt-3 flex items-center justify-between text-xs text-slate-400 px-2">
+          <div class="flex items-center gap-3">
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-pink-400"></span> Khung màu hồng: Hội thoại / Ngữ pháp</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-400"></span> Khung màu xanh: Dẫn truyện</span>
+          </div>
+          <span class="text-slate-400 hover:text-slate-600 cursor-pointer text-[11px] flex items-center gap-1">
+            <i class="fa-solid fa-expand"></i> Toàn màn hình
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT SIDEBAR: STUDY PANEL & VOCABULARY NOTEBOOK (3 COLS) -->
+    <aside class="col-span-1 lg:col-span-3 flex flex-col gap-5 sticky top-24">
+      
+      <!-- Card: Interactive Vocabulary List -->
+      <div class="bg-white rounded-3xl p-5 shadow-soft border border-pink-100">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-xl bg-pink-100 flex items-center justify-center text-pink-600 text-xs">
+              <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <h3 class="text-sm font-bold text-slate-800">Từ vựng trang này</h3>
+          </div>
+          <span class="text-xs font-semibold text-pink-500 bg-pink-50 px-2 py-0.5 rounded-full">5 từ mới</span>
+        </div>
+
+        <div class="space-y-2.5"><div class="p-2.5 rounded-2xl bg-slate-50 hover:bg-pink-50/60 border border-slate-100 hover:border-pink-200 transition-all cursor-pointer group"><div class="flex items-center justify-between"><div><div class="flex items-center gap-1.5"><span class="font-chinese font-bold text-base text-slate-800 group-hover:text-pink-600">期末考试</span><span class="text-[11px] text-slate-400 font-mono">qī mò kǎo shì</span></div><div class="text-xs text-slate-600 font-medium">Kỳ thi cuối kỳ</div></div><button onclick="playVoice('期末考试')" class="w-7 h-7 rounded-lg bg-white group-hover:bg-pink-200/60 text-slate-400 group-hover:text-pink-600 flex items-center justify-center text-xs transition-colors"><i class="fa-solid fa-volume-high"></i></button></div></div><div class="p-2.5 rounded-2xl bg-slate-50 hover:bg-pink-50/60 border border-slate-100 hover:border-pink-200 transition-all cursor-pointer group"><div class="flex items-center justify-between"><div><div class="flex items-center gap-1.5"><span class="font-chinese font-bold text-base text-slate-800 group-hover:text-pink-600">面临</span><span class="text-[11px] text-slate-400 font-mono">miàn lín</span></div><div class="text-xs text-slate-600 font-medium">Sắp diễn ra / đối mặt</div></div><button onclick="playVoice('面临')" class="w-7 h-7 rounded-lg bg-white group-hover:bg-pink-200/60 text-slate-400 group-hover:text-pink-600 flex items-center justify-center text-xs transition-colors"><i class="fa-solid fa-volume-high"></i></button></div></div><div class="p-2.5 rounded-2xl bg-slate-50 hover:bg-pink-50/60 border border-slate-100 hover:border-pink-200 transition-all cursor-pointer group"><div class="flex items-center justify-between"><div><div class="flex items-center gap-1.5"><span class="font-chinese font-bold text-base text-slate-800 group-hover:text-pink-600">答应</span><span class="text-[11px] text-slate-400 font-mono">dā ying</span></div><div class="text-xs text-slate-600 font-medium">Hứa hẹn, đồng ý</div></div><button onclick="playVoice('答应')" class="w-7 h-7 rounded-lg bg-white group-hover:bg-pink-200/60 text-slate-400 group-hover:text-pink-600 flex items-center justify-center text-xs transition-colors"><i class="fa-solid fa-volume-high"></i></button></div></div><div class="p-2.5 rounded-2xl bg-slate-50 hover:bg-pink-50/60 border border-slate-100 hover:border-pink-200 transition-all cursor-pointer group"><div class="flex items-center justify-between"><div><div class="flex items-center gap-1.5"><span class="font-chinese font-bold text-base text-slate-800 group-hover:text-pink-600">星际飞船</span><span class="text-[11px] text-slate-400 font-mono">xīng jì fēi chuán</span></div><div class="text-xs text-slate-600 font-medium">Tàu vũ trụ / phi thuyền liên sao</div></div><button onclick="playVoice('星际飞船')" class="w-7 h-7 rounded-lg bg-white group-hover:bg-pink-200/60 text-slate-400 group-hover:text-pink-600 flex items-center justify-center text-xs transition-colors"><i class="fa-solid fa-volume-high"></i></button></div></div></div>
+
+        <button class="w-full mt-3 py-2 bg-pink-50 hover:bg-pink-100 text-pink-600 text-xs font-bold rounded-2xl border border-pink-200 transition-colors flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-plus text-[10px]"></i> Lưu toàn bộ vào Flashcard
+        </button>
+      </div>
+
+      <!-- Card: Grammar Spotlight -->
+      <div class="bg-gradient-to-br from-blue-50/80 via-white to-pink-50/50 rounded-3xl p-5 shadow-soft border border-blue-100/70"><div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-blue-400"></span><span class="text-xs font-bold text-blue-600 uppercase tracking-wide">Cấu trúc trọng điểm</span></div><div class="text-sm font-bold text-slate-800 mb-1">如果……就…… (Rúguǒ... jiù...)</div><p class="text-xs text-slate-600 leading-relaxed mb-3">Biểu thị điều kiện giả thiết: "Nếu [vế A điều kiện] thì [vế B kết quả]".</p><div class="bg-white/80 p-2.5 rounded-xl border border-blue-200/60 text-xs text-slate-700"><span class="text-pink-600 font-bold">Ví dụ trong trang:</span> 如果考试成绩好，就带他去天斗星玩。<div class="text-[11px] text-slate-500 italic mt-0.5">"Nếu kết quả thi tốt thì sẽ đưa cậu ấy đến sao Thiên Đấu chơi."</div></div></div>
+
+      <!-- Card: Daily Goal Streak -->
+      <div class="bg-white rounded-3xl p-4 shadow-soft border border-amber-100 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-500 text-lg">
+            🔥
+          </div>
+          <div>
+            <div class="text-xs font-bold text-slate-800">Chuỗi học 7 ngày</div>
+            <div class="text-[11px] text-slate-500">Đã đọc 12 trang hôm nay</div>
+          </div>
+        </div>
+        <span class="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-xl border border-amber-200">+50 XP</span>
+      </div>
+
+    </aside>
+
+  </main>
+
+  <!-- FLOATING GLASSMORPHISM DOCK (BOTTOM CONTROLS) -->
+  <footer class="fixed bottom-5 inset-x-0 mx-auto w-fit z-50 transition-all duration-300">
+    <div class="glass-dock rounded-full px-5 py-3 flex items-center gap-4 border border-white/80">
+      
+      <!-- Navigation Buttons -->
+      <div class="flex items-center gap-1.5 border-r border-slate-200/80 pr-3">
+        <button onclick="changePage(-1)" class="w-10 h-10 rounded-full bg-slate-100/80 hover:bg-pink-100 text-slate-600 hover:text-pink-600 flex items-center justify-center transition-all shadow-xs" title="Trang trước">
+          <i class="fa-solid fa-backward-step text-xs"></i>
+        </button>
+        <div class="text-center px-2">
+          <span class="text-xs font-bold text-slate-700 block leading-tight">Trang 04</span>
+          <span class="text-[10px] text-slate-400 block font-medium">18 trang</span>
+        </div>
+        <button onclick="changePage(1)" class="w-10 h-10 rounded-full bg-slate-100/80 hover:bg-pink-100 text-slate-600 hover:text-pink-600 flex items-center justify-center transition-all shadow-xs" title="Trang tiếp">
+          <i class="fa-solid fa-forward-step text-xs"></i>
+        </button>
+      </div>
+
+      <!-- Pronunciation Audio Player Button -->
+      <div class="flex items-center gap-2 border-r border-slate-200/80 pr-3">
+        <button onclick="readEntirePage()" class="px-4 py-2 rounded-full bg-gradient-to-r from-pink-500 to-rose-400 hover:from-pink-600 hover:to-rose-500 text-white font-semibold text-xs flex items-center gap-2 shadow-md shadow-pink-300/40 hover:scale-105 transition-all">
+          <i class="fa-solid fa-circle-play text-sm"></i>
+          <span class="">Đọc thoại toàn trang</span>
+        </button>
+        <button class="w-8 h-8 rounded-full bg-slate-100/80 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-xs transition-colors" title="Tốc độ 1.0x">
+          1.0x
+        </button>
+      </div>
+
+      <!-- Font Resize Controls -->
+      <div class="flex items-center gap-1.5 border-r border-slate-200/80 pr-3">
+        <button onclick="adjustFontSize(-1)" class="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-500 hover:text-slate-800 flex items-center justify-center text-xs transition-colors" title="Giảm cỡ chữ">
+          <i class="fa-solid fa-font text-[10px]"></i>-
+        </button>
+        <span class="text-xs font-mono font-semibold text-slate-600 px-1">Aa</span>
+        <button onclick="adjustFontSize(1)" class="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-500 hover:text-slate-800 flex items-center justify-center text-xs transition-colors" title="Tăng cỡ chữ">
+          <i class="fa-solid fa-font text-xs"></i>+
+        </button>
+      </div>
+
+      <!-- Bubble Visibility Toggle -->
+      <div class="flex items-center gap-2">
+        <button id="toggle-bubbles" onclick="toggleOverlayBubbles()" class="px-3 py-1.5 rounded-full bg-pink-100 text-pink-600 hover:bg-pink-200 text-xs font-semibold flex items-center gap-1.5 transition-colors">
+          <i class="fa-solid fa-eye text-xs"></i>
+          <span id="toggle-label" class="">Hiện bản dịch</span>
+        </button>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- SIMPLE SCRIPT LOGIC FOR INTERACTION -->
+  <script>
+    const images = {
+      image4: { src: "https://lh3.googleusercontent.com/aida-public/AB6AXuBESpdrBLV4x97AFqVltVvpglpS7gNE85FMMGGMoKgtDJhvE6FiBMp72ZjAs0dTACp8pLzgbiIwzRXPMN9uqi3oErbCyPSYiIcmyKpZ3upwws_iKV4kMblYgGtKe04705iGH-qfzQiYTY6Oq9LoR9alNMGsObqFkCuA7oIWcpMs5OfCwlZdB-cuU5AY7kHufMMEz2edhZP3-pk78itZagvgLLxL_fqyuBCTaXe-yjkrpQmTjaY4MDu7pAGjNkxjEhAZrg", name: "Trang 04", bubbles: 3 },
+      image3: { src: "https://lh3.googleusercontent.com/aida-public/AB6AXuAQi1JKkscrvPktQvd0-HY3cQPXBBNQtuONR-CyBC_E9Bl0QHo_Feohi9A0bOZ8gAWGtq4VXoZY8ENwE7PrinQLdqk8OY6DehWTIc1YtNwTA49IDCgHyTtv1aZ78wgrpAy47D9bGgUiUGAjOfByQFNvAwPInv73Ei-GjDGoSwLcQr1OxgzMZmHu6vTO9IhDG7MCHnMMeICJ322wLxqT1Hc37TJLs-MaW9r8AhKMjHZHgOj8uLcs6PDGyDc6Lwue3IT5Ew", name: "Trang 05", bubbles: 4 },
+      image2: { src: "https://lh3.googleusercontent.com/aida-public/AB6AXuAV5EIXD1MStadtH5j20dMt5t_npUus3Hcgx86oRMMjJ7zfhe6qJfSrqY9WYqFCCat2jG2x7dfyjZdOrVL-e4UrurZRPY0nHuczNTm26TEIF-MCwwuhtRRzQsxE_M76KiyVcOVC-ppktHSGcRidMdTiFwdqtJ4_yi_ox_LtIz2cneg2Je5aVo8m9uLUDi_an98rwO2209UokA-8vfPFaWhnDvvpRpfvmnxFLnEreWnabIH0eyMOyBqh1quqmZt-vgTRxw", name: "Trang 06", bubbles: 2 },
+      image1: { src: "https://lh3.googleusercontent.com/aida-public/AB6AXuDO1RyPOuemYSGBa0zrTDK76wS7raJkEq8HNovi841AOkZlUDEV-1aYr2UF08Zk1U99oPxZvI5EDafN4HjS5gMqpqY8iRGArFkuTETIJOHHrFL8FNU4gE1y7XeCdMpo4DC5lIDAd6cIakKoH-33zCGFawgS1F-3Iv6MLXBwnqzj6OYD7HDFFJUFvWw9byjJ5tOLkAvd3GEJskCHZND90RZphVtU3ugzsEZTTZDXfmQHIWZ8qrN7WVAVYnbip1CSXDovvA", name: "Trang 07", bubbles: 3 }
+    };
+
+    let activeKey = 'image4';
+
+    function selectImage(key) {
+      activeKey = key;
+      const mainImg = document.getElementById('active-comic-img');
+      mainImg.src = images[key].src;
+
+      // Update thumbnails border
+      ['image1', 'image2', 'image3', 'image4'].forEach(k => {
+        const el = document.getElementById('thumb-' + k);
+        if (k === key) {
+          el.className = "group relative rounded-2xl overflow-hidden border-2 border-pink-400 shadow-md ring-4 ring-pink-100/70 cursor-pointer transition-all bg-white";
+        } else {
+          el.className = "group relative rounded-2xl overflow-hidden border-2 border-transparent hover:border-pink-200 shadow-sm cursor-pointer transition-all bg-white hover:shadow-md";
+        }
+      });
+    }
+
+    function playVoice(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'zh-CN';
+        utterance.rate = 0.85;
+        window.speechSynthesis.speak(utterance);
+      } else {
+        alert('Phát âm thoại: ' + text);
+      }
+    }
+
+    function readEntirePage() {
+      playVoice('期末考试即将面临。今天蓝轩宇心情很好，因为爸爸答应他，如果考试成绩好，就带他坐星际飞船，去天斗星玩。');
+    }
+
+    let overlaysVisible = true;
+    function toggleOverlayBubbles() {
+      overlaysVisible = !overlaysVisible;
+      const pins = document.querySelectorAll('.bubble-pin');
+      const label = document.getElementById('toggle-label');
+      pins.forEach(pin => {
+        pin.style.display = overlaysVisible ? 'block' : 'none';
+      });
+      label.innerText = overlaysVisible ? 'Hiện bản dịch' : 'Ẩn bản dịch';
+    }
+
+    function changePage(delta) {
+      const keys = ['image4', 'image3', 'image2', 'image1'];
+      let idx = keys.indexOf(activeKey);
+      idx = (idx + delta + keys.length) % keys.length;
+      selectImage(keys[idx]);
+    }
+
+    function adjustFontSize(delta) {
+      alert('Đã điều chỉnh kích thước phông chữ bản dịch ' + (delta > 0 ? '+1' : '-1'));
+    }
+
+    function switchView(mode) {
+      const bBtn = document.getElementById('mode-bubble');
+      const sBtn = document.getElementById('mode-study');
+      if (mode === 'bubble') {
+        bBtn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-pink-600 shadow-sm font-semibold transition-all";
+        sBtn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-slate-500 hover:text-slate-700 transition-all font-medium";
+      } else {
+        sBtn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-blue-600 shadow-sm font-semibold transition-all";
+        bBtn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-slate-500 hover:text-slate-700 transition-all font-medium";
+      }
+    }
+  </script>
+
+
+
+
+<div id="upload-modal" class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 transition-all"><div class="bg-white w-full max-w-lg rounded-3xl shadow-floating border border-pink-100 overflow-hidden"><div class="flex items-center justify-between px-6 py-4 border-b border-pink-100/80 bg-gradient-to-r from-pink-50/60 via-white to-pink-50/30"><div class="flex items-center gap-2.5"><div class="w-8 h-8 rounded-xl bg-pink-100 flex items-center justify-center text-pink-500 text-sm"><i class="fa-solid fa-cloud-arrow-up"></i></div><div><h3 class="text-sm font-bold text-slate-800">Tải ảnh Manhua cần dịch</h3><p class="text-[11px] text-slate-400 font-medium">Tự động nhận dạng ký tự tiếng Trung &amp; dịch sang Tiếng Việt</p></div></div><button onclick="document.getElementById('upload-modal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-pink-100 text-slate-400 hover:text-pink-600 flex items-center justify-center text-xs transition-colors"><i class="fa-solid fa-xmark"></i></button></div><div class="p-6 space-y-4"><div class="border-2 border-dashed border-pink-300 hover:border-pink-500 bg-pink-50/40 hover:bg-pink-50/80 rounded-2xl p-6 text-center cursor-pointer transition-all"><input type="file" id="comic-file-input" accept="image/*" class="hidden" onchange="alert('Đã chọn file ảnh! Đang tải lên &amp; phân tích bóng thoại...')"><label for="comic-file-input" class="cursor-pointer flex flex-col items-center"><div class="w-14 h-14 rounded-2xl bg-white shadow-soft flex items-center justify-center text-pink-500 text-2xl mb-3 border border-pink-100"><i class="fa-regular fa-image"></i></div><span class="text-xs font-bold text-slate-700 mb-1">Kéo thả ảnh manhua vào đây hoặc <span class="text-pink-600 underline">bấm để duyệt tệp</span></span><span class="text-[11px] text-slate-400">Hỗ trợ định dạng PNG, JPG, WEBP dung lượng tối đa 15MB</span></label></div><div class="grid grid-cols-2 gap-3"><div class="bg-slate-50 p-3 rounded-2xl border border-slate-100"><label class="text-[11px] font-bold text-slate-500 block mb-1.5">Ngôn ngữ gốc</label><div class="flex items-center gap-2 text-xs font-semibold text-slate-700 bg-white p-2 rounded-xl border border-slate-200/60"><span class="w-2 h-2 rounded-full bg-blue-400"></span>Tiếng Trung (Giản thể)</div></div><div class="bg-slate-50 p-3 rounded-2xl border border-slate-100"><label class="text-[11px] font-bold text-slate-500 block mb-1.5">Dịch mục tiêu</label><div class="flex items-center gap-2 text-xs font-semibold text-pink-600 bg-white p-2 rounded-xl border border-pink-200"><span class="w-2 h-2 rounded-full bg-pink-400"></span>Tiếng Việt + Pinyin</div></div></div><div class="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200/70 flex items-start gap-3"><i class="fa-solid fa-sparkles text-amber-500 mt-0.5 text-sm"></i><div><div class="text-xs font-bold text-amber-700">Tự động nhận diện bóng thoại AI</div><div class="text-[11px] text-slate-600 mt-0.5 leading-relaxed">Hệ thống sẽ quét khung thoại, phiên âm Pinyin từng chữ, giải thích ngữ pháp và tạo thẻ từ vựng tương tác tức thì.</div></div></div></div><div class="px-6 py-4 bg-slate-50/80 border-t border-slate-100 flex items-center justify-end gap-2.5"><button onclick="document.getElementById('upload-modal').classList.add('hidden')" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-700 hover:bg-slate-200 transition-colors">Hủy bỏ</button><button onclick="alert('Bắt đầu xử lý dịch manhua...'); document.getElementById('upload-modal').classList.add('hidden');" class="px-5 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-pink-500 to-rose-400 hover:from-pink-600 hover:to-rose-500 shadow-sm hover:shadow-md transition-all flex items-center gap-1.5"><i class="fa-solid fa-wand-magic-sparkles text-xs"></i><span class="">Tải lên &amp; Phân tích</span></button></div></div></div>
+
+
+
+
+
+</body></html>
