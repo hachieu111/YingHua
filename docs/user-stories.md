@@ -20,7 +20,7 @@ YingHua là ứng dụng web hỗ trợ học tiếng Trung qua truyện tranh v
 | LLM | Dịch vụ LLM bên ngoài |
 | HG | Bộ hẹn giờ hệ thống |
 
-Các story NH được chia thành nhóm chức năng A–L, đặt tiêu đề nhóm bằng `####`.
+Các story NH được chia thành nhóm chức năng A–O, đặt tiêu đề nhóm bằng `####`.
 
 **Độ ưu tiên.** Must (bắt buộc cho bản phát hành đầu), Should (nên có), Could (có thể bổ sung nếu còn thời gian).
 
@@ -39,13 +39,13 @@ Các story NH được chia thành nhóm chức năng A–L, đặt tiêu đề 
 | Actor | Loại | Số story | Mã |
 |---|---|---|---|
 | Khách | Chính | 6 | US-KH-01 … 06 |
-| Người học | Chính | 60 | US-NH-01 … 60 |
-| Quản trị viên | Chính (kế thừa Người học) | 13 (riêng) | US-QT-01 … 13 |
+| Người học | Chính | 77 | US-NH-01 … 77 |
+| Quản trị viên | Chính (kế thừa Người học) | 16 (riêng) | US-QT-01 … 16 |
 | Pipeline xử lý ảnh | Phụ (hệ thống) | 9 | US-XL-01 … 09 |
 | Dịch vụ TTS bên ngoài | Phụ (hệ thống) | 3 | US-TTS-01 … 03 |
 | Dịch vụ LLM bên ngoài | Phụ (hệ thống) | 3 | US-LLM-01 … 03 |
 | Bộ hẹn giờ hệ thống | Phụ (hệ thống) | 4 | US-HG-01 … 04 |
-| **Tổng** | | **98** | |
+| **Tổng** | | **118** | |
 
 ---
 
@@ -272,7 +272,7 @@ Các story NH được chia thành nhóm chức năng A–L, đặt tiêu đề 
 2. **Cho trước** ảnh tải nhanh, **khi** xem thông tin, **thì** có ghi chú ảnh sẽ được tự động xóa sau 7 ngày.
 3. **Cho trước** ảnh không đạt định dạng/dung lượng, **khi** tải lên, **thì** bị từ chối với thông báo cụ thể.
 4. **Cho trước** ảnh tải nhanh của người khác, **khi** tôi truy cập, **thì** hệ thống từ chối vì không có quyền.
-5. **Cho trước** ảnh tải nhanh đã bị xóa sau 7 ngày, **khi** mở lại, **thì** hiện thông báo "Ảnh đã hết hạn lưu".
+5. **Cho trước** ảnh tải nhanh đã quá 7 ngày nhưng chưa bị dọn, **khi** mở lại, **thì** hiện thông báo "Ảnh đã hết hạn lưu"; nếu đã bị dọn (sau chu kỳ 60 phút), **thì** hiện "Không tìm thấy ảnh".
 
 ### US-NH-14 — Sửa và xóa truyện, chương, trang của mình
 **Là** Người học, **tôi muốn** sửa và xóa truyện, chương, trang do tôi tạo, **để** quản lý thư viện cá nhân gọn gàng.
@@ -363,6 +363,7 @@ Các story NH được chia thành nhóm chức năng A–L, đặt tiêu đề 
 2. **Cho trước** trang đang "Đang chờ" hoặc "Đang xử lý", **khi** bấm "Dịch lại", **thì** yêu cầu bị từ chối với thông báo trang đang được xử lý (không tạo thêm công việc trùng).
 3. **Cho trước** trang không thuộc quyền của tôi, **khi** yêu cầu dịch lại, **thì** bị từ chối vì không có quyền.
 4. **Cho trước** xử lý lại vẫn lỗi, **khi** hoàn tất, **thì** trạng thái trở về "Lỗi" kèm lý do mới nhất.
+5. **Cho trước** trang đã xử lý xong ("Xong"), **khi** yêu cầu dịch lại, **thì** bị từ chối vì chỉ trang "Lỗi" được dịch lại.
 
 #### Nhóm D — Hover & Dịch và chỉnh bản dịch
 
@@ -505,7 +506,7 @@ Các story NH được chia thành nhóm chức năng A–L, đặt tiêu đề 
 1. **Cho trước** từ ở trạng thái "Đang học", **khi** chuyển sang "Đã thuộc", **thì** nhãn đổi ngay và thẻ của từ đó không còn xuất hiện trong danh sách thẻ đến hạn.
 2. **Cho trước** từ ở trạng thái "Bỏ qua", **khi** chuyển lại "Đang học", **thì** thẻ được đưa trở lại lịch ôn tập.
 3. **Cho trước** chọn trạng thái ngoài ba giá trị trên, **khi** gửi, **thì** bị từ chối với thông báo trạng thái không hợp lệ.
-4. **Cho trước** từ của người khác, **khi** tôi cố đổi trạng thái, **thì** bị từ chối vì không có quyền.
+4. **Cho trước** từ của người khác, **khi** tôi cố đổi trạng thái, **thì** bị từ chối vì không có quyền (trừ Quản trị viên, xem US-QT-14).
 
 ### US-NH-34 — Ghi chú cho từ
 **Là** Người học, **tôi muốn** thêm ghi chú cho từ trong sổ tay, **để** lưu mẹo nhớ hay giải thích riêng.
@@ -538,7 +539,7 @@ Các story NH được chia thành nhóm chức năng A–L, đặt tiêu đề 
 1. **Cho trước** từ có trong sổ tay, **khi** xóa và xác nhận ở hộp thoại, **thì** từ, các ngữ cảnh, ghi chú và flashcard của từ đó đều bị xóa.
 2. **Cho trước** hộp thoại xác nhận, **khi** tôi chọn "Hủy", **thì** không có dữ liệu nào bị xóa.
 3. **Cho trước** từ đã xóa, **khi** lưu lại từ đó sau này, **thì** được xem như từ mới với lịch ôn bắt đầu lại.
-4. **Cho trước** từ của người khác, **khi** tôi cố xóa, **thì** bị từ chối vì không có quyền.
+4. **Cho trước** từ của người khác, **khi** tôi cố xóa, **thì** bị từ chối vì không có quyền (trừ Quản trị viên, xem US-QT-14).
 
 ### US-NH-37 — Lọc sổ tay theo HSK và trạng thái
 **Là** Người học, **tôi muốn** lọc sổ tay theo cấp độ HSK và trạng thái, **để** tập trung vào nhóm từ cần học.
@@ -609,7 +610,7 @@ Các story NH được chia thành nhóm chức năng A–L, đặt tiêu đề 
 1. **Cho trước** thẻ đang hoạt động, **khi** chọn "Tạm ngưng", **thì** thẻ không còn xuất hiện trong thẻ đến hạn cho đến khi tôi bật lại.
 2. **Cho trước** thẻ đang tạm ngưng, **khi** chọn "Tiếp tục", **thì** thẻ trở lại lịch ôn với ngày đến hạn tính theo trạng thái hiện tại.
 3. **Cho trước** chọn "Đặt lại" và xác nhận, **khi** hoàn tất, **thì** S, D và lịch ôn của thẻ về trạng thái ban đầu như thẻ mới; lịch sử ôn cũ vẫn được giữ.
-4. **Cho trước** thẻ của người khác, **khi** tôi cố tạm ngưng hoặc đặt lại, **thì** bị từ chối vì không có quyền.
+4. **Cho trước** thẻ của người khác, **khi** tôi cố tạm ngưng hoặc đặt lại, **thì** bị từ chối vì không có quyền (trừ Quản trị viên, xem US-QT-14).
 
 ### US-NH-43 — Xem lịch sử ôn của thẻ
 **Là** Người học, **tôi muốn** xem lịch sử các lần ôn của một thẻ, **để** biết tôi nhớ từ đó tốt hay kém theo thời gian.
@@ -620,7 +621,7 @@ Các story NH được chia thành nhóm chức năng A–L, đặt tiêu đề 
 1. **Cho trước** thẻ đã ôn nhiều lần, **khi** mở lịch sử, **thì** thấy danh sách các lượt theo thứ tự thời gian, mỗi lượt có ngày giờ và mức đánh giá (Quên/Khó/Được/Dễ).
 2. **Cho trước** thẻ mới chưa ôn lần nào, **khi** mở lịch sử, **thì** hiện "Chưa có lượt ôn nào".
 3. **Cho trước** lịch sử dài, **khi** mở, **thì** được chia trang hoặc tải dần.
-4. **Cho trước** thẻ của người khác, **khi** tôi cố xem, **thì** bị từ chối vì không có quyền.
+4. **Cho trước** thẻ của người khác, **khi** tôi cố xem, **thì** bị từ chối vì không có quyền (trừ Quản trị viên, xem US-QT-14).
 
 ### US-NH-44 — Thông báo hoàn thành khi hết thẻ đến hạn
 **Là** Người học, **tôi muốn** được báo khi đã ôn xong mọi thẻ đến hạn, **để** biết mình đã hoàn thành việc ôn hôm nay.
@@ -646,6 +647,9 @@ Các story NH được chia thành nhóm chức năng A–L, đặt tiêu đề 
 3. **Cho trước** hệ thống chọn từ, **khi** tạo bài, **thì** ưu tiên từ sắp quên hoặc đang học, kèm một phần từ đã nhớ lâu.
 4. **Cho trước** từ ở trạng thái "Bỏ qua", **khi** chọn từ ra đề, **thì** các từ này không được dùng.
 5. **Cho trước** đang chờ tạo bài, **khi** quá trình kéo dài, **thì** hiện chỉ báo đang tạo và tôi nhận được bài trong tối đa khoảng 20 giây (kể cả khi phải dùng đề dự phòng).
+6. **Cho trước** hệ thống ra đề, **khi** tạo từng câu, **thì** dùng một câu ví dụ ngẫu nhiên có nghĩa chứa từ (ưu tiên kho câu Tatoeba có bản dịch tiếng Việt), có cấp HSK cao nhất của các từ trong câu không vượt quá trình độ của tôi + 1, dài 5–25 chữ và không lặp câu đã ra trong 5 bài gần nhất; hết câu thì dùng câu thoại đã lưu trong sổ tay, rồi câu hỏi theo định nghĩa.
+7. **Cho trước** dạng câu hỏi, **khi** tạo bài, **thì** gồm điền từ vào câu (chọn 1 trong 4), nghĩa của từ trong câu, chọn bản dịch đúng của cả câu, cùng các dạng Hán→Việt, Việt→Hán, viết chữ; khoảng 85% câu về từ đã lưu (chọn theo độ nhớ R, xấp xỉ 60/30/10) và 15% về từ mở rộng (US-NH-69).
+8. **Cho trước** tôi đã hết hạn mức đề LLM trong ngày, **khi** yêu cầu bài, **thì** hệ thống không từ chối mà dùng đề dự phòng; hạn mức chỉ đếm các đề có dùng LLM.
 
 ### US-NH-46 — Làm bài và nộp bài
 **Là** Người học, **tôi muốn** làm bài trắc nghiệm/điền từ và nộp bài, **để** nhận kết quả.
@@ -669,6 +673,7 @@ Các story NH được chia thành nhóm chức năng A–L, đặt tiêu đề 
 2. **Cho trước** xem chi tiết, **khi** mở từng câu, **thì** thấy đáp án của tôi, đáp án đúng và phần giải thích.
 3. **Cho trước** đáp án đúng, **khi** bài còn chưa nộp, **thì** đáp án đúng không được gửi xuống giao diện của tôi (để không thể xem trước).
 4. **Cho trước** câu điền từ có nhiều cách viết tương đương (ví dụ khác khoảng trắng hoặc hoa thường của pinyin), **khi** chấm, **thì** các cách viết tương đương được chấp nhận (giả định).
+5. **Cho trước** bài có câu từ mở rộng (US-NH-69), **khi** chấm, **thì** điểm chính chỉ tính câu về từ đã lưu; câu từ mở rộng có điểm riêng "Đoán từ mới: x/y".
 
 ### US-NH-48 — Từ làm sai được đưa vào ôn sớm
 **Là** Người học, **tôi muốn** các từ tôi làm sai được ôn lại sớm hơn, **để** củng cố đúng chỗ còn yếu.
@@ -702,6 +707,7 @@ Các story NH được chia thành nhóm chức năng A–L, đặt tiêu đề 
 2. **Cho trước** bài được sinh bằng đề dự phòng, **khi** làm bài, **thì** có ghi chú "Đề tạo tự động từ từ điển" để tôi biết.
 3. **Cho trước** đề dự phòng, **khi** chấm, **thì** quy tắc chấm và lịch ôn sớm áp dụng giống bài thường.
 4. **Cho trước** Quản trị viên đã tắt dịch vụ LLM (US-QT-13), **khi** tôi yêu cầu bài, **thì** hệ thống dùng đề dự phòng ngay, không chờ dịch vụ ngoài.
+5. **Cho trước** tôi đã hết hạn mức đề LLM trong ngày, **khi** yêu cầu bài, **thì** hệ thống dùng đề dự phòng (không tốn phí, không tính vào hạn mức) thay vì từ chối.
 
 #### Nhóm I — Gợi ý từ theo chương (cá nhân hóa)
 
@@ -713,8 +719,9 @@ Các story NH được chia thành nhóm chức năng A–L, đặt tiêu đề 
 **Tiêu chí chấp nhận (Acceptance Criteria):**
 1. **Cho trước** chương đã xử lý xong, **khi** mở "Từ nên học", **thì** thấy danh sách từ sắp xếp theo mức phù hợp dựa trên tần suất trong chương, trình độ HSK của tôi và lịch sử tra.
 2. **Cho trước** từ đã có trong sổ tay hoặc đã "Đã thuộc", **khi** lập gợi ý, **thì** từ đó không xuất hiện trong danh sách.
-3. **Cho trước** tôi chưa khai báo trình độ HSK, **khi** xem gợi ý, **thì** hiện nhắc khai báo và dùng thứ tự theo tần suất.
-4. **Cho trước** chương chưa xử lý xong hoặc không có từ phù hợp, **khi** mở, **thì** hiện thông báo tương ứng thay vì danh sách trống.
+3. **Cho trước** tôi chưa khai báo trình độ HSK, **khi** xem gợi ý, **thì** hiện nhắc khai báo và dùng thứ tự theo tần suất, từ HSK 1 bị giảm điểm.
+4. **Cho trước** từ là hư từ hoặc quá cơ bản (什么, 我们, 没有…) hoặc chỉ gồm các chữ rất phổ biến, **khi** lập gợi ý, **thì** từ đó không xuất hiện; dạng lặp AA, ABAB được gộp về A, AB khi từ gốc có trong từ điển.
+5. **Cho trước** chương chưa xử lý xong hoặc không có từ phù hợp, **khi** mở, **thì** hiện thông báo tương ứng thay vì danh sách trống.
 
 ### US-NH-52 — Nhận hoặc bỏ qua gợi ý
 **Là** Người học, **tôi muốn** nhận một gợi ý vào sổ tay hoặc bỏ qua nó, **để** danh sách gợi ý ngày càng sát nhu cầu.
@@ -822,11 +829,246 @@ Các story NH được chia thành nhóm chức năng A–L, đặt tiêu đề 
 4. **Cho trước** đang áp dụng bộ lọc, **khi** xuất, **thì** chỉ xuất các từ thỏa bộ lọc (hoặc hỏi xuất toàn bộ).
 5. **Cho trước** từ có tiếng Việt và chữ Hán, **khi** mở tệp CSV, **thì** ký tự hiển thị đúng, không bị lỗi mã hóa.
 
+#### Nhóm M — Đồng bộ với giao diện: thư viện cá nhân, đánh giá, ghi chú trang, ảnh đại diện (bổ sung 24/10/2026)
+
+Các story của nhóm này mô tả tính năng đã có trên giao diện nhưng chưa có trong tài liệu; được bổ sung để SRS khớp với sản phẩm (quy tắc `.claude/rules/dev-workflow.md` §3).
+
+### US-NH-61 — Thư viện cá nhân và đánh dấu yêu thích
+**Là** Người học, **tôi muốn** thêm truyện vào Thư viện của mình và đánh dấu yêu thích, **để** tìm lại nhanh những truyện tôi quan tâm.
+
+- **Độ ưu tiên:** Should   ·   **Nguồn:** [Đề xuất]
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tôi đang xem một truyện tôi có quyền đọc, **khi** bấm "Thêm vào Thư viện", **thì** truyện xuất hiện trong Thư viện của tôi; bấm lại "Bỏ khỏi Thư viện" thì truyện biến mất khỏi đó.
+2. **Cho trước** truyện đã nằm trong Thư viện, **khi** bật hoặc tắt "Yêu thích", **thì** trạng thái được lưu ở máy chủ và hiển thị đúng ở lần mở sau, kể cả trên thiết bị khác.
+3. **Cho trước** tôi mở trang Thư viện, **khi** chọn từng tab "Tất cả", "Đang đọc", "Yêu thích", "Đã xong", "Ảnh tải lên", **thì** danh sách chỉ gồm các truyện (hoặc ảnh tải nhanh) thỏa tab đó.
+4. **Cho trước** truyện đã có trong Thư viện, **khi** thêm lần nữa, **thì** không tạo bản ghi trùng.
+5. **Cho trước** truyện bị xóa hoặc trở thành riêng tư của người khác, **khi** mở Thư viện, **thì** truyện đó không còn hiển thị thay vì báo lỗi.
+6. **Cho trước** Thư viện của người khác, **khi** tôi cố truy cập, **thì** không thể xem hay sửa (dữ liệu chỉ thuộc chủ sở hữu, trừ Quản trị viên theo US-QT-14).
+
+### US-NH-62 — Chấm sao truyện
+**Là** Người học, **tôi muốn** chấm từ 1 đến 5 sao cho một truyện, **để** bày tỏ đánh giá và xem mức đánh giá chung của cộng đồng.
+
+- **Độ ưu tiên:** Could   ·   **Nguồn:** [Đề xuất]
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tôi chưa chấm truyện, **khi** chọn số sao từ 1 đến 5, **thì** lượt chấm được lưu và truyện hiển thị điểm trung bình cùng số lượt chấm đã cập nhật.
+2. **Cho trước** tôi đã chấm truyện, **khi** chọn lại số sao khác, **thì** lượt chấm cũ được sửa (mỗi người chỉ có một lượt cho mỗi truyện), không tạo thêm lượt mới.
+3. **Cho trước** giá trị sao ngoài khoảng 1–5, **khi** gửi, **thì** bị từ chối với thông báo giá trị không hợp lệ.
+4. **Cho trước** truyện chưa có ai chấm, **khi** xem truyện, **thì** hiển thị "Chưa có đánh giá" thay vì điểm 0.
+5. **Cho trước** truyện riêng tư của người khác, **khi** tôi cố chấm sao, **thì** bị từ chối như khi truyện không tồn tại.
+
+### US-NH-63 — Đánh dấu trang và xem danh sách trang đã lưu
+**Là** Người học, **tôi muốn** đánh dấu (lưu) một trang truyện và xem lại các trang đã lưu, **để** quay lại nhanh những trang quan trọng.
+
+- **Độ ưu tiên:** Could   ·   **Nguồn:** [Đề xuất]
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tôi đang đọc một trang, **khi** bấm nút đánh dấu, **thì** trang được lưu cho riêng tôi; bấm lần nữa thì bỏ đánh dấu.
+2. **Cho trước** tôi đã đánh dấu một số trang, **khi** mở danh sách trang đã lưu, **thì** thấy các trang đó kèm truyện, chương và số trang, bấm vào mở đúng trang.
+3. **Cho trước** tôi đánh dấu trên thiết bị A, **khi** đăng nhập thiết bị B, **thì** trang vẫn ở trạng thái đã đánh dấu.
+4. **Cho trước** trang bị xóa, **khi** mở danh sách trang đã lưu, **thì** trang đó không còn xuất hiện.
+5. **Cho trước** người học khác, **khi** họ đọc cùng trang, **thì** không thấy dấu của tôi.
+
+### US-NH-64 — Ghi chú trực tiếp trên trang
+**Là** Người học, **tôi muốn** tô màu bong bóng và vẽ nét tự do lên trang truyện, **để** ghi nhớ các chỗ cần chú ý khi đọc.
+
+- **Độ ưu tiên:** Could   ·   **Nguồn:** [Đề xuất]
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tôi đang xem một trang, **khi** chọn một màu và chạm vào bong bóng, **thì** bong bóng được tô màu đó; chạm lại để bỏ tô.
+2. **Cho trước** chế độ vẽ đang bật, **khi** kéo chuột hoặc ngón tay trên trang, **thì** một nét vẽ theo màu đang chọn được thêm vào trang.
+3. **Cho trước** tôi đã tô màu hoặc vẽ, **khi** tải lại trang hoặc đăng nhập thiết bị khác, **thì** các ghi chú vẫn còn nguyên (lưu theo tài khoản ở máy chủ, không chỉ ở trình duyệt).
+4. **Cho trước** trang có ghi chú, **khi** bấm "Xóa ghi chú của trang", **thì** toàn bộ tô màu và nét vẽ của trang bị xóa và hiển thị lại trang sạch.
+5. **Cho trước** người học khác, **khi** họ đọc cùng trang, **thì** không thấy ghi chú của tôi, và ghi chú không làm thay đổi ảnh gốc hay ảnh đã dịch dùng chung.
+
+### US-NH-65 — Tải ảnh đại diện
+**Là** Người học, **tôi muốn** tải lên ảnh đại diện, **để** hồ sơ của tôi dễ nhận biết.
+
+- **Độ ưu tiên:** Could   ·   **Nguồn:** [Đề xuất]
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tôi đang ở trang hồ sơ, **khi** chọn ảnh jpg/png/webp không quá 10 MB, **thì** ảnh được lưu và hiển thị làm ảnh đại diện ngay.
+2. **Cho trước** tệp không phải jpg/png/webp (kiểm tra nội dung thật, không chỉ đuôi tệp), **khi** tải lên, **thì** bị từ chối với thông báo định dạng không hợp lệ.
+3. **Cho trước** tệp lớn hơn 10 MB, **khi** tải lên, **thì** bị từ chối với thông báo vượt dung lượng cho phép.
+4. **Cho trước** tôi đã có ảnh đại diện, **khi** tải ảnh mới, **thì** ảnh mới thay thế ảnh cũ.
+5. **Cho trước** tôi chưa tải ảnh, **khi** xem hồ sơ, **thì** hiển thị ảnh mặc định (chữ cái đầu của tên hiển thị).
+6. **Cho trước** tôi đang ở trang hồ sơ, **khi** chọn một trong các ảnh đại diện có sẵn của hệ thống thay vì tải ảnh lên, **thì** ảnh đó được dùng làm ảnh đại diện ngay và thay thế ảnh đã tải lên trước đó (nếu có); chọn lại ảnh khác hoặc tải ảnh mới thì thay thế lần chọn trước (giai đoạn 6).
+7. **Cho trước** tôi đang có ảnh đại diện, **khi** bấm gỡ ảnh, **thì** ảnh bị gỡ và hồ sơ quay về ảnh mặc định (chữ cái đầu tên hiển thị) (bổ sung GĐ5).
+
+#### Nhóm N — Đồng bộ với giao diện Sổ tay và Flashcard: đánh dấu sao, bộ thẻ theo truyện, âm Hán Việt (bổ sung 24/10/2026)
+
+Các story của nhóm này mô tả tính năng đã có trên giao diện Sổ tay và Flashcard (giai đoạn 4) nhưng tài liệu chưa nêu rõ; được bổ sung theo `.claude/rules/dev-workflow.md` §3.
+
+### US-NH-66 — Đánh dấu sao từ trong sổ tay
+**Là** Người học, **tôi muốn** đánh dấu sao những từ quan trọng trong Sổ tay cá nhân và lọc riêng các từ đó, **để** tìm lại và ôn nhanh nhóm từ tôi ưu tiên.
+
+- **Độ ưu tiên:** Could   ·   **Nguồn:** [Đề xuất]
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** một từ trong sổ tay chưa có sao, **khi** bấm biểu tượng sao, **thì** từ được đánh dấu sao ngay; bấm lần nữa thì bỏ dấu sao.
+2. **Cho trước** tôi đã đánh dấu sao, **khi** tải lại trang hoặc đăng nhập trên thiết bị khác, **thì** dấu sao vẫn còn (lưu ở máy chủ, theo tài khoản).
+3. **Cho trước** sổ tay có từ được đánh dấu sao, **khi** chọn bộ lọc "Từ đánh dấu sao", **thì** chỉ hiển thị các từ có sao và hiện số lượng; có thể kết hợp với bộ lọc HSK và trạng thái (US-NH-37).
+4. **Cho trước** chưa có từ nào được đánh dấu sao, **khi** chọn bộ lọc "Từ đánh dấu sao", **thì** hiện "Chưa có từ nào được đánh dấu sao" thay vì bảng rỗng.
+5. **Cho trước** từ của người khác, **khi** tôi cố đánh dấu sao, **thì** bị từ chối như khi từ không tồn tại (trừ Quản trị viên, xem US-QT-14).
+6. **Cho trước** đánh dấu hoặc bỏ dấu sao, **khi** hoàn tất, **thì** lịch ôn, trạng thái học và ghi chú của từ không bị thay đổi.
+
+### US-NH-67 — Chọn bộ thẻ để ôn theo truyện hoặc từ đánh dấu sao
+**Là** Người học, **tôi muốn** chọn bộ thẻ để ôn theo từng truyện hoặc theo nhóm từ đánh dấu sao, **để** ôn đúng những từ gắn với truyện đang đọc hoặc nhóm từ tôi quan tâm.
+
+- **Độ ưu tiên:** Should   ·   **Nguồn:** [Đề xuất]
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tôi mở màn hình Flashcard, **khi** xem danh sách bộ thẻ, **thì** thấy bộ "Tất cả", mỗi truyện có từ đã lưu (một bộ cho mỗi truyện) và bộ "Từ đánh dấu sao", kèm số từ và số từ đã ôn của từng bộ.
+2. **Cho trước** tôi chọn bộ của một truyện, **khi** bắt đầu ôn, **thì** chỉ gồm thẻ của các từ có ít nhất một ngữ cảnh lấy từ truyện đó (từ liên kết qua ngữ cảnh → trang → chương → truyện).
+3. **Cho trước** tôi chọn bộ "Từ đánh dấu sao", **khi** bắt đầu ôn, **thì** chỉ gồm thẻ của các từ đang được đánh dấu sao (US-NH-66).
+4. **Cho trước** một từ có ngữ cảnh ở nhiều truyện, **khi** xem danh sách bộ thẻ, **thì** từ đó được tính vào từng truyện liên quan.
+5. **Cho trước** đã chọn một bộ, **khi** lập phiên ôn, **thì** vẫn chỉ đưa vào thẻ đến hạn và vẫn loại thẻ của từ "Đã thuộc" hoặc "Bỏ qua" (US-NH-38); chấm thẻ vẫn cập nhật lịch FSRS như bình thường (US-NH-39).
+6. **Cho trước** truyện đã bị xóa hoặc trang nguồn không còn, **khi** xem danh sách bộ thẻ, **thì** bộ của truyện đó không còn hiển thị thay vì báo lỗi; từ vẫn nằm trong bộ "Tất cả".
+7. **Cho trước** dữ liệu của người khác, **khi** tôi xem danh sách bộ thẻ, **thì** chỉ thấy bộ và số liệu thuộc về tôi.
+
+### US-NH-68 — Xem âm Hán Việt trên mục từ và thẻ
+**Là** Người học, **tôi muốn** thấy âm Hán Việt của từ ngay trên chi tiết mục từ trong sổ tay và ở mặt sau thẻ ôn, **để** liên hệ với vốn từ Hán Việt đã biết và nhớ từ dễ hơn.
+
+- **Độ ưu tiên:** Could   ·   **Nguồn:** [Đề xuất]
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** từ có âm Hán Việt trong dữ liệu từ điển, **khi** lật thẻ, **thì** mặt sau hiển thị âm Hán Việt cùng chữ Hán, pinyin và nghĩa.
+2. **Cho trước** từ có âm Hán Việt trong dữ liệu từ điển, **khi** mở chi tiết mục từ trong sổ tay, **thì** thấy âm Hán Việt.
+3. **Cho trước** từ không có dữ liệu âm Hán Việt, **khi** hiển thị thẻ hoặc chi tiết mục từ, **thì** ẩn phần này, không để trống hay hiện "null".
+4. **Cho trước** từ gồm nhiều chữ, **khi** hiển thị, **thì** âm Hán Việt của từng chữ được ghép theo đúng thứ tự chữ trong từ.
+5. **Cho trước** âm Hán Việt chỉ hiển thị, **khi** thẻ được chấm hoặc mục từ được sửa, **thì** dữ liệu từ điển không bị thay đổi.
+
+### US-NH-69 — Câu hỏi từ mở rộng trong bài kiểm tra
+**Là** Người học, **tôi muốn** bài kiểm tra có một ít từ mới liên quan tới từ tôi đã lưu, **để** tập đoán nghĩa chữ và mở rộng vốn từ mà không bị ngợp.
+
+- **Độ ưu tiên:** Could   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** H (Kiểm tra cá nhân hóa, bổ sung)
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tôi yêu cầu bài kiểm tra và tìm được từ mở rộng phù hợp, **khi** tạo bài, **thì** khoảng 15% số câu (làm tròn; đề 10 câu có 2 câu) là từ không có trong sổ tay; không tìm được ứng viên phù hợp thì phần thiếu được bù bằng từ đã lưu.
+2. **Cho trước** cần chọn từ mở rộng, **khi** xếp ứng viên, **thì** ưu tiên theo thứ tự: có chung chữ Hán với từ đã lưu (ưu tiên nhất); đã gặp trong chương đã đọc hoặc đã tra mà chưa lưu; chung thành phần hoặc bộ thủ; cùng cấp HSK và phổ biến.
+3. **Cho trước** trình độ HSK của tôi, **khi** chọn từ mở rộng, **thì** cấp HSK của từ không vượt quá trình độ + 1; không lấy từ đã có trong sổ tay hoặc đã bỏ qua ở gợi ý (US-NH-52).
+4. **Cho trước** một câu từ mở rộng, **khi** làm bài, **thì** chỉ là trắc nghiệm, kèm gợi ý nối với từ đã biết (ví dụ "chữ 友 giống trong 朋友 của bạn") hoặc âm Hán Việt.
+5. **Cho trước** bài có câu từ mở rộng, **khi** chấm, **thì** điểm từ mở rộng tính riêng ("Đoán từ mới: x/y"), không vào điểm chính (US-NH-47) và không ảnh hưởng lịch ôn FSRS (US-NH-48).
+6. **Cho trước** tôi đã nộp bài, **khi** xem kết quả, **thì** mỗi từ mở rộng có nút "Lưu vào Sổ tay"; bấm thì lưu như US-NH-31 với nguồn `quiz`, và không tạo bản trùng nếu từ đã có (US-NH-32).
+
+#### Nhóm O — Đồng bộ với giao diện: câu thoại đã lưu, lưu cả trang, gợi ý truyện, độ phủ từ vựng, cỡ chữ, Flashcard AI, ghi nhớ đăng nhập, trang mẫu (bổ sung 25/10/2026)
+
+Các story của nhóm này mô tả tính năng đã có trên giao diện nhưng chưa có trong tài liệu; được bổ sung theo `.claude/rules/dev-workflow.md` §3. US-NH-70 … 75 thuộc giai đoạn 5; US-NH-76 và US-NH-77 thuộc giai đoạn 6.
+
+### US-NH-70 — Lưu câu thoại
+**Là** Người học, **tôi muốn** lưu nguyên một câu thoại khi đọc truyện và xem lại, nghe lại trong Hồ sơ, **để** ôn các câu hay hoặc khó mà không chỉ lưu từng từ.
+
+- **Độ ưu tiên:** Could   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** O
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tôi đang đọc một trang đã xử lý, **khi** bấm "Lưu câu" trên một bong bóng, **thì** câu tiếng Trung, bản dịch và nguồn (truyện · chương · trang) được lưu vào danh sách "Câu thoại đã lưu" ở Hồ sơ.
+2. **Cho trước** tôi đã lưu bong bóng đó, **khi** bấm lưu lần nữa, **thì** hệ thống báo "Câu này đã được lưu" và không tạo bản trùng (một bong bóng chỉ lưu một lần mỗi người).
+3. **Cho trước** danh sách "Câu thoại đã lưu", **khi** bấm nghe, **thì** câu được phát bằng giọng và tốc độ tôi đã chọn (US-NH-53); **khi** bấm "Mở trang gốc", **thì** mở đúng trang chứa câu đó.
+4. **Cho trước** một câu đã lưu, **khi** thêm hoặc sửa ghi chú (tối đa 1000 ký tự), **thì** ghi chú được lưu; vượt giới hạn thì bị từ chối với thông báo.
+5. **Cho trước** một câu đã lưu, **khi** bấm "Bỏ lưu" và xác nhận, **thì** câu biến khỏi danh sách; sổ tay từ, thẻ ôn và trang đang đọc không bị ảnh hưởng.
+6. **Cho trước** trang hoặc bong bóng gốc đã bị xóa, **khi** xem danh sách, **thì** câu và bản dịch vẫn còn (vì lưu bản sao văn bản), nút "Mở trang gốc" được ẩn; bong bóng đã xóa thì câu không có pinyin (pinyin dựng từ dữ liệu tách từ của bong bóng gốc, không lưu trong bảng).
+7. **Cho trước** tôi không còn quyền đọc trang gốc, **khi** xem danh sách, **thì** câu vẫn còn nhưng không có liên kết mở trang gốc.
+8. **Cho trước** tôi đã sửa bản dịch của bong bóng (US-NH-24), **khi** xem câu đã lưu, **thì** hiện bản sửa cá nhân thay cho bản dịch tự động.
+9. **Cho trước** câu của người khác, **khi** tôi cố xem hoặc sửa, **thì** bị từ chối như không tồn tại (trừ Quản trị viên, xem US-QT-14).
+
+### US-NH-71 — Lưu tất cả từ của trang
+**Là** Người học, **tôi muốn** lưu một lần mọi từ chưa có trong sổ tay của trang đang đọc, **để** khỏi lưu từng từ khi trang có nhiều từ mới.
+
+- **Độ ưu tiên:** Could   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** O
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** trang đã xử lý có từ chưa có trong sổ tay, **khi** bấm "Lưu tất cả từ của trang", **thì** mỗi từ được lưu như US-NH-31 (cấp HSK, ngữ cảnh, flashcard) với ngữ cảnh là bong bóng đầu tiên chứa từ đó.
+2. **Cho trước** có từ đã nằm trong sổ tay, **khi** lưu cả trang, **thì** từ đó được bỏ qua, không tạo bản trùng (US-NH-32) và được tính vào số "đã có".
+3. **Cho trước** trang có hơn 50 từ chưa lưu, **khi** bấm lưu cả trang, **thì** chỉ lưu tối đa 50 từ mỗi lần và thông báo số từ còn lại để bấm lưu tiếp.
+4. **Cho trước** thao tác lưu cả trang hoàn tất, **khi** hiển thị kết quả, **thì** nêu rõ số từ đã lưu, số từ đã có và số từ lỗi.
+5. **Cho trước** lỗi xảy ra ở một từ, **khi** lưu cả trang, **thì** các từ còn lại vẫn được lưu và từ lỗi được đếm riêng.
+6. **Cho trước** trang chưa xử lý xong hoặc không có từ cần lưu, **khi** bấm lưu cả trang, **thì** hiện thông báo "Trang chưa có từ để lưu" và không thay đổi sổ tay.
+7. **Cho trước** trang có từ một chữ rất phổ biến (是, 吗, 的, 了…), **khi** lưu cả trang, **thì** các từ đó bị bỏ qua và kết quả báo lại danh sách đã bỏ qua; từ hai chữ trở lên như 什么, 看看 vẫn được lưu, tôi tự đánh dấu "Bỏ qua" nếu không cần.
+8. **Cho trước** từ lưu từ trang, **khi** xem mục từ, **thì** nguồn là "đọc truyện" và từ đã có trong sổ tay không bị thêm ngữ cảnh mới.
+
+### US-NH-72 — Gợi ý truyện theo trình độ
+**Là** Người học, **tôi muốn** được gợi ý vài truyện hợp trình độ ngay ở Hồ sơ, **để** biết nên đọc truyện nào tiếp theo.
+
+- **Độ ưu tiên:** Could   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** O
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tôi đã khai báo trình độ HSK, **khi** mở Hồ sơ, **thì** thấy 1 đến 3 truyện công khai có cấp HSK ước tính bằng trình độ của tôi hoặc cao hơn 1 cấp.
+2. **Cho trước** có nhiều truyện phù hợp, **khi** xếp gợi ý, **thì** ưu tiên truyện chưa có trong Thư viện cá nhân và chưa đọc xong, rồi theo điểm đánh giá từ cao xuống thấp.
+3. **Cho trước** tôi chưa khai báo trình độ, **khi** mở Hồ sơ, **thì** hiện lời nhắc khai báo trình độ (US-NH-06) và gợi ý các truyện phổ biến (nhiều người thêm vào Thư viện) có cấp HSK 1–3, tối đa 3 truyện.
+4. **Cho trước** không có truyện nào phù hợp, **khi** mở Hồ sơ, **thì** hiện "Chưa có truyện phù hợp trình độ của bạn" thay vì khung trống.
+5. **Cho trước** tôi đổi trình độ HSK, **khi** mở lại Hồ sơ, **thì** danh sách gợi ý đổi theo trình độ mới.
+6. **Cho trước** truyện riêng tư của người khác, **khi** gợi ý, **thì** không bao giờ xuất hiện trong danh sách.
+
+### US-NH-73 — Độ phủ từ vựng của chương
+**Là** Người học, **tôi muốn** biết trong một chương mình đã nắm bao nhiêu từ vựng đúng trình độ, **để** chọn chương vừa sức và thấy tiến bộ.
+
+- **Độ ưu tiên:** Could   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** O
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tôi đã khai báo trình độ HSK n, **khi** xem một chương ở Hồ sơ (tab "Đang đọc") hoặc trong trình đọc, **thì** thấy "đã nắm X/Y từ HSK n" và phần trăm, trong đó Y là số từ khác nhau trong chương có cấp HSK từ 1 đến n và X là số từ trong đó đã có trong sổ tay của tôi.
+2. **Cho trước** tôi lưu thêm một từ của chương vào sổ tay, **khi** xem lại chương, **thì** X tăng tương ứng.
+3. **Cho trước** chương còn trang chưa xử lý xong, **khi** xem độ phủ, **thì** kết quả được ghi là tạm tính, chỉ dựa trên các trang đã xong.
+4. **Cho trước** tôi chưa khai báo trình độ, **khi** xem độ phủ, **thì** hiện lời nhắc khai báo trình độ thay vì số liệu.
+5. **Cho trước** chương không có trang đã xử lý xong hoặc không có từ ở cấp phù hợp, **khi** xem độ phủ, **thì** hiện thông báo tương ứng thay vì "0/0" (trạng thái `empty`; tạm tính là `processing`, đủ là `ready`).
+
+### US-NH-74 — Chỉnh cỡ chữ bong bóng dịch
+**Là** Người học, **tôi muốn** phóng to hoặc thu nhỏ chữ dịch trên trang, **để** đọc thoải mái trên màn hình của mình.
+
+- **Độ ưu tiên:** Could   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** O
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tôi đang đọc, **khi** chỉnh cỡ chữ lớp dịch trong khoảng 80% đến 160% theo bước 10%, **thì** chữ dịch trên trang đổi ngay theo tỉ lệ đã chọn.
+2. **Cho trước** tôi đã chỉnh cỡ chữ, **khi** tải lại trang hoặc đăng nhập trên thiết bị khác, **thì** cỡ chữ vẫn được áp dụng (lưu theo tài khoản).
+3. **Cho trước** tôi chưa chỉnh, **khi** mở trang, **thì** dùng cỡ 100%.
+4. **Cho trước** giá trị ngoài khoảng 80%–160% hoặc không đúng bước, **khi** lưu, **thì** bị từ chối với thông báo giá trị không hợp lệ và giá trị cũ giữ nguyên.
+5. **Cho trước** chữ dịch được phóng to, **khi** hiển thị, **thì** chữ không tràn ra ngoài khung bong bóng.
+
+### US-NH-75 — Flashcard AI
+**Là** Người học, **tôi muốn** xem thêm ví dụ mới, mẹo nhớ theo chiết tự và các cụm từ thường đi kèm cho từ đang ôn, **để** nhớ từ sâu hơn ngoài ngữ cảnh gốc.
+
+- **Độ ưu tiên:** Could   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** O
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** một từ trong sổ tay, **khi** mở "Thẻ mở rộng AI" ở mặt sau thẻ hoặc chi tiết mục từ, **thì** thấy 2 câu ví dụ mới có bản dịch dùng đúng từ đó với cấp HSK không vượt quá trình độ + 1, một mẹo nhớ theo chiết tự và 2 đến 3 cụm từ thường đi kèm.
+2. **Cho trước** mẹo nhớ theo chiết tự, **khi** hiển thị, **thì** chỉ dựa trên dữ liệu phân rã chữ Hán của hệ thống (US-NH-30), không có thành phần chữ nào bịa ra.
+3. **Cho trước** nội dung đã được tạo cho từ đó, **khi** mở lại, **thì** hiển thị ngay từ bộ nhớ đệm, không gọi dịch vụ LLM lại.
+4. **Cho trước** tôi bấm "Tạo lại", **khi** chưa vượt giới hạn số lần tạo lại của từ đó, **thì** nội dung mới thay nội dung cũ; vượt giới hạn thì hiện thông báo đã hết lượt tạo lại và giữ nội dung cũ.
+5. **Cho trước** dịch vụ LLM bị tắt, lỗi, quá thời gian hoặc tôi đã hết hạn mức trong ngày, **khi** mở thẻ mở rộng, **thì** hệ thống dùng câu ví dụ từ từ điển và chiết tự từ dữ liệu của hệ thống, không hiện lỗi kỹ thuật.
+6. **Cho trước** kết quả của LLM không đúng lược đồ hoặc câu không chứa từ cần học, **khi** kiểm tra, **thì** kết quả bị loại và dùng nội dung dự phòng như tiêu chí 5.
+7. **Cho trước** yêu cầu gửi tới LLM, **khi** gửi, **thì** chỉ gồm từ, pinyin, nghĩa ngắn, cấp HSK của từ, trình độ HSK của tôi (một con số) và dữ liệu phân rã chữ Hán công khai của từ điển (bộ thủ, thành phần, âm Hán Việt); không có email, tên, mã người dùng, ngữ cảnh hay ghi chú riêng.
+9. **Cho trước** tôi mở chi tiết một mục từ, **khi** chưa bấm xem nội dung AI, **thì** hệ thống chưa tạo nội dung (tiết kiệm lượt); ở mặt sau thẻ ôn, nội dung được tạo khi tôi lật thẻ lần đầu.
+8. **Cho trước** giao diện có mục quảng cáo "3 ngày mở khóa VIP & Flashcard AI", **khi** dùng Flashcard AI ở giai đoạn 5, **thì** mọi Người học dùng được trong hạn mức mỗi ngày; việc giới hạn theo VIP sẽ làm ở giai đoạn 6.5.
+
+### US-NH-76 — Ghi nhớ đăng nhập
+**Là** Người học, **tôi muốn** chọn có ghi nhớ đăng nhập hay không, **để** vừa tiện trên thiết bị của mình vừa an toàn khi dùng máy chung.
+
+- **Độ ưu tiên:** Could   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** O (giai đoạn 6)
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** form đăng nhập, **khi** tôi chọn "Ghi nhớ đăng nhập" (mặc định chọn), **thì** phiên được giữ như hiện tại với mã làm mới có hạn 30 ngày (US-NH-01) và lưu bền trên trình duyệt.
+2. **Cho trước** tôi bỏ chọn "Ghi nhớ đăng nhập", **khi** đăng nhập thành công, **thì** mã phiên chỉ lưu theo phiên làm việc của trình duyệt và mã làm mới có thời hạn ngắn hơn.
+3. **Cho trước** tôi đăng nhập không ghi nhớ, **khi** đóng hẳn trình duyệt rồi mở lại, **thì** tôi phải đăng nhập lại.
+4. **Cho trước** phiên không ghi nhớ đang dùng, **khi** phiên được làm mới, **thì** phiên mới vẫn ở chế độ không ghi nhớ.
+5. **Cho trước** tôi đăng xuất (US-NH-02 hoặc US-NH-03), **khi** xác nhận, **thì** phiên bị thu hồi ở cả hai chế độ.
+
+### US-NH-77 — Thử với trang mẫu
+**Là** Người học, **tôi muốn** xem thử kết quả xử lý của một trang mẫu trước khi tải ảnh của mình, **để** hiểu tính năng nhận diện và dịch mà không phải chờ.
+
+- **Độ ưu tiên:** Could   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** O (giai đoạn 6)
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tôi ở màn hình tải ảnh, **khi** chọn "Thử với trang mẫu", **thì** thấy ngay một trang mẫu đã xử lý thật, chuyển qua lại được giữa ảnh gốc và bản dịch.
+2. **Cho trước** trang mẫu đang mở, **khi** Hover hoặc chạm vào vùng chữ, **thì** hiện Hover & Dịch như trang thật (US-NH-22, US-NH-23).
+3. **Cho trước** tôi xem trang mẫu, **khi** hoàn tất, **thì** không có công việc xử lý nào được tạo và dung lượng hay ảnh tải nhanh của tôi không bị tính.
+4. **Cho trước** trang mẫu đang mở, **khi** bấm "Tải ảnh của bạn", **thì** quay lại màn hình tải ảnh (US-NH-12, US-NH-13).
+5. **Cho trước** hệ thống chưa có trang mẫu, **khi** mở màn hình tải ảnh, **thì** lựa chọn "Thử với trang mẫu" được ẩn, không báo lỗi.
+
 ---
 
 ## 5. Quản trị viên
 
-**Kế thừa.** Quản trị viên kế thừa toàn bộ hành vi của Người học (US-NH-01 … US-NH-60): có thể đăng nhập, đọc, tra cứu, lưu từ, ôn tập, làm kiểm tra như Người học và được áp dụng cùng tiêu chí chấp nhận, nên không viết lại ở đây. Các story dưới đây chỉ mô tả quyền bổ sung. Riêng quy tắc sở hữu (US-NH-15) được mở rộng: Quản trị viên được sửa/xóa bất kỳ truyện nào (US-QT-05).
+**Kế thừa.** Quản trị viên kế thừa toàn bộ hành vi của Người học (US-NH-01 … US-NH-77): có thể đăng nhập, đọc, tra cứu, lưu từ, ôn tập, làm kiểm tra như Người học và được áp dụng cùng tiêu chí chấp nhận, nên không viết lại ở đây. Các story dưới đây chỉ mô tả quyền bổ sung. Riêng quy tắc sở hữu (US-NH-15) được mở rộng: Quản trị viên được sửa/xóa bất kỳ truyện nào (US-QT-05).
 
 ### US-QT-01 — Xem và tìm người dùng
 **Là** Quản trị viên, **tôi muốn** xem và tìm danh sách người dùng, **để** quản lý tài khoản trong hệ thống.
@@ -961,8 +1203,8 @@ Các story NH được chia thành nhóm chức năng A–L, đặt tiêu đề 
 3. **Cho trước** ảnh đã bị gỡ, **khi** Người học có từ lưu từ ảnh đó, **thì** từ và flashcard vẫn còn nhưng ngữ cảnh ảnh được ẩn.
 4. **Cho trước** thao tác gỡ, **khi** thực hiện, **thì** được ghi nhận người thực hiện, thời điểm, lý do.
 
-### US-QT-13 — Cấu hình dịch vụ LLM và TTS
-**Là** Quản trị viên, **tôi muốn** bật/tắt dịch vụ LLM và TTS và giới hạn số đề mỗi ngày, **để** kiểm soát chi phí và độ ổn định.
+### US-QT-13 — Cấu hình dịch vụ LLM, TTS và công tắc hệ thống
+**Là** Quản trị viên, **tôi muốn** bật/tắt dịch vụ LLM và TTS, giới hạn số đề mỗi ngày và điều chỉnh các công tắc vận hành (bảo trì, kiểm duyệt ảnh tự động, OCR khi tải, thông báo quản trị), **để** kiểm soát chi phí và độ ổn định.
 
 - **Độ ưu tiên:** Could   ·   **Nguồn:** [Đề xuất]
 
@@ -971,6 +1213,53 @@ Các story NH được chia thành nhóm chức năng A–L, đặt tiêu đề 
 2. **Cho trước** tôi đặt giới hạn N đề mỗi ngày cho mỗi Người học, **khi** một người yêu cầu đề thứ N+1 trong ngày, **thì** bị từ chối với thông báo đã hết lượt hôm nay và thời điểm được tạo lại.
 3. **Cho trước** tôi tắt TTS, **khi** Người học bấm nghe, **thì** hiện thông báo tính năng đang tạm tắt, các chức năng khác không bị ảnh hưởng.
 4. **Cho trước** giá trị giới hạn không hợp lệ (âm hoặc không phải số), **khi** lưu, **thì** bị từ chối với thông báo cụ thể.
+5. **Cho trước** tôi bật chế độ bảo trì (giai đoạn 6), **khi** Khách hoặc Người học truy cập, **thì** họ thấy thông báo hệ thống đang bảo trì; tôi vẫn đăng nhập và tắt lại chế độ này được.
+6. **Cho trước** tôi tắt kiểm duyệt ảnh tự động, **khi** Người học tải ảnh lên, **thì** ảnh không qua bước kiểm tra sơ bộ bằng luật mà chỉ kiểm duyệt thủ công (US-QT-12); bật lại thì ảnh nghi vấn (sai kích thước, ảnh trùng) được đưa vào danh sách chờ kiểm duyệt.
+7. **Cho trước** tôi tắt xử lý OCR ngay khi tải, **khi** Người học tải ảnh lên, **thì** trang được lưu ở trạng thái "Đang chờ" và chỉ được xử lý khi Người học yêu cầu (US-NH-21) hoặc tôi chạy lại (US-QT-07).
+8. **Cho trước** tôi tắt thông báo quản trị, **khi** có báo lỗi mới hoặc lỗi xử lý ảnh, **thì** hệ thống không gửi thông báo cho Quản trị viên nhưng dữ liệu vẫn xem được ở màn hình quản trị.
+9. **Cho trước** tôi đặt hạn mức Thẻ mở rộng AI mỗi ngày (US-NH-75), **khi** một Người học đã dùng hết hạn mức, **thì** các lần mở thẻ tiếp theo trong ngày dùng nội dung dự phòng thay vì bị từ chối.
+10. **Cho trước** tôi đổi bất kỳ công tắc nào ở trên, **khi** lưu, **thì** thay đổi có hiệu lực ngay và được ghi nhật ký quản trị.
+
+### US-QT-14 — Xem và quản lý dữ liệu học tập của người dùng
+**Là** Quản trị viên, **tôi muốn** xem và chỉnh sửa dữ liệu học tập của bất kỳ người dùng nào (sổ tay, ngữ cảnh, thẻ ôn, cài đặt, thư viện, tiến độ đọc, truyện riêng tư), **để** hỗ trợ người học khi gặp sự cố, sửa dữ liệu sai và xử lý nội dung vi phạm.
+
+- **Độ ưu tiên:** Could   ·   **Nguồn:** [Đề xuất]
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tôi chọn một người dùng, **khi** mở trang quản lý dữ liệu của người đó, **thì** thấy tổng quan gồm số từ trong sổ tay, số thẻ (đến hạn, tạm ngưng), số lượt ôn, số truyện đã thêm và tiến độ đọc, nhưng không thấy mật khẩu (kể cả bản băm) hay token.
+2. **Cho trước** sổ tay của người đó, **khi** tôi sửa một mục từ (trạng thái học, ghi chú, dấu sao) hoặc xóa một mục từ hay một ngữ cảnh, **thì** thay đổi được lưu, người học thấy kết quả ở lần mở sau, và thao tác được ghi nhật ký quản trị kèm người thực hiện, thời điểm, đối tượng.
+3. **Cho trước** thẻ của người đó, **khi** tôi tạm ngưng, tiếp tục hoặc đặt lại thẻ, **thì** trạng thái và lịch ôn đổi tương ứng, lịch sử ôn vẫn xem được, và thao tác được ghi nhật ký quản trị.
+4. **Cho trước** cài đặt cá nhân của người đó, **khi** tôi xem hoặc sửa (trình độ HSK, chế độ đọc, giọng đọc, nhắc ôn), **thì** giá trị hợp lệ được lưu và thao tác được ghi nhật ký; giá trị không hợp lệ bị từ chối với thông báo cụ thể.
+5. **Cho trước** thư viện, tiến độ đọc và ảnh tải nhanh của người đó, **khi** tôi mở, **thì** xem được danh sách; truyện riêng tư của người đó sửa hoặc xóa được theo US-QT-05.
+6. **Cho trước** người dùng không tồn tại, **khi** tôi mở dữ liệu của họ, **thì** hệ thống báo không tìm thấy người dùng và không thay đổi gì.
+7. **Cho trước** tôi là Người học, **khi** cố mở dữ liệu của người dùng khác qua đường dẫn quản trị, **thì** bị từ chối; khi truy cập mục từ, thẻ của người khác qua chức năng thường, **thì** vẫn bị từ chối như không tồn tại.
+8. **Cho trước** người dùng có câu thoại đã lưu (US-NH-70), **khi** tôi mở dữ liệu của họ, **thì** xem được danh sách và xóa được từng câu sau khi xác nhận, thao tác xóa được ghi nhật ký quản trị.
+
+### US-QT-15 — Trang nội dung pháp lý
+**Là** Quản trị viên, **tôi muốn** soạn và sửa Điều khoản dịch vụ và Chính sách bảo mật hiển thị công khai, **để** người dùng biết quy định trước khi đăng ký và hệ thống có căn cứ pháp lý rõ ràng.
+
+- **Độ ưu tiên:** Could   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** giai đoạn 6.6
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tôi đang ở màn hình quản trị, **khi** soạn hoặc sửa nội dung một văn bản pháp lý và lưu, **thì** nội dung mới hiển thị công khai kèm số phiên bản (tăng thêm 1) và ngày hiệu lực tôi đã nhập.
+2. **Cho trước** là Khách hoặc Người học, **khi** mở trang Điều khoản dịch vụ hoặc Chính sách bảo mật, **thì** xem được nội dung hiện hành mà không cần đăng nhập, có ghi phiên bản và ngày hiệu lực.
+3. **Cho trước** form đăng ký, **khi** hiển thị, **thì** có liên kết tới hai trang này, mở được trước khi đăng ký.
+4. **Cho trước** nội dung rỗng hoặc ngày hiệu lực không hợp lệ, **khi** lưu, **thì** bị từ chối với thông báo cụ thể và nội dung cũ giữ nguyên.
+5. **Cho trước** văn bản có ký tự HTML hoặc script, **khi** hiển thị công khai, **thì** được hiển thị như văn bản thường, không được thực thi.
+6. **Cho trước** tôi là Người học, **khi** cố sửa nội dung pháp lý, **thì** bị từ chối vì không có quyền; thao tác sửa của Quản trị viên được ghi nhật ký quản trị.
+
+### US-QT-16 — Xuất báo cáo vi phạm
+**Là** Quản trị viên, **tôi muốn** xuất danh sách nội dung bị báo cáo hoặc bị gỡ trong một khoảng thời gian ra CSV, **để** lưu hồ sơ và báo cáo định kỳ.
+
+- **Độ ưu tiên:** Could   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** giai đoạn 6.6
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tôi chọn khoảng thời gian hợp lệ, **khi** bấm "Xuất báo cáo", **thì** nhận tệp CSV gồm các báo lỗi và quyết định gỡ ảnh trong khoảng đó, mỗi dòng có loại, thời điểm, trang hoặc ảnh liên quan, lý do, trạng thái xử lý và mã người thực hiện.
+2. **Cho trước** tệp CSV, **khi** mở bằng bảng tính, **thì** chữ Hán và tiếng Việt hiển thị đúng, và ô bắt đầu bằng =, +, -, @ không bị chạy như công thức.
+3. **Cho trước** tệp CSV, **khi** xuất, **thì** không có email, tên hiển thị, mật khẩu hay token của người dùng.
+4. **Cho trước** ngày bắt đầu sau ngày kết thúc hoặc khoảng vượt 366 ngày, **khi** xuất, **thì** bị từ chối với thông báo cụ thể.
+5. **Cho trước** không có dữ liệu trong khoảng đã chọn, **khi** xuất, **thì** hiện thông báo "Không có nội dung trong khoảng thời gian này" và tệp chỉ có dòng tiêu đề.
+6. **Cho trước** tôi là Người học, **khi** cố xuất báo cáo, **thì** bị từ chối vì không có quyền; thao tác xuất được ghi nhật ký quản trị.
 
 ---
 
@@ -1209,9 +1498,12 @@ Các story NH được chia thành nhóm chức năng A–L, đặt tiêu đề 
 | Hover & Dịch | US-KH-05; US-NH-22, 23, 24, 25; US-XL-04, 05 |
 | Tra cứu đa chiều | US-NH-26, 27, 28, 29; US-QT-09; US-XL-04 |
 | Phân rã chữ Hán | US-NH-30 |
-| Sổ tay | US-NH-31, 32, 33, 34, 35, 36, 37, 51, 52, 60; US-QT-10; US-XL-09 |
-| Flashcard & SRS | US-NH-38, 39, 40, 41, 42, 43, 44, 48; US-HG-02, 03; US-NH-45 … 50 (kiểm tra); US-LLM-01 … 03 |
+| Sổ tay | US-NH-31, 32, 33, 34, 35, 36, 37, 51, 52, 60, 66, 68, 70, 71; US-QT-10, 14; US-XL-09 |
+| Flashcard & SRS | US-NH-38, 39, 40, 41, 42, 43, 44, 48, 67, 68, 75; US-HG-02, 03; US-NH-45 … 50, 69 (kiểm tra); US-LLM-01 … 03; US-QT-14 |
 | TTS | US-NH-08, 53, 54, 55; US-TTS-01 … 03; US-QT-13 |
-| Cá nhân hóa | US-NH-06, 07, 08, 45 … 52, 59; US-HG-03, 04 |
-| UI/UX | US-KH-01; US-NH-07, 16, 19, 22, 23, 56, 57; US-QT-08 |
-| Quản lý tài khoản và thư viện (hỗ trợ) | US-KH-02, 03, 06; US-NH-01 … 05, 09 … 16; US-QT-01 … 05 |
+| Cá nhân hóa | US-NH-06, 07, 08, 45 … 52, 59, 69, 72, 73, 75; US-HG-03, 04 |
+| UI/UX | US-KH-01; US-NH-07, 16, 19, 22, 23, 56, 57, 61 … 65, 74, 77; US-QT-08 |
+| Quản lý tài khoản và thư viện (hỗ trợ) | US-KH-02, 03, 06; US-NH-01 … 05, 09 … 16, 61, 62, 65, 76; US-QT-01 … 05, 13, 14, 15, 16 |
+| Trải nghiệm đọc cá nhân (bổ sung, đề xuất) | US-NH-61 … 65 |
+| Sổ tay và Flashcard (bổ sung, đề xuất) | US-NH-66 … 69 |
+| Đồng bộ giao diện giai đoạn 5 và 6 (bổ sung 25/10/2026, đề xuất) | US-NH-70 … 77; US-QT-15, 16 |

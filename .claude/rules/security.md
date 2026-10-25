@@ -14,7 +14,10 @@
 ## Phân quyền
 - Kiểm tra quyền ở **application** (use case nhận `current_user`), không chỉ ở router.
 - Vai trò: `user`, `admin`. Admin kế thừa quyền user. Admin không tự hạ quyền / tự khóa mình.
-- Dữ liệu cá nhân (sổ tay, thẻ, bài kiểm tra, cài đặt) chỉ chủ sở hữu truy cập. Truy cập tài nguyên người khác → `404`.
+- Dữ liệu cá nhân (sổ tay, thẻ, bài kiểm tra, cài đặt) chỉ chủ sở hữu truy cập. Người dùng thường truy cập tài nguyên người khác → `404`.
+- **Quản trị viên xem và sửa được toàn bộ dữ liệu** của mọi người dùng (sổ tay, ngữ cảnh, ảnh, thẻ ôn, lịch sử ôn, cài đặt,
+  tiến độ đọc, truyện riêng tư…) qua API quản trị `/api/v1/admin/users/{user_id}/...` (F13.07; người dùng chốt 24/10/2026).
+  Mọi thao tác sửa/xóa của admin trên dữ liệu người khác ghi nhật ký quản trị (F13.06). API của người dùng thường vẫn lọc theo `user_id` của chính họ.
 - Truyện riêng tư chỉ chủ sở hữu và admin xem; chỉ admin đăng truyện công khai.
 
 ## Dữ liệu đầu vào
@@ -24,7 +27,10 @@
 - Frontend không dùng `innerHTML` với dữ liệu người dùng (chống XSS).
 
 ## Dịch vụ ngoài
-- Gửi cho LLM **chỉ** từ, pinyin, nghĩa — không email, tên, id người dùng.
+- Gửi cho LLM **chỉ** từ, pinyin, nghĩa, cấp HSK của từ và trình độ HSK của người học dạng một con số
+  (người dùng chốt 25/10/2026), cùng dữ liệu từ điển công khai của từ đó (phân rã chữ Hán: bộ thủ, thành phần, âm Hán Việt)
+  để LLM dựa vào dữ liệu thật thay vì tự bịa — không email, tên, id người dùng, ghi chú, câu thoại đã lưu hay dữ liệu nào
+  định danh được người học.
 - Không tin dữ liệu LLM trả về: validate schema, đối chiếu từ điển, escape khi hiển thị.
 - Giới hạn số đề LLM mỗi người mỗi ngày.
 

@@ -24,10 +24,14 @@ YOLO (ultralytics) phát hiện bong bóng · PaddleOCR · OpenCV inpaint · Pil
 
 ## Dịch vụ ngoài
 - TTS: `edge-tts`, có cache.
-- LLM (sinh đề kiểm tra): gọi qua port `QuizGenerator`; nhà cung cấp chưa chốt — chọn nhà cung cấp phải hỏi người dùng. Khóa API chỉ để trong `.env`.
+- LLM (sinh đề kiểm tra, Flashcard AI): **Google Gemini** (người dùng chọn 25/10/2026), gọi REST bằng `httpx` qua port
+  (`QuizGenerator`, `AiNoteGenerator`), không dùng SDK riêng. Model và mức "thinking" đặt trong `.env` (`LLM_MODEL`,
+  `LLM_THINKING_LEVEL`; hiện `gemini-flash-lite-latest` + `low`). Khóa API chỉ để trong `.env`, gửi qua header, không đặt trong URL.
+  Đổi nhà cung cấp khác phải hỏi người dùng.
 
 ## Frontend
-HTML/CSS/JavaScript thuần (chưa chốt framework). Muốn dùng React/Vue/Tailwind... → hỏi trước.
+**React 19 + TypeScript + Vite + Tailwind CSS** — giao diện của người dùng ở `frontend/frontend-YingHua/` (chốt 23/10/2026).
+Claude tích hợp (thay dữ liệu giả bằng gọi API, thêm lớp gọi API) và **được tự điều chỉnh giao diện** cho hợp lý, nhưng giữ bộ màu, font, logo (xem `dev-workflow.md`); bỏ qua phần server/Express/Gemini trong thư mục đó. Thêm thư viện frontend mới → hỏi trước.
 
 ## Công cụ phát triển
 pytest, pytest-asyncio, httpx (test API) · ruff (lint + format) · mypy · pre-commit (tùy chọn).

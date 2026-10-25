@@ -2,7 +2,7 @@
 
 > Tài liệu thiết kế chức năng, học phần Phát triển ứng dụng, Trường Đại học Lạc Hồng.
 > Sinh viên thực hiện: Hoàng Hạc Hiếu, Đinh Thị Quỳnh Anh. GVHD: TS. Đoàn Thiện Minh.
-> Căn cứ: `docs/user-stories.md` (98 user story kèm tiêu chí chấp nhận) và `docs/danh-gia-luong-2-3.md` (kiến trúc đã chốt).
+> Căn cứ: `docs/user-stories.md` (118 user story kèm tiêu chí chấp nhận) và `docs/danh-gia-luong-2-3.md` (kiến trúc đã chốt).
 
 ## 1. Giới thiệu
 
@@ -39,28 +39,33 @@ Phân module bám theo phương án gợi ý gồm 15 module; có các điều c
 | 2 | **US-HG-02** đặt ở M08 (F08.01) nhưng **không tạo tác vụ định kỳ** trong M15. | Theo kiến trúc đã chốt, thẻ "đến hạn" được xác định bằng điều kiện *thời điểm ôn ≤ hiện tại* ngay khi truy vấn; không cần job hằng ngày. M15 chỉ điều phối các job thực sự định kỳ (HG-01, HG-03, HG-04). |
 | 3 | Bổ sung 6 **chức năng nội bộ**: F01.09, F06.08, F08.09, F13.06, F14.05, F15.03. Ngoài ra US-NH-15 được tách thành chức năng riêng F03.10 (bảo vệ quyền sở hữu) thay vì gộp vào F03.09. | Tách các xử lý dùng chung (kiểm tra vai trò, xác định HSK, tạo thẻ, ghi nhật ký quản trị, gửi thông báo, lập lịch) để tránh lặp mô tả ở nhiều chức năng. Mỗi chức năng nội bộ đều chỉ ra story được hỗ trợ. F03.10 là quy tắc quyền được mọi chức năng của M03, M04, M05 gọi tới. |
 | 4 | Thiết lập **tốc độ đọc** (US-NH-55) giữ ở M11 và **giờ nhắc ôn** (US-NH-59) giữ ở M14 thay vì M02. | Hai story gắn chặt với hành vi phát âm và hành vi gửi nhắc; dữ liệu tùy chọn vẫn được lưu chung trong "Cài đặt cá nhân" do M02 quản lý (ghi ở mục phụ thuộc). |
-| 5 | Ở F06.08, khi từ **không có** trong danh sách HSK thì lấy **cấp cao nhất của các chữ cấu thành**; không chữ nào có cấp thì gán "Ngoài HSK". | Nhóm đã chốt cách này, thống nhất với US-NH-31 TC2 và tài liệu đánh giá Luồng 2. Nhờ vậy từ ghép, thành ngữ, tên riêng không có trong danh sách vẫn có cấp ước lượng để lọc sổ tay và xếp gợi ý. |
+| 5 | Bổ sung (24/10/2026) 5 chức năng đồng bộ với giao diện: **F01.10** (ảnh đại diện), **F03.13** (Thư viện cá nhân và yêu thích), **F03.14** (chấm sao truyện), **F05.07** (đánh dấu trang), **F05.08** (ghi chú trên trang), gắn với US-NH-61 … US-NH-65. Tổng số chức năng từ 104 lên 109. | Các tính năng này đã có trên giao diện nhưng chưa có trong tài liệu; theo `.claude/rules/dev-workflow.md` §3, tính năng thiếu được thêm vào hệ thống và SRS. Mã chức năng khớp với mã backend đang dùng. |
+| 7 | Bổ sung (24/10/2026) 3 chức năng đồng bộ với giao diện Sổ tay và Flashcard (giai đoạn 4): **F07.09** (đánh dấu sao từ), **F07.10** (hiển thị âm Hán Việt trên mục từ và thẻ), **F08.10** (bộ thẻ theo truyện và bộ "Từ đánh dấu sao"), gắn với US-NH-66, US-NH-67, US-NH-68. Tổng số chức năng từ 109 lên 112 (M07 từ 8 lên 10, M08 từ 9 lên 10). | Giao diện đã có sao đánh dấu, chọn bộ thẻ theo truyện và âm Hán Việt ở mặt sau thẻ, nhưng các hành vi này chưa được mô tả trọn vẹn trong F07.07, F08.03, F08.04; theo `.claude/rules/dev-workflow.md` §3, bổ sung thành chức năng riêng để code, tài liệu và giao diện khớp nhau. Không thêm bảng dữ liệu mới (xem `docs/database-design.md`). |
+| 9 | Bổ sung (25/10/2026) chức năng **F09.09** (câu hỏi từ mở rộng), gắn với US-NH-69; sửa F09.01, F09.03, F09.08 (câu ví dụ ngẫu nhiên có nghĩa, điểm chính chỉ tính từ đã lưu, hết hạn mức LLM thì dùng đề dự phòng) và F10.01, F10.03. Tổng số chức năng từ 113 lên 114 (M09 từ 8 lên 9). Bảng `chapter_vocab` của M10 bị bỏ (gợi ý tính khi gọi). | Quyết định của người dùng khi làm giai đoạn 5: bài kiểm tra có một ít từ mới liên quan để mở rộng vốn từ, mỗi câu dùng một câu ví dụ có nghĩa thay vì chỉ định nghĩa. Thay đổi dữ liệu ghi ở `docs/database-design.md` (mục 4.13, 4.14). |
+| 10 | Bổ sung (25/10/2026) 10 chức năng đồng bộ với giao diện, gắn với US-NH-70 … US-NH-77, US-QT-15, US-QT-16: **F07.11** (lưu câu thoại), **F07.12** (lưu tất cả từ của trang), **F08.11** (Flashcard AI), **F10.04** (gợi ý truyện theo trình độ), **F10.05** (độ phủ từ vựng của chương), **F02.04** (cỡ chữ bong bóng dịch) thuộc giai đoạn 5; **F01.11** (ghi nhớ đăng nhập), **F04.16** (thử với trang mẫu), **F13.08** (trang nội dung pháp lý), **F13.09** (xuất báo cáo vi phạm) thuộc giai đoạn 6 đến 6.6. Mở rộng không đổi mã: F01.10 (chọn ảnh đại diện có sẵn, US-NH-65) và F13.05 (chế độ bảo trì và các công tắc hệ thống, US-QT-13). Tổng số chức năng từ 114 lên 124 (M01 từ 10 lên 11, M02 từ 3 lên 4, M04 từ 15 lên 16, M07 từ 10 lên 12, M08 từ 10 lên 11, M10 từ 3 lên 5, M13 từ 7 lên 9); tổng user story từ 108 lên 118. | Các tính năng đã có trên giao diện nhưng chưa có trong tài liệu; theo `.claude/rules/dev-workflow.md` §3, thêm vào hệ thống và SRS. Người dùng duyệt ngày 25/10/2026. F08.11 dùng dịch vụ LLM (Google Gemini, chọn 25/10/2026) qua cổng riêng, có dự phòng từ dữ liệu từ điển và chiết tự. Thêm hai bảng `saved_sentences` (F07.11) và `vocab_ai_notes` (F08.11) và cột `user_settings.bubble_font_scale` (F02.04); các chức năng còn lại không thêm bảng (xem `docs/database-design.md`). |
+| 6 | Ở F06.08, khi từ **không có** trong danh sách HSK thì lấy **cấp cao nhất của các chữ cấu thành**; không chữ nào có cấp thì gán "Ngoài HSK". | Nhóm đã chốt cách này, thống nhất với US-NH-31 TC2 và tài liệu đánh giá Luồng 2. Nhờ vậy từ ghép, thành ngữ, tên riêng không có trong danh sách vẫn có cấp ước lượng để lọc sổ tay và xếp gợi ý. |
+| 8 | Bổ sung (24/10/2026) chức năng **F13.07** (xem và quản lý dữ liệu học tập của người dùng) cho Quản trị viên, gắn với US-QT-14. Tổng số chức năng từ 112 lên 113 (M13 từ 6 lên 7). Đồng thời nới quy tắc "chỉ chủ sở hữu" đối với sổ tay, thẻ, cài đặt, thư viện: Quản trị viên được xem và sửa qua F13.07. | Quyết định của người dùng ngày 24/10/2026: Quản trị viên xem và sửa được toàn bộ dữ liệu của mọi người dùng (đã đồng bộ `.claude/rules/security.md`). Mọi thao tác sửa/xóa ghi nhật ký quản trị (F13.06); người dùng thường vẫn chỉ truy cập dữ liệu của mình. Không thêm bảng dữ liệu mới (xem `docs/database-design.md`). |
 
 ## 2. Bảng tổng quan module
 
 | Mã | Tên module | Mục đích | Actor sử dụng | Số chức năng |
 |---|---|---|---|---|
-| M01 | Xác thực & Tài khoản | Quản lý vòng đời tài khoản, phiên đăng nhập và kiểm tra quyền cho mọi yêu cầu. | Khách, Người học, Quản trị viên | 9 |
-| M02 | Cài đặt cá nhân | Lưu các tùy chọn học tập của từng Người học (trình độ HSK, chế độ đọc, giọng đọc). | Người học, Quản trị viên; Dịch vụ TTS (phụ) | 3 |
-| M03 | Thư viện truyện | Quản lý truyện, chương, trang, ảnh tải nhanh, quyền sở hữu và tiến độ đọc. | Khách, Người học, Quản trị viên; Pipeline (phụ) | 12 |
-| M04 | Xử lý ảnh & Nhận diện văn bản | Đưa trang qua pipeline nhận diện, dịch, xóa chữ, đắp chữ và theo dõi trạng thái xử lý. | Người học, Quản trị viên; Pipeline xử lý ảnh (phụ) | 15 |
-| M05 | Đọc truyện & Hover-Dịch | Hiển thị trang ở ba dạng, tra nhanh bằng Hover/chạm và quản lý bản sửa dịch cá nhân. | Khách, Người học, Quản trị viên; Pipeline (phụ) | 6 |
+| M01 | Xác thực & Tài khoản | Quản lý vòng đời tài khoản, phiên đăng nhập và kiểm tra quyền cho mọi yêu cầu. | Khách, Người học, Quản trị viên | 11 |
+| M02 | Cài đặt cá nhân | Lưu các tùy chọn học tập của từng Người học (trình độ HSK, chế độ đọc, giọng đọc, cỡ chữ bong bóng dịch). | Người học, Quản trị viên; Dịch vụ TTS (phụ) | 4 |
+| M03 | Thư viện truyện | Quản lý truyện, chương, trang, ảnh tải nhanh, quyền sở hữu và tiến độ đọc. | Khách, Người học, Quản trị viên; Pipeline (phụ) | 14 |
+| M04 | Xử lý ảnh & Nhận diện văn bản | Đưa trang qua pipeline nhận diện, dịch, xóa chữ, đắp chữ và theo dõi trạng thái xử lý. | Người học, Quản trị viên; Pipeline xử lý ảnh (phụ) | 16 |
+| M05 | Đọc truyện & Hover-Dịch | Hiển thị trang ở ba dạng, tra nhanh bằng Hover/chạm và quản lý bản sửa dịch cá nhân. | Khách, Người học, Quản trị viên; Pipeline (phụ) | 8 |
 | M06 | Từ điển & Tra cứu | Cung cấp tra cứu đa chiều, tách từ, phân rã chữ Hán, dữ liệu từ điển và danh sách HSK. | Khách (hạn chế), Người học, Quản trị viên; Pipeline (phụ) | 8 |
-| M07 | Sổ tay cá nhân | Lưu từ kèm ngữ cảnh gốc, cấp HSK, ghi chú, trạng thái học và xuất dữ liệu. | Người học, Quản trị viên; Pipeline (phụ) | 8 |
-| M08 | Flashcard & Ôn tập (FSRS) | Lập lịch ôn bằng FSRS, tổ chức phiên ôn với ba loại thẻ và quản lý lịch sử ôn. | Người học, Quản trị viên; Dịch vụ TTS, Bộ hẹn giờ (phụ) | 9 |
-| M09 | Kiểm tra cá nhân hóa | Sinh bài kiểm tra từ sổ tay (LLM hoặc đề dự phòng), chấm ở máy chủ và đưa từ sai về ôn sớm. | Người học, Quản trị viên; Dịch vụ LLM (phụ) | 8 |
-| M10 | Gợi ý từ cá nhân hóa | Đề xuất từ nên học trong chương theo tần suất, trình độ và lịch sử tra. | Người học, Quản trị viên | 3 |
+| M07 | Sổ tay cá nhân | Lưu từ kèm ngữ cảnh gốc, cấp HSK, ghi chú, trạng thái học, câu thoại đã lưu và xuất dữ liệu. | Người học, Quản trị viên; Pipeline (phụ) | 12 |
+| M08 | Flashcard & Ôn tập (FSRS) | Lập lịch ôn bằng FSRS, tổ chức phiên ôn với ba loại thẻ, quản lý lịch sử ôn và sinh thẻ mở rộng AI. | Người học, Quản trị viên; Dịch vụ TTS, Dịch vụ LLM, Bộ hẹn giờ (phụ) | 11 |
+| M09 | Kiểm tra cá nhân hóa | Sinh bài kiểm tra từ sổ tay (LLM hoặc đề dự phòng), chấm ở máy chủ và đưa từ sai về ôn sớm. | Người học, Quản trị viên; Dịch vụ LLM (phụ) | 9 |
+| M10 | Gợi ý từ cá nhân hóa | Đề xuất từ nên học trong chương theo tần suất, trình độ và lịch sử tra; gợi ý truyện theo trình độ và đo độ phủ từ vựng của chương. | Người học, Quản trị viên | 5 |
 | M11 | Phát âm (TTS) | Phát âm từ, câu, cả trang qua Edge TTS với bộ đệm và xử lý lỗi. | Người học, Quản trị viên; Dịch vụ TTS (phụ) | 6 |
 | M12 | Thống kê & Tiến trình | Tổng hợp số liệu học tập cá nhân và số liệu toàn hệ thống. | Người học, Quản trị viên | 3 |
-| M13 | Quản trị hệ thống | Quản lý người dùng, kiểm duyệt ảnh, cấu hình dịch vụ ngoài và nhật ký quản trị. | Quản trị viên | 6 |
+| M13 | Quản trị hệ thống | Quản lý người dùng và dữ liệu học tập của họ, kiểm duyệt ảnh, cấu hình dịch vụ ngoài, trang nội dung pháp lý, xuất báo cáo vi phạm và nhật ký quản trị. | Quản trị viên | 9 |
 | M14 | Phản hồi & Thông báo | Tiếp nhận, xử lý báo lỗi và gửi thông báo, nhắc ôn tập. | Người học, Quản trị viên; Bộ hẹn giờ (phụ) | 5 |
 | M15 | Tác vụ nền & Lập lịch | Dọn dữ liệu hết hạn và điều phối các tác vụ định kỳ. | Bộ hẹn giờ hệ thống (phụ) | 3 |
-| | **Tổng** | | | **104** |
+| | **Tổng** | | | **124** |
 
 ## 3. Sơ đồ phân rã chức năng
 
@@ -80,10 +85,13 @@ wbsDiagram { node { FontSize 11 } }
 *** F01.07 Xem & sửa hồ sơ
 *** F01.08 Đổi mật khẩu
 *** F01.09 Xác thực & kiểm tra vai trò (nội bộ)
+*** F01.10 Tải ảnh đại diện
+*** F01.11 Ghi nhớ đăng nhập
 ** M02 Cài đặt cá nhân
 *** F02.01 Khai báo trình độ HSK
 *** F02.02 Chế độ mặc định Đọc/Học
 *** F02.03 Chọn giọng đọc TTS
+*** F02.04 Cỡ chữ bong bóng dịch
 ** M03 Thư viện truyện
 *** F03.01 Trang giới thiệu
 *** F03.02 Duyệt & tìm truyện
@@ -97,6 +105,8 @@ wbsDiagram { node { FontSize 11 } }
 *** F03.10 Bảo vệ quyền sở hữu
 *** F03.11 Sửa & xóa bất kỳ truyện
 *** F03.12 Tiến độ đọc
+*** F03.13 Thư viện cá nhân & yêu thích
+*** F03.14 Chấm sao truyện
 ** M04 Xử lý ảnh & Nhận diện
 *** F04.01 Tự động nhận diện văn bản
 *** F04.02 Xem trạng thái xử lý
@@ -113,6 +123,7 @@ wbsDiagram { node { FontSize 11 } }
 *** F04.13 Cập nhật trạng thái
 *** F04.14 Chống xử lý ảnh trùng
 *** F04.15 Tọa độ bong bóng
+*** F04.16 Thử với trang mẫu
 ** M05 Đọc truyện & Hover-Dịch
 *** F05.01 Xem ba dạng hiển thị
 *** F05.02 Hover & Dịch bằng chuột
@@ -120,6 +131,8 @@ wbsDiagram { node { FontSize 11 } }
 *** F05.04 Tra giới hạn cho Khách
 *** F05.05 Sửa bản dịch bong bóng
 *** F05.06 Hoàn tác bản sửa dịch
+*** F05.07 Đánh dấu trang đã lưu
+*** F05.08 Ghi chú trên trang
 ** M06 Từ điển & Tra cứu
 *** F06.01 Tra cứu chi tiết từ
 *** F06.02 Tìm kiếm từ
@@ -138,6 +151,10 @@ wbsDiagram { node { FontSize 11 } }
 *** F07.06 Xóa từ
 *** F07.07 Xem & lọc sổ tay
 *** F07.08 Xuất CSV/Anki
+*** F07.09 Đánh dấu sao từ
+*** F07.10 Âm Hán Việt trên mục từ/thẻ
+*** F07.11 Lưu câu thoại
+*** F07.12 Lưu tất cả từ của trang
 ** M08 Flashcard & Ôn tập
 *** F08.01 Thẻ đến hạn
 *** F08.02 Chấm mức nhớ & lập lịch FSRS
@@ -148,6 +165,8 @@ wbsDiagram { node { FontSize 11 } }
 *** F08.07 Hoàn thành phiên ôn
 *** F08.08 Tối ưu tham số FSRS
 *** F08.09 Tạo bộ thẻ (nội bộ)
+*** F08.10 Bộ thẻ theo truyện
+*** F08.11 Flashcard AI
 ** M09 Kiểm tra cá nhân hóa
 *** F09.01 Yêu cầu tạo bài
 *** F09.02 Làm & nộp bài
@@ -157,10 +176,13 @@ wbsDiagram { node { FontSize 11 } }
 *** F09.06 Sinh đề bằng LLM
 *** F09.07 Kiểm tra lược đồ & đáp án
 *** F09.08 Thời gian chờ & đề dự phòng
+*** F09.09 Câu hỏi từ mở rộng
 ** M10 Gợi ý từ
 *** F10.01 Từ nên học trong chương
 *** F10.02 Nhận gợi ý
 *** F10.03 Bỏ qua & khôi phục gợi ý
+*** F10.04 Gợi ý truyện theo trình độ
+*** F10.05 Độ phủ từ vựng của chương
 ** M11 Phát âm (TTS)
 *** F11.01 Nghe từ và câu
 *** F11.02 Nghe cả trang
@@ -179,6 +201,9 @@ wbsDiagram { node { FontSize 11 } }
 *** F13.04 Kiểm duyệt ảnh
 *** F13.05 Cấu hình LLM, TTS
 *** F13.06 Nhật ký quản trị (nội bộ)
+*** F13.07 Quản lý dữ liệu học tập của người dùng
+*** F13.08 Trang nội dung pháp lý
+*** F13.09 Xuất báo cáo vi phạm
 ** M14 Phản hồi & Thông báo
 *** F14.01 Gửi & theo dõi báo lỗi
 *** F14.02 Xử lý báo lỗi
@@ -199,7 +224,7 @@ wbsDiagram { node { FontSize 11 } }
 - **Mục đích & phạm vi:** Quản lý toàn bộ vòng đời tài khoản: đăng ký, đăng nhập, duy trì và thu hồi phiên, đặt lại và đổi mật khẩu, hồ sơ cá nhân. Module cũng cung cấp cơ chế xác thực yêu cầu và kiểm tra vai trò dùng chung cho mọi module khác. Việc quản trị tài khoản người khác (đổi vai trò, khóa) thuộc M13.
 - **Actor sử dụng:** Khách, Người học (chính); Quản trị viên (kế thừa).
 - **Module phụ thuộc:** không phụ thuộc module nghiệp vụ nào; dùng dịch vụ gửi email (hạ tầng) cho đặt lại mật khẩu. M13 thay đổi trạng thái khóa và vai trò mà M01 kiểm tra.
-- **Dữ liệu chính:** Tài khoản (email, mật khẩu đã băm, tên hiển thị, vai trò, trạng thái hoạt động/khóa, ngày tham gia), Phiên đăng nhập (theo thiết bị, hạn dùng, trạng thái thu hồi), Yêu cầu đặt lại mật khẩu (mã dùng một lần, hạn 30 phút).
+- **Dữ liệu chính:** Tài khoản (email, mật khẩu đã băm, tên hiển thị, vai trò, trạng thái hoạt động/khóa, ngày tham gia, ảnh đại diện), Phiên đăng nhập (theo thiết bị, hạn dùng, trạng thái thu hồi), Yêu cầu đặt lại mật khẩu (mã dùng một lần, hạn 30 phút).
 - **Gợi ý router FastAPI:** `auth` (đăng ký, đăng nhập, phiên, mật khẩu) và `account` (hồ sơ của chính mình); kiểm tra vai trò đặt ở dependency dùng chung.
 
 | Mã | Tên chức năng | Actor | User story |
@@ -213,6 +238,8 @@ wbsDiagram { node { FontSize 11 } }
 | F01.07 | Xem và sửa hồ sơ | Người học, Quản trị viên (kế thừa) | US-NH-04 |
 | F01.08 | Đổi mật khẩu | Người học, Quản trị viên (kế thừa) | US-NH-05 |
 | F01.09 | Xác thực yêu cầu và kiểm tra vai trò (chức năng nội bộ) | Hệ thống (phục vụ mọi actor chính) | hỗ trợ US-NH-02, US-NH-04, US-QT-01, US-QT-02, US-QT-06, US-QT-08, US-QT-09, US-QT-11 |
+| F01.10 | Tải ảnh đại diện | Người học, Quản trị viên (kế thừa) | US-NH-65 |
+| F01.11 | Ghi nhớ đăng nhập | Khách, Người học | US-NH-76 |
 
 ##### F01.01 — Đăng ký tài khoản
 - **Actor:** Khách (chính)
@@ -386,12 +413,53 @@ wbsDiagram { node { FontSize 11 } }
   - Phiên hết hạn hoặc bị thu hồi: thông báo phiên không hợp lệ, giao diện thử F01.03 rồi mới chuyển về đăng nhập.
   - Sai vai trò: thông báo "Bạn không có quyền thực hiện thao tác này".
 
+##### F01.10 — Tải ảnh đại diện
+- **Actor:** Người học (chính), Quản trị viên (kế thừa)
+- **User story:** US-NH-65 [Đề xuất]
+- **Mô tả:** Cho phép người dùng tải ảnh đại diện để hồ sơ dễ nhận biết. Ảnh được lưu như một tệp của kho lưu trữ (loại `avatar`) và hồ sơ chỉ giữ tham chiếu tới tệp đó.
+- **Đầu vào:** tệp ảnh jpg/png/webp.
+- **Xử lý chính:**
+  1. Xác định người dùng từ phiên (F01.09).
+  2. Kiểm tra dung lượng không quá 10 MB và kiểm tra định dạng thật bằng nội dung tệp (jpg/png/webp), không tin đuôi tệp.
+  3. Lưu tệp vào kho lưu trữ với tên ngẫu nhiên, ghi vào `stored_files` với loại `avatar`.
+  4. Cập nhật `users.avatar_file_id` trỏ tới tệp mới; xóa tham chiếu và tệp ảnh đại diện cũ nếu có.
+  5. Trả về hồ sơ kèm địa chỉ ảnh đại diện (F01.07).
+- **Đầu ra:** ảnh đại diện mới hiển thị ngay trên hồ sơ.
+- **Quy tắc nghiệp vụ:**
+  - Chỉ chấp nhận jpg, png, webp; tối đa 10 MB.
+  - Mỗi người dùng chỉ có một ảnh đại diện; ảnh mới thay ảnh cũ.
+  - Không dùng tên tệp của người dùng làm đường dẫn lưu; không trả đường dẫn tuyệt đối trên máy chủ.
+  - Chưa có ảnh thì giao diện hiển thị ảnh mặc định (chữ cái đầu tên hiển thị).
+  - Mở rộng (giai đoạn 6): ngoài việc tải ảnh lên, Người học có thể **chọn một trong các ảnh đại diện mặc định** do hệ thống cung cấp (tệp tĩnh đi kèm ứng dụng, không lưu vào `stored_files`); khi chọn, hồ sơ ghi mã ảnh mặc định (`users.avatar_preset`) và bỏ tham chiếu `avatar_file_id`, đồng thời xóa tệp ảnh tải lên cũ (nếu có). Tải ảnh lên và chọn ảnh có sẵn loại trừ nhau: lần chọn sau thay lần chọn trước.
+- **Ngoại lệ:**
+  - Sai định dạng: từ chối với thông báo định dạng không hợp lệ.
+  - Vượt 10 MB: từ chối với thông báo vượt dung lượng cho phép.
+  - Lỗi lưu tệp: giữ nguyên ảnh đại diện cũ, thông báo lỗi để thử lại.
+  - Mã ảnh mặc định không có trong danh sách của hệ thống: từ chối với thông báo giá trị không hợp lệ.
+- **Gỡ ảnh đại diện (bổ sung GĐ5):** Người học có thể gỡ ảnh đại diện để quay về ảnh mặc định (chữ cái đầu tên hiển thị). Thao tác bỏ tham chiếu `users.avatar_file_id` (và mã ảnh có sẵn nếu đang chọn), đồng thời xóa tệp ảnh tải lên cũ khỏi kho lưu trữ; gỡ khi chưa có ảnh thì không đổi gì và không báo lỗi. Hồ sơ trả về sau khi gỡ không còn địa chỉ ảnh đại diện.
+
+##### F01.11 — Ghi nhớ đăng nhập
+- **Actor:** Khách, Người học (chính)
+- **User story:** US-NH-76 [Đề xuất]
+- **Mô tả:** Ô "Ghi nhớ đăng nhập" trên form đăng nhập cho Người học chọn giữ phiên lâu dài trên thiết bị tin cậy hoặc chỉ giữ phiên trong lần mở trình duyệt hiện tại (thiết bị dùng chung). Mở rộng F01.02 và F01.03, thực hiện ở giai đoạn 6.
+- **Đầu vào:** email, mật khẩu (F01.02) và cờ ghi nhớ (mặc định chọn).
+- **Xử lý chính:**
+  1. Cờ được chọn: giữ như hiện tại, phiên làm mới có hạn 30 ngày (F01.03) và giao diện lưu mã làm mới ở bộ nhớ bền của trình duyệt.
+  2. Cờ bị bỏ chọn: máy chủ cấp phiên có hạn ngắn (giá trị cấu hình, đề xuất 24 giờ); giao diện chỉ lưu mã truy cập và mã làm mới trong `sessionStorage`, nên đóng trình duyệt là phiên kết thúc.
+  3. Mỗi lần làm mới (F01.03), phiên mới kế thừa chế độ của phiên cũ.
+- **Đầu ra:** phiên đăng nhập có thời hạn đúng theo lựa chọn.
+- **Quy tắc nghiệp vụ:**
+  - Cờ chỉ quyết định thời hạn phiên, không thay đổi quyền hay các quy tắc xoay vòng và thu hồi mã làm mới.
+  - Đăng xuất (F01.04, F01.05) thu hồi phiên ở cả hai chế độ.
+- **Ngoại lệ:**
+  - Phiên ngắn hết hạn: yêu cầu đăng nhập lại như F01.03.
+
 ### 4.2 M02 — Cài đặt cá nhân
 
-- **Mục đích & phạm vi:** Lưu và áp dụng các tùy chọn học tập của từng Người học: trình độ HSK tự khai báo, chế độ hiển thị mặc định của trình đọc và giọng đọc TTS. Module này là nơi lưu chung "Cài đặt cá nhân"; một số tùy chọn khác (tốc độ đọc ở F11.03, bật/tắt từ điển chuyên ngành ở F06.03, giờ nhắc ôn ở F14.03) cũng ghi vào đây nhưng được mô tả ở module dùng chúng.
+- **Mục đích & phạm vi:** Lưu và áp dụng các tùy chọn học tập của từng Người học: trình độ HSK tự khai báo, chế độ hiển thị mặc định của trình đọc, giọng đọc TTS và cỡ chữ bong bóng dịch. Module này là nơi lưu chung "Cài đặt cá nhân"; một số tùy chọn khác (tốc độ đọc ở F11.03, bật/tắt từ điển chuyên ngành ở F06.03, giờ nhắc ôn ở F14.03) cũng ghi vào đây nhưng được mô tả ở module dùng chúng. Cài đặt chỉ thuộc chủ sở hữu, trừ Quản trị viên xem và sửa cài đặt của người dùng khác qua F13.07.
 - **Actor sử dụng:** Người học (chính), Quản trị viên (kế thừa); Dịch vụ TTS (phụ, phục vụ nghe thử giọng).
 - **Module phụ thuộc:** M01 (danh tính), M11 (danh sách giọng và nghe thử).
-- **Dữ liệu chính:** Cài đặt cá nhân (trình độ HSK 1–9 hoặc "Chưa chọn", chế độ mặc định Đọc/Học, giọng đọc, tốc độ đọc, tùy chọn hiển thị từ điển chuyên ngành, tùy chọn nhắc ôn).
+- **Dữ liệu chính:** Cài đặt cá nhân (trình độ HSK 1–9 hoặc "Chưa chọn", chế độ mặc định Đọc/Học, giọng đọc, tốc độ đọc, cỡ chữ bong bóng dịch, tùy chọn hiển thị từ điển chuyên ngành, tùy chọn nhắc ôn).
 - **Gợi ý router FastAPI:** `settings`.
 
 | Mã | Tên chức năng | Actor | User story |
@@ -399,6 +467,7 @@ wbsDiagram { node { FontSize 11 } }
 | F02.01 | Khai báo trình độ HSK | Người học, Quản trị viên (kế thừa) | US-NH-06 |
 | F02.02 | Chọn chế độ mặc định Đọc/Học | Người học, Quản trị viên (kế thừa) | US-NH-07 |
 | F02.03 | Chọn giọng đọc Text-to-Speech | Người học, Quản trị viên (kế thừa); Dịch vụ TTS (phụ) | US-NH-08 |
+| F02.04 | Chỉnh cỡ chữ bong bóng dịch | Người học, Quản trị viên (kế thừa) | US-NH-74 |
 
 ##### F02.01 — Khai báo trình độ HSK
 - **Actor:** Người học (chính), Quản trị viên (kế thừa)
@@ -450,12 +519,30 @@ wbsDiagram { node { FontSize 11 } }
   - Mã giọng không có trong danh sách: từ chối lưu.
   - Dịch vụ TTS lỗi khi nghe thử: thông báo theo F11.06, thiết lập vẫn lưu được.
 
+##### F02.04 — Chỉnh cỡ chữ bong bóng dịch
+- **Actor:** Người học (chính), Quản trị viên (kế thừa)
+- **User story:** US-NH-74 [Đề xuất]
+- **Mô tả:** Cho Người học phóng to hoặc thu nhỏ chữ của lớp bản dịch hiển thị trên trang (F05.01) để đọc thoải mái trên màn hình nhỏ hoặc lớn. Giá trị lưu trong Cài đặt cá nhân nên áp dụng ở mọi thiết bị. Không ảnh hưởng ảnh đã đắp chữ ở máy chủ (F04.12).
+- **Đầu vào:** tỉ lệ cỡ chữ (phần trăm, bội số của 10 trong khoảng 80–160).
+- **Xử lý chính:**
+  1. Hiển thị giá trị hiện tại (mặc định 100%).
+  2. Kiểm tra giá trị nằm trong 80–160 và là bội số của 10.
+  3. Lưu vào Cài đặt cá nhân (`user_settings.bubble_font_scale`).
+  4. Trình đọc (F05.01) đọc giá trị này khi mở trang và áp dụng cho lớp chữ dịch.
+- **Đầu ra:** cỡ chữ đã lưu, xem ngay trên trang đang mở.
+- **Quy tắc nghiệp vụ:**
+  - Chỉ chấp nhận 80, 90, …, 160 (%); chưa thiết lập thì dùng 100%.
+  - Lớp chữ dịch tự co giãn trong khung bong bóng, không tràn ra ngoài vùng bong bóng khi phóng to.
+  - Quản trị viên xem và sửa giá trị này của người khác qua F13.07.
+- **Ngoại lệ:**
+  - Giá trị ngoài khoảng hoặc không đúng bước: từ chối với thông báo giá trị không hợp lệ, giá trị cũ giữ nguyên.
+
 ### 4.3 M03 — Thư viện truyện
 
 - **Mục đích & phạm vi:** Quản lý nội dung truyện gồm truyện, chương, trang và ảnh tải nhanh; phân biệt truyện công khai (do Quản trị viên đăng) và truyện riêng tư (của từng Người học); bảo vệ quyền sở hữu; ghi nhớ tiến độ đọc. Module cũng phục vụ Khách qua trang giới thiệu và các chương đọc thử. Việc xử lý ảnh sau khi tải lên được giao cho M04.
 - **Actor sử dụng:** Khách, Người học (chính); Quản trị viên (kế thừa và có chức năng riêng F03.05, F03.11); Pipeline xử lý ảnh (phụ, nhận trang mới tải lên).
 - **Module phụ thuộc:** M01 (danh tính, vai trò), M04 (đưa trang vào hàng đợi, trạng thái xử lý), M13 (ghi nhật ký thao tác quản trị qua F13.06). M15 dọn ảnh tải nhanh hết hạn.
-- **Dữ liệu chính:** Truyện (tên, ảnh bìa, chủ sở hữu, chế độ công khai/riêng tư), Chương (số thứ tự, tên, cờ cho đọc thử), Trang (ảnh gốc, dấu vân tay nội dung, thứ tự, trạng thái xử lý), Ảnh tải nhanh (chủ sở hữu, thời điểm tải, hạn lưu 7 ngày), Tiến độ đọc (vị trí dừng và các trang đã đọc theo từng truyện).
+- **Dữ liệu chính:** Truyện (tên, ảnh bìa, chủ sở hữu, chế độ công khai/riêng tư), Chương (số thứ tự, tên, cờ cho đọc thử), Trang (ảnh gốc, dấu vân tay nội dung, thứ tự, trạng thái xử lý), Ảnh tải nhanh (chủ sở hữu, thời điểm tải, hạn lưu 7 ngày), Tiến độ đọc (vị trí dừng và các trang đã đọc theo từng truyện), Thư viện cá nhân (truyện đã thêm, cờ yêu thích, ngày thêm), Lượt chấm sao (mỗi người một lượt cho mỗi truyện, 1–5 sao).
 - **Gợi ý router FastAPI:** `library` (truyện, chương, trang, tiến độ) và `uploads` (tải nhanh); trang giới thiệu là trang tĩnh của giao diện.
 
 | Mã | Tên chức năng | Actor | User story |
@@ -472,6 +559,8 @@ wbsDiagram { node { FontSize 11 } }
 | F03.10 | Bảo vệ quyền sở hữu nội dung truyện | Người học, Quản trị viên (kế thừa) | US-NH-15 |
 | F03.11 | Sửa và xóa bất kỳ truyện | Quản trị viên | US-QT-05 |
 | F03.12 | Lưu và tiếp tục tiến độ đọc | Người học, Quản trị viên (kế thừa) | US-NH-16 |
+| F03.13 | Thư viện cá nhân và yêu thích | Người học, Quản trị viên (kế thừa) | US-NH-61 |
+| F03.14 | Chấm sao truyện | Người học, Quản trị viên (kế thừa) | US-NH-62 |
 
 ##### F03.01 — Xem trang giới thiệu
 - **Actor:** Khách (chính)
@@ -610,11 +699,11 @@ wbsDiagram { node { FontSize 11 } }
 - **Đầu ra:** trang đọc của ảnh tải nhanh, kèm ghi chú "ảnh sẽ được tự động xóa sau 7 ngày".
 - **Quy tắc nghiệp vụ:**
   - Chỉ chủ sở hữu (và Quản trị viên) truy cập được ảnh tải nhanh.
-  - Ảnh hết hạn bị xóa nội dung nhưng giữ bản ghi đánh dấu "đã hết hạn" để thông báo đúng.
+  - Ảnh đã quá hạn nhưng chưa tới lượt dọn (chu kỳ 60 phút, F15.01) không còn mở được và hiện "Ảnh đã hết hạn lưu"; sau khi F15.01 dọn, bản ghi bị xóa hẳn và mở lại như trang không còn tồn tại ("Không tìm thấy ảnh").
 - **Ngoại lệ:**
   - Sai định dạng/dung lượng: từ chối với thông báo cụ thể.
   - Truy cập ảnh tải nhanh của người khác: từ chối vì không có quyền.
-  - Ảnh đã bị xóa sau 7 ngày: "Ảnh đã hết hạn lưu".
+  - Ảnh quá 7 ngày chưa bị dọn: "Ảnh đã hết hạn lưu". Ảnh đã bị dọn: "Không tìm thấy ảnh".
 
 ##### F03.09 — Sửa và xóa truyện, chương, trang của mình
 - **Actor:** Người học (chính), Quản trị viên (kế thừa)
@@ -687,6 +776,46 @@ wbsDiagram { node { FontSize 11 } }
   - Trang dừng đã bị xóa: chuyển tới trang gần nhất còn tồn tại thay vì báo lỗi.
   - Cả truyện đã bị xóa: bỏ vị trí dừng của truyện đó.
 
+##### F03.13 — Thư viện cá nhân và yêu thích
+- **Actor:** Người học (chính), Quản trị viên (kế thừa)
+- **User story:** US-NH-61 [Đề xuất]
+- **Mô tả:** Cho phép thêm hoặc bỏ một truyện vào "Thư viện" của riêng người dùng và bật/tắt dấu "Yêu thích". Trang Thư viện lọc theo năm tab: Tất cả, Đang đọc, Yêu thích, Đã xong, Ảnh tải lên.
+- **Đầu vào:** truyện; hành động (thêm, bỏ, bật/tắt yêu thích); tab đang chọn.
+- **Xử lý chính:**
+  1. Kiểm tra quyền đọc truyện (F03.10).
+  2. Thêm: tạo bản ghi `library_items` khóa chính (`user_id`, `series_id`) với `is_favorite` mặc định tắt và `added_at` là thời điểm hiện tại; nếu đã có thì giữ nguyên.
+  3. Bỏ: xóa bản ghi tương ứng của chính người dùng.
+  4. Bật/tắt yêu thích: cập nhật `is_favorite` của bản ghi.
+  5. Liệt kê theo tab: "Tất cả" (mọi truyện trong Thư viện); "Đang đọc" (có tiến độ đọc chưa hoàn tất, theo F03.12); "Yêu thích" (`is_favorite` bật); "Đã xong" (đã đọc hết các trang của truyện); "Ảnh tải lên" (ảnh tải nhanh của người dùng, F03.08).
+- **Đầu ra:** trạng thái Thư viện/Yêu thích của truyện; danh sách theo tab, mỗi truyện kèm tiến độ của người dùng (`progress`: điểm dừng mới nhất, số trang đã đọc/tổng trang, phần trăm, đã xong hay chưa; rỗng với Khách hoặc truyện chưa đọc).
+- **Quy tắc nghiệp vụ:**
+  - Mỗi cặp (người dùng, truyện) tối đa một bản ghi; thêm lặp không tạo trùng.
+  - Dữ liệu chỉ thuộc chủ sở hữu; mọi truy vấn lọc theo người dùng đang đăng nhập (trừ Quản trị viên xem qua F13.07).
+  - Truyện không còn quyền đọc (bị xóa, thành riêng tư của người khác) bị ẩn khỏi danh sách.
+  - Bỏ khỏi Thư viện không xóa tiến độ đọc, sổ tay hay thẻ đã có.
+- **Ngoại lệ:**
+  - Truyện riêng tư của người khác: trả lời như không tồn tại.
+  - Bật yêu thích cho truyện chưa có trong Thư viện: tự thêm vào Thư viện rồi bật yêu thích [Đề xuất].
+
+##### F03.14 — Chấm sao truyện
+- **Actor:** Người học (chính), Quản trị viên (kế thừa)
+- **User story:** US-NH-62 [Đề xuất]
+- **Mô tả:** Cho phép mỗi người chấm 1–5 sao cho một truyện và sửa lại lượt chấm của mình. Truyện hiển thị điểm trung bình và số lượt chấm.
+- **Đầu vào:** truyện, số sao (1–5).
+- **Xử lý chính:**
+  1. Kiểm tra quyền đọc truyện (F03.10).
+  2. Kiểm tra số sao là số nguyên từ 1 đến 5.
+  3. Lưu vào `series_ratings` khóa chính (`user_id`, `series_id`): tạo mới nếu chưa có, ngược lại sửa `stars` và `updated_at`.
+  4. Tính lại điểm trung bình và số lượt chấm của truyện để hiển thị.
+- **Đầu ra:** lượt chấm của người dùng; điểm trung bình và số lượt của truyện.
+- **Quy tắc nghiệp vụ:**
+  - Mỗi người một lượt cho mỗi truyện; chấm lại là sửa, không thêm lượt.
+  - `stars` là `SMALLINT` có ràng buộc `CHECK` trong khoảng 1–5 ở cơ sở dữ liệu.
+  - Truyện chưa có lượt chấm hiển thị "Chưa có đánh giá".
+- **Ngoại lệ:**
+  - Số sao ngoài 1–5: từ chối với thông báo giá trị không hợp lệ.
+  - Truyện riêng tư của người khác hoặc không tồn tại: trả lời như không tồn tại.
+
 ### 4.4 M04 — Xử lý ảnh & Nhận diện văn bản
 
 - **Mục đích & phạm vi:** Biến ảnh trang thô thành dữ liệu học được: phát hiện bong bóng, nhận dạng chữ, tách từ và gắn từ điển, dịch ngoại tuyến, tạo ảnh đã xóa chữ và ảnh đã đắp bản dịch. Module gồm phần giao tiếp với người dùng (xem trạng thái, dịch lại, tải ảnh, giám sát, chạy lại) chạy trong ứng dụng FastAPI và phần xử lý nặng chạy ở **worker nền** nhận việc qua hàng đợi.
@@ -712,6 +841,7 @@ wbsDiagram { node { FontSize 11 } }
 | F04.13 | Cập nhật trạng thái và ghi lý do lỗi | Pipeline xử lý ảnh | US-XL-07 |
 | F04.14 | Chống xử lý lại ảnh trùng | Pipeline xử lý ảnh | US-XL-08 |
 | F04.15 | Lưu và cung cấp tọa độ bong bóng | Pipeline xử lý ảnh | US-XL-09 |
+| F04.16 | Thử với trang mẫu | Người học, Quản trị viên (kế thừa) | US-NH-77 |
 
 ##### F04.01 — Tự động nhận diện văn bản trên trang tải lên
 - **Actor:** Người học (chính), Quản trị viên (kế thừa); Pipeline xử lý ảnh (phụ)
@@ -764,6 +894,7 @@ wbsDiagram { node { FontSize 11 } }
 - **Ngoại lệ:**
   - Trang đang "Đang chờ"/"Đang xử lý": từ chối, thông báo trang đang được xử lý.
   - Trang không thuộc quyền: từ chối vì không có quyền.
+  - Trang đã xử lý xong ("Xong"): từ chối, chỉ trang "Lỗi" mới được dịch lại.
 
 ##### F04.04 — Tải ảnh về máy
 - **Actor:** Người học (chính), Quản trị viên (kế thừa)
@@ -973,12 +1104,29 @@ wbsDiagram { node { FontSize 11 } }
 - **Ngoại lệ:**
   - Tọa độ ngoài kích thước ảnh: chặn việc cắt; M07 tiếp tục lưu từ không kèm ảnh (US-NH-31 TC4).
 
+##### F04.16 — Thử với trang mẫu
+- **Actor:** Người học (chính), Quản trị viên (kế thừa)
+- **User story:** US-NH-77 [Đề xuất]
+- **Mô tả:** Trước khi tải ảnh của mình lên (F03.07, F03.08), Người học xem kết quả xử lý thật của một trang mẫu có sẵn: ảnh gốc và ảnh đã dịch, kèm Hover & Dịch, để hiểu tính năng mà không phải chờ pipeline. Thực hiện ở giai đoạn 6.
+- **Đầu vào:** lựa chọn "Thử với trang mẫu" trên màn hình tải ảnh.
+- **Xử lý chính:**
+  1. Lấy trang mẫu do Quản trị viên chọn từ các trang đã xử lý xong (khóa `sample_page_id` trong Cấu hình hệ thống, F13.05), hoặc trang mẫu đi kèm hệ thống khi chưa cấu hình.
+  2. Trả ảnh gốc, ảnh đã dịch và bong bóng của trang mẫu theo cùng định dạng với trang thật (F05.01).
+  3. Giao diện cho chuyển qua lại giữa ảnh gốc và bản dịch, dùng Hover & Dịch như trang thật (F05.02, F05.03); có nút chuyển sang tải ảnh của chính mình.
+- **Đầu ra:** trang mẫu đọc được ngay, không tạo công việc xử lý.
+- **Quy tắc nghiệp vụ:**
+  - Trang mẫu là dữ liệu có sẵn đã xử lý bởi pipeline thật, không tạo công việc mới và không tính vào dung lượng hay ảnh tải nhanh của người dùng.
+  - Chỉ Người học đã đăng nhập dùng; Khách đã có đọc thử chương công khai (F03.03, F05.04).
+  - Không dùng ảnh mẫu có bản quyền chưa được phép.
+- **Ngoại lệ:**
+  - Chưa có trang mẫu nào: ẩn lựa chọn "Thử với trang mẫu", không báo lỗi.
+
 ### 4.5 M05 — Đọc truyện & Hover-Dịch
 
 - **Mục đích & phạm vi:** Cung cấp trình đọc truyện: hiển thị trang ở ba dạng (gốc, đã xóa chữ, đã dịch), tra nhanh bằng Hover hoặc chạm trên dữ liệu đã tính sẵn của pipeline, và cho phép mỗi Người học sửa bản dịch bong bóng cho riêng mình. Khung Hover là điểm khởi phát cho các thao tác của module khác: Lưu từ (M07), nghe phát âm (M11), xem chi tiết (M06), báo lỗi (M14).
 - **Actor sử dụng:** Khách (đọc thử, tra giới hạn), Người học (chính); Quản trị viên (kế thừa); Pipeline xử lý ảnh (phụ, cung cấp dữ liệu bong bóng và từ đã tách).
 - **Module phụ thuộc:** M03 (trang, quyền đọc, đọc thử), M04 (trạng thái, bong bóng, từ đã tách, ảnh dẫn xuất), M06 (nghĩa từ, chi tiết), M02 (chế độ mặc định), M07, M11, M14 (các nút trên khung Hover).
-- **Dữ liệu chính:** Bản sửa dịch cá nhân (theo Người học và bong bóng), Bộ đếm lượt tra của Khách (theo phiên ẩn danh).
+- **Dữ liệu chính:** Bản sửa dịch cá nhân (theo Người học và bong bóng), Ghi chú trang (theo Người học và trang: cờ đánh dấu, bong bóng được tô màu, nét vẽ), Bộ đếm lượt tra của Khách (theo phiên ẩn danh).
 - **Gợi ý router FastAPI:** `reader`.
 
 | Mã | Tên chức năng | Actor | User story |
@@ -989,6 +1137,8 @@ wbsDiagram { node { FontSize 11 } }
 | F05.04 | Tra từ giới hạn cho Khách khi đọc thử | Khách | US-KH-05 |
 | F05.05 | Sửa bản dịch của một bong bóng | Người học, Quản trị viên (kế thừa) | US-NH-24 |
 | F05.06 | Hoàn tác bản sửa dịch | Người học, Quản trị viên (kế thừa) | US-NH-25 |
+| F05.07 | Đánh dấu trang và xem danh sách trang đã lưu | Người học, Quản trị viên (kế thừa) | US-NH-63 |
+| F05.08 | Ghi chú trên trang (tô màu bong bóng, vẽ tự do) | Người học, Quản trị viên (kế thừa) | US-NH-64 |
 
 ##### F05.01 — Xem trang ở ba dạng hiển thị
 - **Actor:** Người học (chính), Quản trị viên (kế thừa); Khách (khi đọc thử qua F03.03)
@@ -1101,6 +1251,43 @@ wbsDiagram { node { FontSize 11 } }
   - Trang được dịch lại sau khi đã sửa: giữ bản sửa của Người học, ghi rõ đang dùng bản sửa và vẫn cho phép hoàn tác (giả định của US-NH-25 TC4).
 - **Ngoại lệ:**
   - Bong bóng không còn tồn tại sau khi xử lý lại (tọa độ thay đổi): bản sửa không áp dụng được, thông báo cho người dùng [Đề xuất].
+
+##### F05.07 — Đánh dấu trang và xem danh sách trang đã lưu
+- **Actor:** Người học (chính), Quản trị viên (kế thừa)
+- **User story:** US-NH-63 [Đề xuất]
+- **Mô tả:** Cho phép đánh dấu (lưu) một trang để quay lại nhanh và xem danh sách các trang đã lưu của mình.
+- **Đầu vào:** trang; trạng thái đánh dấu mong muốn (bật/tắt).
+- **Xử lý chính:**
+  1. Kiểm tra quyền đọc trang (F03.10).
+  2. Cập nhật `page_annotations.is_bookmarked` của (người dùng, trang); tạo bản ghi ghi chú rỗng nếu chưa có.
+  3. Khi xem danh sách, lấy các trang có `is_bookmarked` bật của người dùng, kèm truyện, chương, số trang, chia trang kết quả.
+- **Đầu ra:** trạng thái đánh dấu của trang; danh sách trang đã lưu.
+- **Quy tắc nghiệp vụ:**
+  - Dấu trang là dữ liệu cá nhân, đồng bộ giữa các thiết bị, người khác không thấy.
+  - Bỏ đánh dấu không xóa tô màu hay nét vẽ của trang (F05.08).
+  - Trang đã bị xóa hoặc không còn quyền đọc bị ẩn khỏi danh sách.
+- **Ngoại lệ:**
+  - Trang không tồn tại hoặc thuộc truyện riêng tư của người khác: trả lời như không tồn tại.
+
+##### F05.08 — Ghi chú trên trang (tô màu bong bóng, vẽ tự do)
+- **Actor:** Người học (chính), Quản trị viên (kế thừa)
+- **User story:** US-NH-64 [Đề xuất]
+- **Mô tả:** Cho phép tô màu các bong bóng, vẽ nét tự do và chọn màu trên trang; có thao tác xóa toàn bộ ghi chú của trang. Ghi chú lưu theo người dùng ở máy chủ (thay cho lưu cục bộ trên trình duyệt) nên đồng bộ giữa các thiết bị.
+- **Đầu vào:** trang; danh sách bong bóng được tô kèm màu; danh sách nét vẽ (tọa độ, màu).
+- **Xử lý chính:**
+  1. Kiểm tra quyền đọc trang (F03.10).
+  2. Kiểm tra dữ liệu ghi chú đúng lược đồ (màu hợp lệ, số bong bóng và số nét trong giới hạn).
+  3. Lưu vào `page_annotations` của (người dùng, trang): tô màu ở `highlights` (JSONB), nét vẽ ở `strokes` (JSONB).
+  4. Khi mở trang, trả ghi chú của người dùng để giao diện vẽ phủ lên ảnh.
+  5. Khi xóa ghi chú của trang, đặt `highlights` và `strokes` về rỗng.
+- **Đầu ra:** ghi chú của trang hiển thị phủ lên ảnh.
+- **Quy tắc nghiệp vụ:**
+  - Ghi chú chỉ là lớp phủ riêng của người dùng; không thay đổi ảnh gốc hay ảnh đã dịch dùng chung.
+  - Xóa ghi chú không làm mất dấu trang (F05.07).
+  - Dữ liệu chỉ thuộc chủ sở hữu.
+- **Ngoại lệ:**
+  - Dữ liệu sai lược đồ hoặc vượt giới hạn: từ chối với thông báo dữ liệu không hợp lệ.
+  - Trang không tồn tại hoặc không có quyền đọc: trả lời như không tồn tại.
 
 ### 4.6 M06 — Từ điển & Tra cứu
 
@@ -1270,8 +1457,8 @@ wbsDiagram { node { FontSize 11 } }
 
 - **Mục đích & phạm vi:** Quản lý từ vựng cá nhân của Người học: lưu từ ngay khi đọc kèm ngữ cảnh gốc (ảnh bong bóng đã cắt và câu văn), cấp HSK và bộ flashcard; chống trùng; đổi trạng thái học; ghi chú; quản lý ngữ cảnh; lọc và xuất dữ liệu. Mỗi mục từ là duy nhất theo từng Người học.
 - **Actor sử dụng:** Người học (chính), Quản trị viên (kế thừa); Pipeline xử lý ảnh (phụ, cung cấp tọa độ bong bóng để cắt ảnh).
-- **Module phụ thuộc:** M04 (tọa độ, ảnh cắt, từ đã tách), M06 (cấp HSK, nghĩa), M08 (tạo và cập nhật thẻ), M03 (nguồn truyện–chương–trang), M01.
-- **Dữ liệu chính:** Mục từ sổ tay (từ, pinyin, nghĩa, cấp HSK, trạng thái học Đang học/Đã thuộc/Bỏ qua, ghi chú), Ngữ cảnh (ảnh bong bóng đã cắt là bản sao độc lập, câu văn bản, nguồn truyện–chương–trang, bong bóng gốc).
+- **Module phụ thuộc:** M04 (tọa độ, ảnh cắt, từ đã tách), M06 (cấp HSK, nghĩa, âm Hán Việt), M08 (tạo và cập nhật thẻ), M03 (nguồn truyện–chương–trang), M05 (bản sửa dịch cá nhân, F07.11), M11 (nghe lại câu thoại, F07.11), M01.
+- **Dữ liệu chính:** Mục từ sổ tay (từ, pinyin, nghĩa, cấp HSK, trạng thái học Đang học/Đã thuộc/Bỏ qua, ghi chú, cờ đánh dấu sao), Ngữ cảnh (ảnh bong bóng đã cắt là bản sao độc lập, câu văn bản, nguồn truyện–chương–trang, bong bóng gốc), Câu thoại đã lưu (câu Trung, bản dịch, nhãn nguồn, ghi chú, bong bóng và trang gốc; F07.11).
 - **Gợi ý router FastAPI:** `vocab`.
 
 | Mã | Tên chức năng | Actor | User story |
@@ -1284,6 +1471,10 @@ wbsDiagram { node { FontSize 11 } }
 | F07.06 | Xóa từ khỏi sổ tay | Người học, Quản trị viên (kế thừa) | US-NH-36 |
 | F07.07 | Xem và lọc sổ tay theo HSK, trạng thái | Người học, Quản trị viên (kế thừa) | US-NH-37 |
 | F07.08 | Xuất sổ tay ra CSV hoặc Anki | Người học, Quản trị viên (kế thừa) | US-NH-60 |
+| F07.09 | Đánh dấu sao từ trong sổ tay | Người học, Quản trị viên (kế thừa) | US-NH-66 |
+| F07.10 | Hiển thị âm Hán Việt trên mục từ và thẻ | Người học, Quản trị viên (kế thừa) | US-NH-68 |
+| F07.11 | Lưu câu thoại | Người học, Quản trị viên (kế thừa) | US-NH-70 |
+| F07.12 | Lưu tất cả từ của trang | Người học, Quản trị viên (kế thừa) | US-NH-71 |
 
 ##### F07.01 — Lưu từ ngay khi đang đọc
 - **Actor:** Người học (chính), Quản trị viên (kế thừa); Pipeline xử lý ảnh (phụ, qua F04.15)
@@ -1341,7 +1532,7 @@ wbsDiagram { node { FontSize 11 } }
   - M09 có thể chuyển từ về "Đang học" khi làm sai (F09.04).
 - **Ngoại lệ:**
   - Trạng thái ngoài ba giá trị: từ chối với thông báo trạng thái không hợp lệ.
-  - Từ của người khác: từ chối vì không có quyền.
+  - Từ của người khác: từ chối vì không có quyền (trừ Quản trị viên, F13.07).
 
 ##### F07.04 — Ghi chú cho từ
 - **Actor:** Người học (chính), Quản trị viên (kế thừa)
@@ -1374,7 +1565,7 @@ wbsDiagram { node { FontSize 11 } }
   - Ngữ cảnh có ảnh nguồn bị gỡ do kiểm duyệt thì ẩn ảnh.
 - **Ngoại lệ:**
   - Trang nguồn đã bị xóa: "Trang nguồn không còn".
-  - Từ của người khác: từ chối vì không có quyền.
+  - Từ của người khác: từ chối vì không có quyền (trừ Quản trị viên, F13.07).
 
 ##### F07.06 — Xóa từ khỏi sổ tay
 - **Actor:** Người học (chính), Quản trị viên (kế thừa)
@@ -1390,7 +1581,7 @@ wbsDiagram { node { FontSize 11 } }
   - Lưu lại từ đó sau này được xem như từ mới, lịch ôn bắt đầu lại.
 - **Ngoại lệ:**
   - Chọn "Hủy": không xóa dữ liệu nào.
-  - Từ của người khác: từ chối vì không có quyền.
+  - Từ của người khác: từ chối vì không có quyền (trừ Quản trị viên, F13.07).
 
 ##### F07.07 — Xem và lọc sổ tay theo HSK, trạng thái
 - **Actor:** Người học (chính), Quản trị viên (kế thừa)
@@ -1425,12 +1616,97 @@ wbsDiagram { node { FontSize 11 } }
 - **Ngoại lệ:**
   - Sổ tay trống: "Sổ tay chưa có từ để xuất".
 
+##### F07.09 — Đánh dấu sao từ trong sổ tay
+- **Actor:** Người học (chính), Quản trị viên (kế thừa)
+- **User story:** US-NH-66 [Đề xuất]
+- **Mô tả:** Bật hoặc tắt dấu sao cho một mục từ để nhóm các từ quan trọng; sổ tay có bộ lọc "Từ đánh dấu sao" và bộ này cũng là một bộ thẻ trong F08.10.
+- **Đầu vào:** mục từ, trạng thái sao mong muốn (có/không).
+- **Xử lý chính:**
+  1. Kiểm tra mục từ thuộc người dùng.
+  2. Cập nhật cờ đánh dấu sao của mục từ (`vocab_entries.is_starred`); không thay đổi trạng thái học, ghi chú hay thẻ.
+  3. Khi lọc "Từ đánh dấu sao" (mở rộng F07.07): chỉ lấy các mục từ có cờ sao, kết hợp được với bộ lọc HSK và trạng thái.
+- **Đầu ra:** dấu sao hiển thị ngay; danh sách lọc theo sao kèm số lượng.
+- **Quy tắc nghiệp vụ:**
+  - Dấu sao thuộc riêng từng Người học và lưu ở máy chủ, không phụ thuộc thiết bị.
+  - Đánh dấu hay bỏ dấu sao không ảnh hưởng lịch ôn FSRS.
+- **Ngoại lệ:**
+  - Từ của người khác: từ chối như khi từ không tồn tại (trừ Quản trị viên, F13.07).
+  - Chưa có từ nào có sao: "Chưa có từ nào được đánh dấu sao".
+
+##### F07.10 — Hiển thị âm Hán Việt trên mục từ và thẻ
+- **Actor:** Người học (chính), Quản trị viên (kế thừa)
+- **User story:** US-NH-68 [Đề xuất]
+- **Mô tả:** Hiển thị âm Hán Việt của từ ở chi tiết mục từ trong sổ tay và ở mặt sau thẻ ôn (F08.03), để Người học liên hệ với vốn từ Hán Việt. Dữ liệu lấy từ M06 (F06.01), không lưu lại ở sổ tay.
+- **Đầu vào:** mục từ hoặc thẻ cần hiển thị.
+- **Xử lý chính:**
+  1. Tra âm Hán Việt của từ qua giao diện công khai của M06.
+  2. Gắn vào dữ liệu trả về của chi tiết mục từ và của mặt sau thẻ.
+  3. Giao diện hiển thị cạnh chữ Hán và pinyin.
+- **Đầu ra:** âm Hán Việt trên chi tiết mục từ và mặt sau thẻ.
+- **Quy tắc nghiệp vụ:**
+  - Từ nhiều chữ: ghép âm Hán Việt của từng chữ theo thứ tự trong từ.
+  - Chỉ đọc dữ liệu từ điển; không sửa dữ liệu từ điển, không đổi lịch ôn.
+- **Ngoại lệ:**
+  - Không có dữ liệu âm Hán Việt: ẩn phần này, không hiện giá trị rỗng.
+
+##### F07.11 — Lưu câu thoại
+- **Actor:** Người học (chính), Quản trị viên (kế thừa)
+- **User story:** US-NH-70 [Đề xuất]
+- **Mô tả:** Cho Người học lưu nguyên một câu thoại (một bong bóng) khi đọc để xem lại và nghe lại sau, khác với lưu từ ở F07.01. Danh sách "Câu thoại đã lưu" nằm ở Hồ sơ, mỗi mục gồm câu tiếng Trung, bản dịch, nguồn (truyện · chương · trang), nút nghe, nút mở lại trang gốc, ghi chú và nút bỏ lưu. Câu được lưu dưới dạng **bản sao văn bản** nên vẫn giữ khi trang hoặc bong bóng gốc bị xóa.
+- **Đầu vào:** bong bóng đang đọc; ghi chú (tùy chọn, tối đa 1000 ký tự).
+- **Xử lý chính:**
+  1. Kiểm tra người dùng đã đăng nhập và có quyền đọc trang chứa bong bóng (F03.10).
+  2. Kiểm tra Người học chưa lưu bong bóng này (một bong bóng chỉ lưu một lần mỗi người).
+  3. Lấy câu tiếng Trung của bong bóng, bản dịch (bản sửa cá nhân F05.05 nếu có, nếu không thì bản dịch tự động) và nhãn nguồn "Truyện · Chương · Trang".
+  4. Tạo bản ghi câu thoại đã lưu (`saved_sentences`) kèm tham chiếu tới bong bóng và trang gốc.
+  5. Hồ sơ liệt kê có phân trang, mới nhất trước; nghe lại qua F11.01 với giọng và tốc độ đã chọn; mở lại trang gốc nếu còn; sửa ghi chú; bỏ lưu (xóa bản ghi sau xác nhận).
+- **Đầu ra:** câu thoại trong danh sách "Câu thoại đã lưu"; danh sách và chi tiết cập nhật sau khi sửa ghi chú hoặc bỏ lưu.
+- **Quy tắc nghiệp vụ:**
+  - Mỗi bong bóng chỉ lưu một lần cho mỗi Người học; lưu lại thì báo đã lưu, không tạo bản trùng.
+  - Văn bản câu và bản dịch là bản sao tại thời điểm lưu: xóa trang, xóa bong bóng hoặc dịch lại trang không làm mất câu đã lưu; khi trang không còn, nút "Mở trang gốc" bị ẩn.
+  - Bỏ lưu một câu không ảnh hưởng sổ tay từ, thẻ ôn hay trang đang đọc.
+  - Dữ liệu chỉ thuộc chủ sở hữu; Quản trị viên xem và xóa qua F13.07 (có nhật ký).
+  - Pinyin không được lưu trong bảng: khi trả danh sách, pinyin được dựng từ dữ liệu tách từ (F04.10) của bong bóng gốc; bong bóng gốc đã bị xóa thì câu không có pinyin.
+  - Khi trang gốc bị xóa hoặc Người học không còn quyền đọc trang đó (F03.10), câu vẫn còn trong danh sách nhưng không có liên kết mở trang gốc.
+  - Bản dịch hiển thị ưu tiên bản sửa cá nhân (F05.05) nếu có; nếu không thì dùng bản sao dịch tự động lúc lưu.
+  - Ghi chú tối đa 1000 ký tự.
+- **Ngoại lệ:**
+  - Bong bóng đã lưu: "Câu này đã được lưu".
+  - Ghi chú vượt 1000 ký tự: từ chối với thông báo giới hạn.
+  - Câu của người khác: trả lời như không tồn tại (trừ Quản trị viên, F13.07).
+  - Dịch vụ TTS lỗi khi nghe lại: thông báo theo F11.06, danh sách vẫn dùng được.
+
+##### F07.12 — Lưu tất cả từ của trang
+- **Actor:** Người học (chính), Quản trị viên (kế thừa)
+- **User story:** US-NH-71 [Đề xuất]
+- **Mô tả:** Lưu một lần mọi từ đã tách của các bong bóng trong trang đang đọc mà chưa có trong Sổ tay, thay cho việc lưu từng từ. Mỗi từ được lưu theo đúng quy tắc của F07.01 và F07.02, kèm ngữ cảnh là bong bóng đầu tiên (theo thứ tự đọc) chứa từ đó.
+- **Đầu vào:** trang đang đọc.
+- **Xử lý chính:**
+  1. Kiểm tra người dùng đã đăng nhập và có quyền đọc trang (F03.10).
+  2. Gom các từ đã tách (F04.10) của mọi bong bóng trong trang theo thứ tự xuất hiện, loại dấu câu và ký tự không phải chữ Hán, gộp từ trùng.
+  3. Bỏ các từ đã có trong Sổ tay (ở mọi trạng thái); các từ này chỉ được đếm vào số "đã có".
+  4. Lấy tối đa 50 từ đầu danh sách còn lại; với mỗi từ gọi F07.01 với bong bóng đầu tiên chứa từ, mỗi từ một giao dịch riêng.
+  5. Trả số từ đã lưu, số từ đã có, số từ lỗi và số từ còn lại chưa lưu (nếu quá 50).
+- **Đầu ra:** các mục từ mới cùng thẻ ôn trong Sổ tay; bản tóm tắt kết quả cho giao diện.
+- **Quy tắc nghiệp vụ:**
+  - Tối đa 50 từ mỗi lần; còn dư thì thông báo số từ còn lại và cho bấm lưu tiếp.
+  - Mỗi từ lưu độc lập: lỗi ở một từ không hủy các từ đã lưu hay còn lại; từ lỗi được đếm riêng.
+  - Cấp HSK, ảnh ngữ cảnh và bộ thẻ của từng từ theo F06.08, F04.15, F08.09 như lưu từ thông thường.
+  - Chỉ lưu từ trang đã xử lý xong; nhấn lặp lại không tạo bản trùng (F07.02).
+  - Chỉ bỏ qua các từ **một chữ** rất phổ biến (是, 吗, 的, 了…); kết quả báo lại danh sách các từ đã bỏ qua. Từ từ hai chữ trở lên như 什么, 看看 vẫn được lưu; Người học tự đánh dấu "Bỏ qua" (F07.03) nếu không cần (người dùng chốt 25/10/2026).
+  - Từ đã có trong Sổ tay chỉ được đếm vào số "đã có", không thêm ngữ cảnh mới.
+  - Nguồn của mục từ là "đọc truyện" (highlight).
+- **Ngoại lệ:**
+  - Trang chưa xử lý xong hoặc không có từ: thông báo "Trang chưa có từ để lưu".
+  - Mọi từ đã có trong Sổ tay: thông báo "Tất cả từ của trang đã có trong Sổ tay", không thay đổi gì.
+  - Mất kết nối giữa chừng: các từ đã lưu giữ nguyên, các từ còn lại có thể lưu lại bằng thao tác lặp.
+
 ### 4.8 M08 — Flashcard & Ôn tập (FSRS)
 
 - **Mục đích & phạm vi:** Tổ chức việc ôn tập theo lặp lại ngắt quãng: mỗi từ trong sổ tay có ba thẻ (nhận diện, nhớ lại, nghe), lịch ôn của từng thẻ do thuật toán FSRS tính từ trạng thái hiện tại của thẻ và mức đánh giá Quên/Khó/Được/Dễ. Module quản lý phiên ôn, lịch sử ôn và tham số FSRS riêng cho từng Người học.
 - **Actor sử dụng:** Người học (chính), Quản trị viên (kế thừa); Dịch vụ TTS (phụ, phát âm thẻ nghe); Bộ hẹn giờ hệ thống (phụ, tối ưu tham số FSRS).
-- **Module phụ thuộc:** M07 (mục từ, trạng thái học, ngữ cảnh, ghi chú), M11 (âm thanh thẻ nghe), M15 (lập lịch tối ưu tham số). M09 và M12 dùng dữ liệu của module này.
-- **Dữ liệu chính:** Thẻ ôn (loại thẻ, trạng thái FSRS: độ ổn định S, độ khó D, lần ôn cuối, thời điểm đến hạn, cờ tạm ngưng), Lượt ôn (thẻ, mức đánh giá, thời điểm, S/D trước–sau), Tham số FSRS cá nhân.
+- **Module phụ thuộc:** M07 (mục từ, trạng thái học, cờ đánh dấu sao, ngữ cảnh, ghi chú, âm Hán Việt), M03 (tên truyện để gom bộ thẻ, F08.10), M11 (âm thanh thẻ nghe), M15 (lập lịch tối ưu tham số), M06 (ví dụ, chiết tự và cấp HSK cho F08.11), M02 (trình độ HSK), M13 (bật/tắt LLM, F08.11). M09 và M12 dùng dữ liệu của module này.
+- **Dữ liệu chính:** Thẻ ôn (loại thẻ, trạng thái FSRS: độ ổn định S, độ khó D, lần ôn cuối, thời điểm đến hạn, cờ tạm ngưng), Lượt ôn (thẻ, mức đánh giá, thời điểm, S/D trước–sau), Tham số FSRS cá nhân, Thẻ mở rộng AI (nội dung sinh cho mục từ: câu ví dụ, mẹo chiết tự, cụm từ; nguồn LLM hoặc dự phòng; F08.11).
 - **Gợi ý router FastAPI:** `review`.
 
 | Mã | Tên chức năng | Actor | User story |
@@ -1444,6 +1720,8 @@ wbsDiagram { node { FontSize 11 } }
 | F08.07 | Thông báo hoàn thành phiên ôn | Người học, Quản trị viên (kế thừa) | US-NH-44 |
 | F08.08 | Tối ưu tham số FSRS riêng cho từng Người học | Bộ hẹn giờ hệ thống | US-HG-03 |
 | F08.09 | Tạo bộ thẻ cho từ mới (chức năng nội bộ) | Hệ thống (phục vụ Người học khi lưu từ) | hỗ trợ US-NH-31, US-NH-40 |
+| F08.10 | Chọn bộ thẻ theo truyện hoặc từ đánh dấu sao | Người học, Quản trị viên (kế thừa) | US-NH-67 |
+| F08.11 | Flashcard AI | Người học, Quản trị viên (kế thừa); Dịch vụ LLM (phụ) | US-NH-75 |
 
 ##### F08.01 — Lập danh sách thẻ đến hạn
 - **Actor:** Người học (chính), Quản trị viên (kế thừa); Bộ hẹn giờ hệ thống (phụ, về mặt khái niệm)
@@ -1483,7 +1761,7 @@ wbsDiagram { node { FontSize 11 } }
   - Một lượt hiển thị chỉ được tính một lượt ôn, kể cả khi bấm đúp.
 - **Ngoại lệ:**
   - Mất mạng khi gửi: hiện lỗi, thẻ giữ nguyên để chấm lại; lịch ôn không bị cập nhật một nửa (giao dịch).
-  - Thẻ của người khác: từ chối vì không có quyền.
+  - Thẻ của người khác: từ chối vì không có quyền (trừ Quản trị viên xem/quản lý thẻ qua F13.07).
 
 ##### F08.03 — Hiển thị ba loại thẻ ôn tập
 - **Actor:** Người học (chính), Quản trị viên (kế thừa); Dịch vụ TTS (phụ)
@@ -1532,7 +1810,7 @@ wbsDiagram { node { FontSize 11 } }
   - Thẻ tạm ngưng không xuất hiện trong thẻ đến hạn cho đến khi bật lại.
   - Đặt lại giữ nguyên lịch sử ôn.
 - **Ngoại lệ:**
-  - Thẻ của người khác: từ chối vì không có quyền.
+  - Thẻ của người khác: từ chối vì không có quyền (trừ Quản trị viên, F13.07).
   - Hủy xác nhận đặt lại: không thay đổi.
 
 ##### F08.06 — Xem lịch sử ôn của thẻ
@@ -1549,7 +1827,7 @@ wbsDiagram { node { FontSize 11 } }
   - Lịch sử dài được chia trang hoặc tải dần.
 - **Ngoại lệ:**
   - Thẻ chưa ôn lần nào: "Chưa có lượt ôn nào".
-  - Thẻ của người khác: từ chối vì không có quyền.
+  - Thẻ của người khác: từ chối vì không có quyền (trừ Quản trị viên, F13.07).
 
 ##### F08.07 — Thông báo hoàn thành phiên ôn
 - **Actor:** Người học (chính), Quản trị viên (kế thừa)
@@ -1600,6 +1878,51 @@ wbsDiagram { node { FontSize 11 } }
 - **Ngoại lệ:**
   - Lỗi khi tạo thẻ: toàn bộ giao dịch lưu từ bị hủy (F07.01).
 
+##### F08.10 — Chọn bộ thẻ theo truyện hoặc từ đánh dấu sao
+- **Actor:** Người học (chính), Quản trị viên (kế thừa)
+- **User story:** US-NH-67 [Đề xuất]
+- **Mô tả:** Trên màn hình Flashcard, cho Người học chọn bộ thẻ cần ôn: "Tất cả", bộ theo từng truyện có từ đã lưu, hoặc bộ "Từ đánh dấu sao" (F07.09); mỗi bộ hiện số từ và số từ đã ôn. Chức năng chỉ đọc dữ liệu của M07 và M03, không tạo bảng dữ liệu mới.
+- **Đầu vào:** bộ thẻ được chọn (tất cả / mã truyện / từ đánh dấu sao).
+- **Xử lý chính:**
+  1. Lấy các mục từ của Người học cùng liên kết nguồn qua ngữ cảnh → trang → chương → truyện (M07, M03).
+  2. Gom theo truyện: mỗi truyện một bộ, gồm các từ có ít nhất một ngữ cảnh thuộc truyện đó; gom bộ "Từ đánh dấu sao" theo cờ sao của mục từ.
+  3. Tính cho mỗi bộ: số từ, và số từ đã ôn (từ có ít nhất một thẻ đã có Lượt ôn).
+  4. Khi bắt đầu ôn một bộ: lọc danh sách thẻ đến hạn của F08.01 theo bộ đã chọn rồi chuyển sang F08.02.
+- **Đầu ra:** danh sách bộ thẻ kèm số liệu; phiên ôn giới hạn trong bộ đã chọn.
+- **Quy tắc nghiệp vụ:**
+  - Một từ có ngữ cảnh ở nhiều truyện được tính vào từng bộ truyện tương ứng; bộ "Tất cả" luôn gồm mọi từ của Người học.
+  - Chọn bộ chỉ thu hẹp tập thẻ; điều kiện đến hạn, loại thẻ tạm ngưng và thẻ thuộc từ "Đã thuộc"/"Bỏ qua" của F08.01 và lịch FSRS của F08.02 giữ nguyên.
+  - Chỉ hiển thị bộ và số liệu của chính Người học.
+- **Ngoại lệ:**
+  - Truyện đã xóa hoặc trang nguồn không còn: bộ của truyện đó không hiển thị; từ vẫn nằm trong bộ "Tất cả".
+  - Bộ không có thẻ đến hạn: chuyển sang màn hình hoàn thành của F08.07.
+
+##### F08.11 — Flashcard AI
+- **Actor:** Người học (chính), Quản trị viên (kế thừa); Dịch vụ LLM (phụ)
+- **User story:** US-NH-75 [Đề xuất]
+- **Mô tả:** Với một mục từ trong Sổ tay, sinh "Thẻ mở rộng AI" gồm: 2 câu ví dụ mới dùng từ kèm bản dịch, mẹo nhớ theo chiết tự và 2–3 cụm từ thường đi kèm. Nội dung hiện ở mặt sau thẻ ôn (F08.03) và ở chi tiết mục từ. Dùng dịch vụ LLM (Google Gemini, chọn 25/10/2026) qua cổng riêng, theo cùng nguyên tắc với F09.06 đến F09.08: có thời gian chờ, kiểm tra kết quả và phương án dự phòng.
+- **Đầu vào:** mục từ; yêu cầu tạo lại (tùy chọn).
+- **Xử lý chính:**
+  1. Kiểm tra mục từ thuộc người dùng.
+  2. Tra bộ đệm theo mục từ (`vocab_ai_notes`); có rồi và không yêu cầu tạo lại thì trả ngay, không gọi LLM.
+  3. Nếu LLM đang bật (F13.05) và người dùng chưa hết hạn mức trong ngày: gửi LLM **chỉ** từ, pinyin, nghĩa ngắn, cấp HSK của từ, trình độ HSK của Người học (một con số) và dữ liệu phân rã chữ Hán công khai của từ điển (bộ thủ, thành phần, âm Hán Việt); yêu cầu JSON theo lược đồ cố định.
+  4. Kiểm tra kết quả như F09.07: đúng lược đồ; mỗi câu ví dụ chứa đúng từ; độ khó câu (tách từ F06.04 và tra cấp HSK F06.08) không vượt trình độ + 1; mẹo chiết tự chỉ dựa trên dữ liệu phân rã chữ của M06 (F06.05), LLM chỉ diễn đạt lại và không được thêm thành phần chữ không có trong dữ liệu.
+  5. Kết quả hợp lệ: lưu vào bộ đệm với nguồn `llm`, tên mô hình và thời điểm sinh. Không hợp lệ, LLM tắt, quá thời gian hoặc hết hạn mức: dùng nội dung dự phòng gồm câu ví dụ từ từ điển (F06.01), mẹo chiết tự và cụm từ lấy từ dữ liệu M06; lưu với nguồn `fallback`.
+  6. Yêu cầu "Tạo lại": tăng bộ đếm tạo lại và sinh nội dung mới theo bước 3 đến 5, chỉ khi chưa vượt giới hạn tạo lại.
+- **Đầu ra:** thẻ mở rộng AI hiển thị trên mặt sau thẻ và chi tiết mục từ; nhãn nguồn (AI hoặc từ điển).
+- **Quy tắc nghiệp vụ:**
+  - Hạn mức số lần gọi LLM cho Thẻ mở rộng AI mỗi người mỗi ngày là giá trị cấu hình (mặc định đặt ở `Settings`; Quản trị viên chỉnh ở F13.05 từ giai đoạn 6); nội dung lấy từ bộ đệm hoặc dự phòng không tính hạn mức.
+  - Nút "Tạo lại" bị giới hạn số lần cho mỗi mục từ (giá trị cấu hình, đề xuất 3 lần) để kiểm soát chi phí.
+  - Không gửi cho LLM email, tên hay mã người dùng, ngữ cảnh hay ghi chú riêng của Người học.
+  - Thời điểm tạo nội dung (để tiết kiệm lượt): ở chi tiết mục từ, nội dung AI chỉ được tạo khi Người học bấm xem; ở mặt sau thẻ ôn, nội dung được tạo khi lật thẻ lần đầu (các lần sau lấy từ bộ đệm).
+  - Không báo lỗi kỹ thuật khi LLM lỗi: Người học luôn nhận được nội dung, có thể là dự phòng; sự kiện dự phòng ghi nhật ký mức cảnh báo.
+  - Nội dung chỉ để học, không đổi lịch ôn, trạng thái hay ghi chú của mục từ; xóa mục từ xóa luôn thẻ mở rộng.
+  - Ghi chú về giao diện: màn hình hiện có quảng cáo "3 ngày mở khóa VIP & Flashcard AI". Việc giới hạn theo VIP thuộc M17 (giai đoạn 6.5); ở giai đoạn 5 mọi Người học dùng được trong hạn mức ngày.
+- **Ngoại lệ:**
+  - LLM tắt, lỗi, quá thời gian, trả kết quả không hợp lệ hoặc hết hạn mức: dùng nội dung dự phòng như bước 5.
+  - Từ không có dữ liệu từ điển hay chiết tự: phần tương ứng bị ẩn, không hiện giá trị rỗng.
+  - Vượt giới hạn tạo lại: thông báo đã hết lượt tạo lại cho từ này, giữ nội dung hiện có.
+
 ### 4.9 M09 — Kiểm tra cá nhân hóa
 
 - **Mục đích & phạm vi:** Sinh bài kiểm tra 10 câu từ Sổ tay cá nhân, ưu tiên từ sắp quên theo khả năng nhớ R của FSRS; dùng Dịch vụ LLM để sinh câu hỏi và luôn có đề dự phòng từ từ điển khi LLM lỗi, chậm hoặc bị tắt. Đề và đáp án được lưu và chấm ở máy chủ; từ làm sai được đưa về ôn sớm. Đây là chức năng mở rộng [Luồng 3], ngoài thuyết minh, cần trao đổi với GVHD.
@@ -1618,6 +1941,7 @@ wbsDiagram { node { FontSize 11 } }
 | F09.06 | Sinh bộ đề bằng LLM | Dịch vụ LLM | US-LLM-01 |
 | F09.07 | Kiểm tra lược đồ và đối chiếu đáp án | Dịch vụ LLM | US-LLM-02 |
 | F09.08 | Giới hạn thời gian chờ và sinh đề dự phòng | Người học, Quản trị viên (kế thừa); Dịch vụ LLM (phụ) | US-LLM-03, US-NH-50 |
+| F09.09 | Câu hỏi từ mở rộng | Người học, Quản trị viên (kế thừa) | US-NH-69 |
 
 ##### F09.01 — Yêu cầu tạo bài kiểm tra
 - **Actor:** Người học (chính), Quản trị viên (kế thừa); Dịch vụ LLM (phụ)
@@ -1625,11 +1949,12 @@ wbsDiagram { node { FontSize 11 } }
 - **Mô tả:** Tạo một bài kiểm tra từ Sổ tay cá nhân để đánh giá mức nhớ thực tế. Từ ra đề được chọn theo khả năng nhớ R của FSRS: ưu tiên từ sắp quên hoặc đang học, kèm một phần từ đã nhớ lâu.
 - **Đầu vào:** yêu cầu tạo bài (số câu mặc định 10, dạng câu).
 - **Xử lý chính:**
-  1. Kiểm tra hạn mức số đề trong ngày (F13.05).
+  1. Kiểm tra hạn mức số đề LLM trong ngày (F13.05); hạn mức chỉ đếm các đề có dùng LLM. Hết hạn mức thì không từ chối mà dùng đề dự phòng (F09.08).
   2. Đếm số từ đủ điều kiện ra đề (không ở trạng thái "Bỏ qua"); dưới 10 thì từ chối.
-  3. Tính R hiện tại của từng từ từ trạng thái thẻ; chọn khoảng 60% từ R thấp, 30% R trung bình, 10% R cao [Đề xuất theo tài liệu đánh giá Luồng 3].
-  4. Giao diện hiện chỉ báo "Đang tạo đề…"; gọi F09.06 (nếu LLM đang bật) với tổng ngân sách thời gian khoảng 20 giây, hoặc F09.08 ngay nếu LLM tắt.
-  5. Lưu đề và đáp án ở máy chủ; trả câu hỏi (không kèm đáp án) và chuyển vào màn làm bài.
+  3. Chia số câu: khoảng 85% câu về từ đã lưu và 15% câu về từ mở rộng (F09.09). Với phần từ đã lưu, tính R hiện tại của từng từ từ trạng thái thẻ; chọn khoảng 60% từ R thấp, 30% R trung bình, 10% R cao [Đề xuất theo tài liệu đánh giá Luồng 3].
+  4. Với mỗi câu, chọn **một câu ví dụ ngẫu nhiên có nghĩa** chứa từ (ưu tiên kho câu Tatoeba có bản dịch tiếng Việt), lọc theo độ khó: cấp HSK cao nhất của các từ trong câu không vượt quá trình độ của Người học + 1, độ dài 5–25 chữ, không lặp câu đã ra trong 5 bài gần nhất. Hết câu phù hợp thì dùng câu thoại đã lưu trong Sổ tay (ngữ cảnh), rồi mới đến câu hỏi theo định nghĩa. Dạng câu: điền từ vào câu (chọn 1 trong 4), nghĩa của từ trong câu, chọn bản dịch đúng của cả câu, cùng các dạng cũ (Hán→Việt, Việt→Hán, viết chữ).
+  5. Giao diện hiện chỉ báo "Đang tạo đề…"; gọi F09.06 (nếu LLM đang bật và chưa hết hạn mức) với tổng ngân sách thời gian khoảng 20 giây, hoặc F09.08 ngay nếu LLM tắt hay đã hết hạn mức trong ngày.
+  6. Lưu đề và đáp án ở máy chủ; trả câu hỏi (không kèm đáp án) và chuyển vào màn làm bài.
 - **Đầu ra:** bài kiểm tra 10 câu sẵn sàng làm.
 - **Quy tắc nghiệp vụ:**
   - Sổ tay cần tối thiểu 10 từ.
@@ -1638,7 +1963,7 @@ wbsDiagram { node { FontSize 11 } }
   - Trình độ HSK đã khai báo (F02.01) được dùng để chọn phương án nhiễu cùng mức [Đề xuất].
 - **Ngoại lệ:**
   - Dưới 10 từ: "Cần tối thiểu 10 từ trong Sổ tay cá nhân" kèm số từ hiện có.
-  - Hết hạn mức trong ngày: từ chối kèm thời điểm được tạo lại (F13.05).
+  - Hết hạn mức đề LLM trong ngày: không từ chối; bài được tạo bằng đề dự phòng (không tốn phí) và không tính vào hạn mức (F13.05, F09.08).
 
 ##### F09.02 — Làm bài và nộp bài
 - **Actor:** Người học (chính), Quản trị viên (kế thừa)
@@ -1667,12 +1992,13 @@ wbsDiagram { node { FontSize 11 } }
 - **Xử lý chính:**
   1. So sánh từng đáp án với đáp án đúng đã lưu.
   2. Với câu điền từ: chuẩn hóa trước khi so (bỏ khoảng trắng thừa, không phân biệt hoa thường của pinyin) để chấp nhận các cách viết tương đương.
-  3. Tính điểm = số câu đúng / tổng số câu; lưu kết quả.
-  4. Gọi F09.04 với danh sách câu sai.
-  5. Trả điểm và chi tiết từng câu: đáp án của người học, đáp án đúng, giải thích.
+  3. Tính điểm chính = số câu đúng / tổng số câu **về từ đã lưu**; lưu kết quả. Câu từ mở rộng (F09.09) tính điểm riêng "Đoán từ mới: x/y".
+  4. Gọi F09.04 với danh sách câu sai về từ đã lưu.
+  5. Trả điểm và chi tiết từng câu: đáp án của người học, đáp án đúng, giải thích; kèm điểm từ mở rộng nếu bài có.
 - **Đầu ra:** điểm và chi tiết kết quả.
 - **Quy tắc nghiệp vụ:**
   - Điểm do máy chủ tính.
+  - Điểm chính chỉ tính câu về từ đã lưu; câu từ mở rộng có điểm riêng và không vào điểm chính.
   - Đáp án đúng không được gửi xuống giao diện khi bài chưa nộp.
 - **Ngoại lệ:**
   - Mở kết quả của bài chưa nộp: không trả đáp án đúng.
@@ -1725,6 +2051,7 @@ wbsDiagram { node { FontSize 11 } }
 - **Quy tắc nghiệp vụ:**
   - Nội dung gửi đi không chứa email, tên, mã người dùng hay thông tin cá nhân khác.
   - Mỗi từ đã chọn có ít nhất một câu và tổng số câu khớp số câu yêu cầu.
+  - Mô hình dùng: Google Gemini `gemini-flash-lite-latest`, mức "thinking" thấp (cấu hình `LLM_MODEL`, `LLM_THINKING_LEVEL`). Đo thực tế ngày 25/10/2026: đề 10 câu mất 4–12 giây, nằm trong giới hạn 20 giây của F09.08.
 - **Ngoại lệ:**
   - Lỗi mạng, lỗi phía dịch vụ, hết hạn mức, quá thời gian: chuyển F09.08.
 
@@ -1752,23 +2079,44 @@ wbsDiagram { node { FontSize 11 } }
 - **Đầu vào:** danh sách từ đã chọn, số câu và dạng câu yêu cầu; nguyên nhân chuyển sang dự phòng.
 - **Xử lý chính:**
   1. Hủy chờ khi LLM không phản hồi trong 20 giây.
-  2. Sinh đề dự phòng: trắc nghiệm nghĩa với phương án nhiễu lấy từ các từ cùng cấp HSK, và câu điền từ theo dạng đã yêu cầu; cùng số câu và loại câu như yêu cầu ban đầu.
+  2. Sinh đề dự phòng: mỗi câu dùng một câu ví dụ ngẫu nhiên có nghĩa chứa từ (bộ lọc độ khó, độ dài và không lặp như F09.01); các dạng: điền từ vào câu (chọn 1 trong 4), nghĩa của từ trong câu, chọn bản dịch đúng của cả câu, Hán→Việt, Việt→Hán, viết chữ; phương án nhiễu lấy từ các từ cùng cấp HSK. Hết câu ví dụ thì dùng câu thoại đã lưu trong Sổ tay, rồi câu hỏi theo định nghĩa. Giữ cùng số câu và tỉ lệ 85% từ đã lưu, 15% từ mở rộng (F09.09).
   3. Gắn ghi chú "Đề tạo tự động từ từ điển" cho bài.
-  4. Ghi nhật ký nguyên nhân (hết thời gian, lỗi cấu trúc, lỗi mạng, LLM bị tắt).
+  4. Ghi nhật ký nguyên nhân (hết thời gian, lỗi cấu trúc, lỗi mạng, LLM bị tắt, hết hạn mức trong ngày); nguyên nhân chỉ lưu nội bộ, không trả cho Người học.
 - **Đầu ra:** bài kiểm tra đầy đủ từ đề dự phòng.
 - **Quy tắc nghiệp vụ:**
-  - LLM bị tắt (US-QT-13): dùng đề dự phòng ngay, không chờ dịch vụ ngoài.
+  - LLM bị tắt (US-QT-13) hoặc đã hết hạn mức đề LLM trong ngày: dùng đề dự phòng ngay, không chờ dịch vụ ngoài. Đề dự phòng không tốn phí nên không tính vào hạn mức.
   - Không báo lỗi kỹ thuật cho Người học.
   - Quy tắc chấm và ôn sớm áp dụng giống bài thường.
 - **Ngoại lệ:**
   - Không đủ dữ liệu từ điển để tạo phương án nhiễu cùng cấp: lấy nhiễu ở cấp lân cận [Đề xuất].
 
+##### F09.09 — Câu hỏi từ mở rộng
+- **Actor:** Người học (chính), Quản trị viên (kế thừa)
+- **User story:** US-NH-69 [Đề xuất]
+- **Mô tả:** Chèn vào bài kiểm tra một ít câu về từ mới liên quan tới từ Người học đã lưu để tập đoán nghĩa chữ và mở rộng vốn từ mà không bị ngợp. Điểm của các câu này tính riêng, không ảnh hưởng điểm chính và lịch ôn.
+- **Đầu vào:** danh sách từ đã chọn ra đề (F09.01); Sổ tay; chương đã đọc và lịch sử tra; trình độ HSK (F02.01); danh sách từ gợi ý đã bỏ qua (F10.03).
+- **Xử lý chính:**
+  1. Xác định số câu mở rộng: khoảng 15% tổng số câu, làm tròn (đề 10 câu có 2 câu).
+  2. Tìm ứng viên là từ không có trong Sổ tay và chưa bị bỏ qua ở gợi ý, cấp HSK không vượt quá trình độ của Người học + 1.
+  3. Xếp ưu tiên: (a) có chung chữ Hán với một từ đã lưu (ưu tiên nhất); (b) đã gặp trong chương đã đọc hoặc đã tra mà chưa lưu; (c) chung thành phần hoặc bộ thủ; (d) cùng cấp HSK và phổ biến.
+  4. Tạo câu trắc nghiệm cho từ mở rộng, kèm gợi ý nối với từ đã biết (vd. "chữ 友 giống trong 朋友 của bạn") hoặc âm Hán Việt.
+  5. Sau khi nộp bài, hiện nút "Lưu vào Sổ tay" cho từng từ mở rộng; bấm thì gọi F07.01 với nguồn `quiz`.
+- **Đầu ra:** các câu từ mở rộng trong đề; điểm riêng "Đoán từ mới: x/y" trong kết quả.
+- **Quy tắc nghiệp vụ:**
+  - Chỉ chèn khi tìm được ứng viên phù hợp; thiếu thì bù bằng câu về từ đã lưu.
+  - Câu từ mở rộng chỉ là trắc nghiệm.
+  - Điểm từ mở rộng tính riêng (F09.03), không vào điểm chính và không gọi F09.04; không ảnh hưởng lịch ôn FSRS.
+  - Không lấy từ đã có trong Sổ tay hoặc đã bỏ qua ở gợi ý.
+- **Ngoại lệ:**
+  - Không có ứng viên phù hợp: bài không có câu từ mở rộng, toàn bộ là câu về từ đã lưu.
+  - Từ mở rộng đã được lưu trước khi bấm "Lưu vào Sổ tay": áp dụng F07.02 (không trùng).
+
 ### 4.10 M10 — Gợi ý từ cá nhân hóa
 
 - **Mục đích & phạm vi:** Đề xuất danh sách từ nên học trong chương đang đọc, xếp hạng theo tần suất xuất hiện trong chương, độ phù hợp với trình độ HSK đã khai báo và lịch sử tra của Người học; cho phép nhận gợi ý vào sổ tay hoặc bỏ qua. Đây là chức năng đề xuất mở rộng.
 - **Actor sử dụng:** Người học (chính), Quản trị viên (kế thừa).
-- **Module phụ thuộc:** M04 (từ đã tách của các trang trong chương), M07 (sổ tay, lưu từ), M02 (trình độ HSK), M06 (cấp HSK của từ, lịch sử tra cứu).
-- **Dữ liệu chính:** Danh sách gợi ý (tính khi yêu cầu, không lưu cố định), Từ gợi ý đã bỏ qua (theo Người học).
+- **Module phụ thuộc:** M04 (từ đã tách của các trang trong chương), M07 (sổ tay, lưu từ), M02 (trình độ HSK), M06 (cấp HSK của từ, lịch sử tra cứu), M03 (truyện công khai, Thư viện cá nhân, điểm đánh giá, tiến độ đọc; F10.04).
+- **Dữ liệu chính:** Danh sách gợi ý (tính khi yêu cầu, không lưu cố định), Từ gợi ý đã bỏ qua (theo Người học), Truyện gợi ý và độ phủ từ vựng của chương (tính khi gọi, không lưu).
 - **Gợi ý router FastAPI:** `suggestions`.
 
 | Mã | Tên chức năng | Actor | User story |
@@ -1776,6 +2124,8 @@ wbsDiagram { node { FontSize 11 } }
 | F10.01 | Lập danh sách từ nên học trong chương | Người học, Quản trị viên (kế thừa) | US-NH-51 |
 | F10.02 | Nhận gợi ý vào sổ tay | Người học, Quản trị viên (kế thừa) | US-NH-52 |
 | F10.03 | Bỏ qua và khôi phục gợi ý | Người học, Quản trị viên (kế thừa) | US-NH-52 |
+| F10.04 | Gợi ý truyện theo trình độ | Người học, Quản trị viên (kế thừa) | US-NH-72 |
+| F10.05 | Độ phủ từ vựng của chương | Người học, Quản trị viên (kế thừa) | US-NH-73 |
 
 ##### F10.01 — Lập danh sách từ nên học trong chương
 - **Actor:** Người học (chính), Quản trị viên (kế thừa)
@@ -1790,10 +2140,12 @@ wbsDiagram { node { FontSize 11 } }
   5. Trả danh sách đã sắp xếp.
 - **Đầu ra:** danh sách "Từ nên học".
 - **Quy tắc nghiệp vụ:**
-  - Chưa khai báo trình độ HSK: hiện nhắc khai báo và sắp xếp theo tần suất.
+  - Chưa khai báo trình độ HSK: hiện nhắc khai báo và sắp xếp theo tần suất; từ HSK 1 bị giảm điểm.
+  - Loại hư từ và từ quá cơ bản (什么, 我们, 没有…) cùng mọi từ chỉ gồm các chữ rất phổ biến.
+  - Gộp dạng lặp: AA về A, ABAB về AB khi từ gốc có trong từ điển (tần suất cộng dồn vào từ gốc).
   - Đổi trình độ (F02.01) làm thay đổi danh sách ở lần xem sau.
 - **Ngoại lệ:**
-  - Chương chưa xử lý xong: thông báo chương đang xử lý.
+  - Chương còn trang đang chờ, đang chạy hoặc chưa có bản dịch: thông báo chương đang xử lý. Chương có trang dịch lỗi vĩnh viễn không bị coi là "đang xử lý".
   - Không có từ phù hợp: thông báo tương ứng thay vì danh sách trống.
 
 ##### F10.02 — Nhận gợi ý vào sổ tay
@@ -1822,9 +2174,49 @@ wbsDiagram { node { FontSize 11 } }
   3. Khôi phục: xóa từ khỏi danh sách bỏ qua để được gợi ý lại.
 - **Đầu ra:** danh sách gợi ý và danh sách đã bỏ qua cập nhật.
 - **Quy tắc nghiệp vụ:**
-  - Từ đã bỏ qua không được gợi ý lại ở mọi chương cho tới khi khôi phục.
+  - Từ đã bỏ qua không được gợi ý lại ở mọi chương cho tới khi khôi phục; việc bỏ qua áp dụng cho mọi chương (không gắn với chương cụ thể).
 - **Ngoại lệ:**
   - Khôi phục từ không có trong danh sách bỏ qua: bỏ qua thao tác, không báo lỗi.
+
+##### F10.04 — Gợi ý truyện theo trình độ
+- **Actor:** Người học (chính), Quản trị viên (kế thừa)
+- **User story:** US-NH-72 [Đề xuất]
+- **Mô tả:** Ở Hồ sơ, gợi ý 1 đến 3 truyện công khai phù hợp trình độ HSK của Người học để biết nên đọc gì tiếp theo.
+- **Đầu vào:** Người học; trình độ HSK đã khai báo (F02.01).
+- **Xử lý chính:**
+  1. Lấy các truyện công khai có cấp HSK ước tính (`est_hsk_level`) bằng trình độ của Người học hoặc cao hơn 1 cấp.
+  2. Loại hoặc xếp sau các truyện đã có trong Thư viện cá nhân (F03.13) và truyện đã đọc xong (F03.12).
+  3. Sắp xếp: truyện chưa thêm vào Thư viện và chưa đọc xong trước, sau đó theo điểm đánh giá trung bình (F03.14) từ cao xuống thấp.
+  4. Trả tối đa 3 truyện.
+  5. Chưa khai báo trình độ: trả kèm lời nhắc khai báo (F02.01) và gợi ý theo các truyện phổ biến có cấp HSK thấp.
+- **Đầu ra:** danh sách 1–3 truyện gợi ý, mỗi truyện có tên, ảnh bìa, cấp HSK ước tính và điểm đánh giá.
+- **Quy tắc nghiệp vụ:**
+  - Chỉ gợi ý truyện công khai; không gợi ý truyện riêng tư của người khác.
+  - Danh sách tính khi yêu cầu, không lưu sẵn; đổi trình độ làm gợi ý đổi ở lần xem sau.
+  - "Phổ biến" lấy theo số người thêm vào Thư viện cá nhân.
+  - Chưa khai báo trình độ: kết quả mang cờ "cần khai báo trình độ" và gợi ý các truyện phổ biến (nhiều người thêm vào Thư viện nhất) có cấp HSK 1–3; tối đa 3 truyện.
+- **Ngoại lệ:**
+  - Không có truyện phù hợp: hiện thông báo "Chưa có truyện phù hợp trình độ của bạn", không để trống.
+  - Không còn truyện nào chưa thêm hoặc chưa đọc xong: vẫn trả các truyện còn lại phù hợp theo điểm đánh giá.
+
+##### F10.05 — Độ phủ từ vựng của chương
+- **Actor:** Người học (chính), Quản trị viên (kế thừa)
+- **User story:** US-NH-73 [Đề xuất]
+- **Mô tả:** Với một chương, cho Người học biết mình đã nắm bao nhiêu từ vựng đúng trình độ xuất hiện trong chương, dạng "đã nắm X/Y từ HSK n" và phần trăm, để chọn chương vừa sức. Dùng ở Hồ sơ (tab "Đang đọc") và trong trình đọc.
+- **Đầu vào:** chương; trình độ HSK n của Người học (F02.01).
+- **Xử lý chính:**
+  1. Gom các từ khác nhau đã tách (F04.10) từ `bubbles.tokens` của các trang trong chương.
+  2. Giữ các từ có cấp HSK từ 1 đến n (F06.08).
+  3. Y là số từ giữ lại; X là số từ trong đó đã có trong Sổ tay (F07.01) của Người học.
+  4. Trả X, Y, n và phần trăm X/Y làm tròn.
+- **Đầu ra:** "đã nắm X/Y từ HSK n" kèm phần trăm.
+- **Quy tắc nghiệp vụ:**
+  - Tính khi gọi, không lưu sẵn; từ có trong Sổ tay ở mọi trạng thái (Đang học, Đã thuộc, Bỏ qua) đều được tính vào X.
+  - Chỉ tính các trang đã xử lý xong; chương còn trang chưa xong thì kết quả ghi nhận là tạm tính.
+  - Chưa khai báo trình độ: nhắc khai báo, không tính.
+  - Kết quả mang trạng thái: `ready` (đã tính đủ); `processing` (tạm tính vì còn trang chưa xử lý xong); `empty` (không có từ để tính; giao diện không hiện 0/0).
+- **Ngoại lệ:**
+  - Chương chưa có trang nào xử lý xong hoặc không có từ ở cấp phù hợp: thông báo tương ứng thay vì hiển thị 0/0.
 
 ### 4.11 M11 — Phát âm (TTS)
 
@@ -1908,8 +2300,10 @@ wbsDiagram { node { FontSize 11 } }
 - **Đầu ra:** tệp âm thanh.
 - **Quy tắc nghiệp vụ:**
   - Âm thanh phải đúng văn bản, giọng và tốc độ yêu cầu.
+  - Danh sách giọng (để chọn và nghe thử ở F02.03) lấy từ dịch vụ Edge TTS và lưu đệm 24 giờ; xem được cả khi chưa đăng nhập.
 - **Ngoại lệ:**
   - Dịch vụ lỗi hoặc không phản hồi: chuyển F11.06.
+  - Dịch vụ lỗi khi lấy danh sách giọng: dùng danh sách giọng mặc định đi kèm hệ thống, không báo lỗi cho Người học.
 
 ##### F11.05 — Quản lý bộ đệm (cache) âm thanh
 - **Actor:** Dịch vụ TTS (phụ, hệ thống)
@@ -2007,11 +2401,11 @@ wbsDiagram { node { FontSize 11 } }
 
 ### 4.13 M13 — Quản trị hệ thống
 
-- **Mục đích & phạm vi:** Tập hợp các chức năng quản trị không gắn với một module nghiệp vụ cụ thể: quản lý người dùng (xem, đổi vai trò, khóa), kiểm duyệt ảnh tải lên, cấu hình dịch vụ ngoài (LLM, TTS, hạn mức đề) và ghi nhật ký thao tác quản trị. Các chức năng quản trị gắn với nghiệp vụ khác (đăng truyện công khai, giám sát xử lý ảnh, nạp từ điển, thống kê, xử lý báo lỗi) nằm ở module tương ứng.
+- **Mục đích & phạm vi:** Tập hợp các chức năng quản trị không gắn với một module nghiệp vụ cụ thể: quản lý người dùng (xem, đổi vai trò, khóa), xem và quản lý dữ liệu học tập của người dùng (F13.07), kiểm duyệt ảnh tải lên, cấu hình dịch vụ ngoài (LLM, TTS, hạn mức đề) và các công tắc vận hành, soạn trang nội dung pháp lý (F13.08), xuất báo cáo vi phạm (F13.09) và ghi nhật ký thao tác quản trị. Các chức năng quản trị gắn với nghiệp vụ khác (đăng truyện công khai, giám sát xử lý ảnh, nạp từ điển, thống kê, xử lý báo lỗi) nằm ở module tương ứng.
 - **Actor sử dụng:** Quản trị viên (chính).
-- **Module phụ thuộc:** M01 (tài khoản, phiên: thu hồi phiên khi khóa), M03 (trang, ảnh), M14 (thông báo cho chủ ảnh). M09 và M11 đọc cấu hình của module này.
+- **Module phụ thuộc:** M01 (tài khoản, phiên: thu hồi phiên khi khóa), M02 (cài đặt của người dùng, F13.07), M03 (trang, ảnh, thư viện, tiến độ đọc), M07 (mục từ, ngữ cảnh), M08 (thẻ, lượt ôn), M14 (thông báo cho chủ ảnh). M09 và M11 đọc cấu hình của module này. Các lời gọi sang M02, M03, M07, M08 đi qua `application/public.py` của module đích.
 - **Dữ liệu chính:** Cấu hình hệ thống (bật/tắt LLM, bật/tắt TTS, hạn mức số đề mỗi ngày), Quyết định gỡ ảnh (ảnh, lý do, người thực hiện, thời điểm), Nhật ký thao tác quản trị.
-- **Gợi ý router FastAPI:** `admin` (mọi đường dẫn yêu cầu vai trò Quản trị viên).
+- **Gợi ý router FastAPI:** `admin` (mọi đường dẫn yêu cầu vai trò Quản trị viên; dữ liệu của một người dùng đặt dưới `/api/v1/admin/users/{user_id}/...`, xem F13.07).
 
 | Mã | Tên chức năng | Actor | User story |
 |---|---|---|---|
@@ -2020,7 +2414,10 @@ wbsDiagram { node { FontSize 11 } }
 | F13.03 | Khóa và mở khóa tài khoản | Quản trị viên | US-QT-03 |
 | F13.04 | Kiểm duyệt và gỡ ảnh tải lên | Quản trị viên | US-QT-12 |
 | F13.05 | Cấu hình dịch vụ LLM, TTS và hạn mức đề | Quản trị viên | US-QT-13 |
-| F13.06 | Ghi nhật ký thao tác quản trị (chức năng nội bộ) | Hệ thống (phục vụ Quản trị viên) | hỗ trợ US-QT-02, US-QT-03, US-QT-05, US-QT-12 |
+| F13.06 | Ghi nhật ký thao tác quản trị (chức năng nội bộ) | Hệ thống (phục vụ Quản trị viên) | hỗ trợ US-QT-02, US-QT-03, US-QT-05, US-QT-12, US-QT-14 |
+| F13.07 | Xem và quản lý dữ liệu học tập của người dùng | Quản trị viên | US-QT-14 |
+| F13.08 | Trang nội dung pháp lý | Quản trị viên; Khách, Người học (xem) | US-QT-15 |
+| F13.09 | Xuất báo cáo vi phạm | Quản trị viên | US-QT-16 |
 
 ##### F13.01 — Xem và tìm người dùng
 - **Actor:** Quản trị viên (chính)
@@ -2096,11 +2493,11 @@ wbsDiagram { node { FontSize 11 } }
 ##### F13.05 — Cấu hình dịch vụ LLM, TTS và hạn mức đề
 - **Actor:** Quản trị viên (chính)
 - **User story:** US-QT-13 [Đề xuất]
-- **Mô tả:** Bật/tắt dịch vụ LLM và TTS, đặt giới hạn số đề kiểm tra mỗi ngày cho mỗi Người học, để kiểm soát chi phí và độ ổn định.
-- **Đầu vào:** cờ bật/tắt LLM, cờ bật/tắt TTS, giới hạn N đề mỗi ngày.
+- **Mô tả:** Bật/tắt dịch vụ LLM và TTS, đặt giới hạn số đề kiểm tra mỗi ngày cho mỗi Người học, để kiểm soát chi phí và độ ổn định. Mở rộng (giai đoạn 6): thêm các công tắc vận hành của hệ thống (chế độ bảo trì, kiểm duyệt ảnh tự động, xử lý OCR ngay khi tải, thông báo quản trị) và hạn mức Thẻ mở rộng AI mỗi ngày (F08.11).
+- **Đầu vào:** cờ bật/tắt LLM, cờ bật/tắt TTS, giới hạn N đề mỗi ngày; mở rộng: cờ chế độ bảo trì, cờ kiểm duyệt ảnh tự động, cờ xử lý OCR ngay khi tải, cờ thông báo quản trị, giới hạn số lần tạo Thẻ mở rộng AI mỗi ngày.
 - **Xử lý chính:**
   1. Kiểm tra vai trò Quản trị viên.
-  2. Kiểm tra N là số nguyên không âm.
+  2. Kiểm tra N và giới hạn Thẻ mở rộng AI là số nguyên không âm.
   3. Lưu Cấu hình hệ thống; các module M09, M11 đọc cấu hình ở mỗi yêu cầu.
   4. Ghi nhật ký thay đổi (F13.06).
 - **Đầu ra:** cấu hình mới có hiệu lực ngay.
@@ -2108,22 +2505,99 @@ wbsDiagram { node { FontSize 11 } }
   - Tắt LLM: Người học yêu cầu bài kiểm tra nhận đề dự phòng (F09.08).
   - Tắt TTS: bấm nghe hiện thông báo tính năng đang tạm tắt; các chức năng khác không bị ảnh hưởng.
   - Người học yêu cầu đề thứ N+1 trong ngày: từ chối, thông báo đã hết lượt hôm nay và thời điểm được tạo lại (đầu ngày kế tiếp theo múi giờ Người học [Đề xuất]); mọi bài được tạo, kể cả đề dự phòng, đều tính vào hạn mức [Đề xuất].
+  - Chế độ bảo trì bật: chỉ Quản trị viên truy cập được; Khách và Người học nhận thông báo hệ thống đang bảo trì (mã 503), phiên đăng nhập hiện có không bị thu hồi. Quản trị viên vẫn đăng nhập và tắt lại chế độ này được.
+  - Kiểm duyệt ảnh tự động bật: ảnh tải lên được kiểm tra sơ bộ bằng luật (định dạng, kích thước, ảnh trùng) và ảnh nghi vấn được đưa vào danh sách chờ của F13.04; không dùng mô hình AI nhận dạng nội dung. Tắt thì chỉ kiểm duyệt thủ công theo F13.04.
+  - Xử lý OCR ngay khi tải tắt: trang tải lên được lưu ở trạng thái "Đang chờ" nhưng chưa vào hàng đợi cho tới khi Người học yêu cầu (F04.03) hoặc Quản trị viên chạy (F04.06).
+  - Thông báo quản trị tắt: hệ thống không gửi thông báo cho Quản trị viên (báo lỗi mới, lỗi xử lý ảnh hàng loạt); dữ liệu vẫn xem được ở màn hình quản trị.
+  - Hết hạn mức Thẻ mở rộng AI trong ngày (F08.11): vẫn trả nội dung dự phòng, không từ chối.
 - **Ngoại lệ:**
   - Giới hạn âm hoặc không phải số: từ chối với thông báo cụ thể.
 
 ##### F13.06 — Ghi nhật ký thao tác quản trị (chức năng nội bộ)
 - **Actor:** Hệ thống, phục vụ Quản trị viên
-- **User story:** (chức năng nội bộ) hỗ trợ US-QT-02 TC3, US-QT-03 TC4, US-QT-05 TC2, US-QT-12 TC4
-- **Mô tả:** Ghi lại mọi thao tác quản trị có tác động (đổi vai trò, khóa/mở khóa, sửa/xóa truyện của người khác, gỡ ảnh, đổi cấu hình) để truy vết trách nhiệm.
+- **User story:** (chức năng nội bộ) hỗ trợ US-QT-02 TC3, US-QT-03 TC4, US-QT-05 TC2, US-QT-12 TC4, US-QT-14 TC2
+- **Mô tả:** Ghi lại mọi thao tác quản trị có tác động (đổi vai trò, khóa/mở khóa, sửa/xóa truyện của người khác, gỡ ảnh, đổi cấu hình, sửa/xóa dữ liệu học tập của người dùng) để truy vết trách nhiệm.
 - **Đầu vào:** người thực hiện, loại thao tác, đối tượng, thời điểm, lý do (nếu có).
 - **Xử lý chính:**
   1. Nhận sự kiện từ chức năng quản trị ngay sau khi thao tác thành công (trong cùng giao dịch).
   2. Ghi bản ghi chỉ thêm, không sửa, không xóa.
 - **Đầu ra:** bản ghi nhật ký.
 - **Quy tắc nghiệp vụ:**
-  - Nhật ký không chứa mật khẩu hay dữ liệu học tập riêng.
+  - Nhật ký không chứa mật khẩu hay dữ liệu học tập riêng; với thao tác ở F13.07 chỉ ghi loại thao tác, người dùng đích, định danh đối tượng bị tác động và tên các trường bị đổi, không chép nội dung.
 - **Ngoại lệ:**
   - Không ghi được nhật ký: hủy thao tác quản trị tương ứng để không có thao tác không được truy vết.
+
+##### F13.07 — Xem và quản lý dữ liệu học tập của người dùng
+- **Actor:** Quản trị viên (chính)
+- **User story:** US-QT-14 [Đề xuất]
+- **Mô tả:** Cho phép Quản trị viên xem và chỉnh sửa dữ liệu học tập của bất kỳ người dùng nào để hỗ trợ người học khi gặp sự cố, sửa dữ liệu sai và xử lý nội dung vi phạm. Phạm vi gồm: tổng quan một người dùng; mục từ và ngữ cảnh trong Sổ tay cá nhân; thẻ ôn và lịch sử ôn; cài đặt cá nhân; thư viện, tiến độ đọc và ảnh tải nhanh; dấu trang, ghi chú trên trang và bản sửa dịch cá nhân (F05.05–F05.08); truyện riêng tư (sửa/xóa dùng lại F03.11); bài kiểm tra cá nhân (M09) khi được xây dựng ở GĐ5. Các chức năng đọc/ghi này nằm ở module sở hữu dữ liệu (M02, M03, M07, M08); F13.07 là điểm vào quản trị gọi sang chúng qua giao diện công khai của từng module.
+- **Đầu vào:** người dùng đích; loại dữ liệu cần xem (tổng quan, mục từ, thẻ, cài đặt, thư viện, tiến độ đọc, ảnh tải nhanh, dấu trang, ghi chú trên trang, bản sửa dịch); thao tác sửa/xóa kèm đối tượng và giá trị mới (nếu có); xác nhận với thao tác xóa và đặt lại thẻ.
+- **Xử lý chính:**
+  1. Kiểm tra vai trò Quản trị viên (F01.09) và người dùng đích tồn tại.
+  2. Tổng quan: trả số mục từ, số thẻ (tổng, đến hạn, tạm ngưng), số lượt ôn, số truyện trong Thư viện, tiến độ đọc từng truyện, trình độ HSK đã khai báo.
+  3. Sổ tay: liệt kê có phân trang và lọc như F07.07; xem chi tiết mục từ kèm ngữ cảnh; sửa trạng thái học (F07.03), ghi chú (F07.04), dấu sao (F07.09); xóa từng ngữ cảnh (F07.05) hoặc xóa mục từ (F07.06) với hộp thoại xác nhận; xem và xóa câu thoại đã lưu (F07.11) với hộp thoại xác nhận.
+  4. Thẻ ôn: xem danh sách và thông tin lịch của thẻ; tạm ngưng, tiếp tục hoặc đặt lại thẻ (F08.05); xem lịch sử ôn (F08.06).
+  5. Cài đặt: xem và sửa trình độ HSK, chế độ mặc định, giọng đọc, tốc độ đọc, cỡ chữ bong bóng dịch, tùy chọn từ điển chuyên ngành, nhắc ôn (F02.01, F02.02, F02.03, F02.04, F11.03, F06.03, F14.03) theo đúng quy tắc kiểm tra giá trị của từng chức năng.
+  6. Thư viện: xem Thư viện cá nhân (F03.13), tiến độ đọc (F03.12) và ảnh tải nhanh còn hạn (F03.08); sửa/xóa truyện riêng tư của người dùng thực hiện theo F03.11.
+  7. Với mọi thao tác sửa/xóa: ghi nhật ký quản trị trong cùng giao dịch (F13.06) gồm người thực hiện, thời điểm, người dùng đích, loại thao tác và đối tượng.
+- **Đầu ra:** dữ liệu của người dùng đích (danh sách, chi tiết, tổng quan) hoặc kết quả thao tác sửa/xóa; người học thấy thay đổi ở lần mở sau.
+- **Quy tắc nghiệp vụ:**
+  - Chỉ Quản trị viên dùng được; đường dẫn quản trị đặt dưới `/api/v1/admin/users/{user_id}/...`. Người học vẫn chỉ truy cập dữ liệu của chính mình qua các chức năng thường; dữ liệu của người khác trả lời như không tồn tại (404).
+  - Mọi thao tác sửa/xóa đều ghi nhật ký quản trị (F13.06); thao tác chỉ xem không bắt buộc ghi nhật ký.
+  - Không bao giờ trả mật khẩu băm, token (kể cả bản băm), khóa API hay đường dẫn tệp tuyệt đối trên máy chủ.
+  - Sửa dữ liệu phải tuân thủ cùng quy tắc kiểm tra giá trị như khi chính người học sửa (ví dụ trạng thái học chỉ gồm ba giá trị, trình độ HSK 1–9); không có đường vòng bỏ qua ràng buộc.
+  - Xóa mục từ/ngữ cảnh/truyện theo đúng quy tắc tầng của chức năng gốc (xóa mục từ xóa thẻ và lịch sử ôn tương ứng; xóa truyện không xóa từ đã lưu).
+  - Ảnh ngữ cảnh đã bị gỡ do kiểm duyệt (F13.04) vẫn bị ẩn khi Quản trị viên xem.
+  - Quản trị viên không tự tạo dữ liệu học tập thay người dùng; chỉ sửa, tạm ngưng/đặt lại hoặc xóa dữ liệu đã có.
+- **Ngoại lệ:**
+  - Người dùng đích không tồn tại: "Không tìm thấy người dùng", không thay đổi gì.
+  - Đối tượng (mục từ, thẻ, ngữ cảnh) không thuộc người dùng đích: trả lời như không tồn tại.
+  - Giá trị sửa không hợp lệ: từ chối với thông báo cụ thể, dữ liệu không đổi.
+  - Hủy hộp thoại xác nhận: không thay đổi.
+  - Không ghi được nhật ký: hủy thao tác (theo F13.06).
+  - Người học truy cập đường dẫn quản trị: từ chối vì không có quyền.
+
+##### F13.08 — Trang nội dung pháp lý
+- **Actor:** Quản trị viên (chính); Khách, Người học (xem)
+- **User story:** US-QT-15 [Đề xuất]
+- **Mô tả:** Quản trị viên soạn và sửa hai văn bản "Điều khoản dịch vụ" và "Chính sách bảo mật"; mọi người, kể cả Khách, xem công khai không cần đăng nhập. Form đăng ký (F01.01) có liên kết tới hai trang này. Thực hiện ở giai đoạn 6.6.
+- **Đầu vào:** loại văn bản (điều khoản hoặc bảo mật), nội dung, ngày hiệu lực.
+- **Xử lý chính:**
+  1. Kiểm tra vai trò Quản trị viên (F01.09) cho thao tác soạn và sửa.
+  2. Kiểm tra nội dung không rỗng và ngày hiệu lực hợp lệ.
+  3. Lưu văn bản vào Cấu hình hệ thống (khóa riêng cho từng loại), tăng số phiên bản lên 1 và ghi ngày hiệu lực.
+  4. Ghi nhật ký quản trị (F13.06) với loại văn bản và số phiên bản, không chép nội dung.
+  5. Trang công khai trả nội dung hiện hành kèm số phiên bản và ngày hiệu lực.
+- **Đầu ra:** hai trang pháp lý công khai; liên kết trên form đăng ký trỏ tới phiên bản hiện hành.
+- **Quy tắc nghiệp vụ:**
+  - Mỗi lần lưu tạo phiên bản mới; trang công khai luôn hiển thị phiên bản và ngày hiệu lực.
+  - Nội dung hiển thị dạng văn bản, không chạy mã HTML hay script từ nội dung do Quản trị viên nhập.
+  - Chưa soạn văn bản: trang công khai hiển thị nội dung mặc định của hệ thống, không để trống.
+  - Chỉ Quản trị viên sửa được; xem là công khai.
+- **Ngoại lệ:**
+  - Nội dung rỗng hoặc ngày hiệu lực không hợp lệ: từ chối với thông báo cụ thể.
+  - Người học truy cập thao tác sửa: từ chối vì không có quyền.
+  - Không ghi được nhật ký: hủy thao tác (theo F13.06).
+
+##### F13.09 — Xuất báo cáo vi phạm
+- **Actor:** Quản trị viên (chính)
+- **User story:** US-QT-16 [Đề xuất]
+- **Mô tả:** Xuất danh sách nội dung bị báo cáo hoặc bị gỡ trong một khoảng thời gian ra tệp CSV để lưu hồ sơ, báo cáo hay đối chiếu. Thực hiện ở giai đoạn 6.6.
+- **Đầu vào:** khoảng thời gian (từ ngày, đến ngày).
+- **Xử lý chính:**
+  1. Kiểm tra vai trò Quản trị viên và khoảng thời gian hợp lệ.
+  2. Lấy các báo lỗi (F14.01) và quyết định gỡ ảnh (F13.04) có thời điểm trong khoảng đó.
+  3. Dựng bảng CSV gồm: loại (báo cáo hoặc gỡ), thời điểm, trang hoặc ảnh liên quan, lý do, trạng thái xử lý, mã người thực hiện.
+  4. Trả tệp CSV; ghi nhật ký quản trị (F13.06) loại thao tác xuất và khoảng thời gian.
+- **Đầu ra:** tệp CSV mã hóa UTF-8 mở được đúng tiếng Việt và chữ Hán.
+- **Quy tắc nghiệp vụ:**
+  - Không xuất email, tên hiển thị, mật khẩu hay token; người liên quan chỉ ghi bằng mã.
+  - Ô văn bản bắt đầu bằng ký tự công thức (=, +, -, @) được thêm tiền tố để tránh chạy công thức khi mở bằng bảng tính.
+  - Khoảng thời gian tối đa 366 ngày mỗi lần xuất; kết quả sắp theo thời điểm.
+- **Ngoại lệ:**
+  - Ngày bắt đầu sau ngày kết thúc hoặc vượt giới hạn: từ chối với thông báo cụ thể.
+  - Không có dữ liệu trong khoảng: tệp chỉ có dòng tiêu đề kèm thông báo "Không có nội dung trong khoảng thời gian này".
+  - Người học truy cập: từ chối vì không có quyền.
 
 ### 4.14 M14 — Phản hồi & Thông báo
 
@@ -2245,7 +2719,7 @@ wbsDiagram { node { FontSize 11 } }
 - **Xử lý chính:**
   1. Chọn ảnh tải nhanh có thời điểm tải cách hiện tại quá 7 ngày.
   2. Với mỗi ảnh: xóa ảnh gốc, ảnh đã xóa chữ, ảnh đã dịch và dữ liệu nhận diện kèm theo.
-  3. Đánh dấu bản ghi ảnh là "đã hết hạn" (để F03.08 hiện "Ảnh đã hết hạn lưu").
+  3. Xóa trang và bản ghi ảnh tải nhanh (không giữ bản ghi đánh dấu); từ lúc này F03.08 trả "Không tìm thấy ảnh".
   4. Ghi số ảnh đã dọn vào nhật ký.
 - **Đầu ra:** dung lượng được giải phóng; nhật ký dọn dẹp.
 - **Quy tắc nghiệp vụ:**
@@ -2299,7 +2773,7 @@ Ký hiệu: ✔ sử dụng trực tiếp; ◐ tham gia như actor phụ/hệ th
 | M05 Đọc truyện & Hover-Dịch | ✔ | ✔ | ✔ | ◐ | | | |
 | M06 Từ điển & Tra cứu | ✔ | ✔ | ✔ | ◐ | | | |
 | M07 Sổ tay cá nhân | | ✔ | ✔ | ◐ | | | |
-| M08 Flashcard & Ôn tập (FSRS) | | ✔ | ✔ | | ◐ | | ◐ |
+| M08 Flashcard & Ôn tập (FSRS) | | ✔ | ✔ | | ◐ | ◐ | ◐ |
 | M09 Kiểm tra cá nhân hóa | | ✔ | ✔ | | | ◐ | |
 | M10 Gợi ý từ cá nhân hóa | | ✔ | ✔ | | | | |
 | M11 Phát âm (TTS) | | ✔ | ✔ | | ◐ | | |
@@ -2308,7 +2782,7 @@ Ký hiệu: ✔ sử dụng trực tiếp; ◐ tham gia như actor phụ/hệ th
 | M14 Phản hồi & Thông báo | | ✔ | ✔ | | | | ◐ |
 | M15 Tác vụ nền & Lập lịch | | | | | | | ◐ |
 
-Ghi chú: Khách ở M06 chỉ dùng phần thông tin cơ bản của F06.01 thông qua F05.04 (US-KH-05 TC4).
+Ghi chú: Khách ở M06 chỉ dùng phần thông tin cơ bản của F06.01 thông qua F05.04 (US-KH-05 TC4). Khách cũng xem được trang nội dung pháp lý của F13.08 (chỉ xem công khai); việc soạn và sửa chỉ dành cho Quản trị viên. Dịch vụ LLM ở M08 phục vụ F08.11 (Flashcard AI).
 
 ## 6. Ma trận truy vết User story → Chức năng
 
@@ -2380,6 +2854,23 @@ Ghi chú: Khách ở M06 chỉ dùng phần thông tin cơ bản của F06.01 th
 | US-NH-58 | Báo lỗi nhận diện hoặc bản dịch | F14.01 |
 | US-NH-59 | Nhắc ôn tập hằng ngày | F14.03, F14.04 |
 | US-NH-60 | Xuất sổ tay ra CSV hoặc Anki | F07.08 |
+| US-NH-61 | Thư viện cá nhân và yêu thích | F03.13 |
+| US-NH-62 | Chấm sao truyện | F03.14 |
+| US-NH-63 | Đánh dấu trang và xem trang đã lưu | F05.07 |
+| US-NH-64 | Ghi chú trực tiếp trên trang | F05.08 |
+| US-NH-65 | Tải ảnh đại diện và chọn ảnh có sẵn | F01.10 |
+| US-NH-66 | Đánh dấu sao từ trong sổ tay | F07.09 |
+| US-NH-67 | Chọn bộ thẻ theo truyện hoặc từ đánh dấu sao | F08.10 |
+| US-NH-68 | Xem âm Hán Việt trên mục từ và thẻ | F07.10 |
+| US-NH-69 | Câu hỏi từ mở rộng trong bài kiểm tra | F09.09, F07.01 |
+| US-NH-70 | Lưu câu thoại | F07.11 |
+| US-NH-71 | Lưu tất cả từ của trang | F07.12, F07.01, F07.02 |
+| US-NH-72 | Gợi ý truyện theo trình độ | F10.04 |
+| US-NH-73 | Độ phủ từ vựng của chương | F10.05 |
+| US-NH-74 | Chỉnh cỡ chữ bong bóng dịch | F02.04 |
+| US-NH-75 | Flashcard AI | F08.11 |
+| US-NH-76 | Ghi nhớ đăng nhập | F01.11 |
+| US-NH-77 | Thử với trang mẫu | F04.16 |
 | US-QT-01 | Xem và tìm người dùng | F13.01 |
 | US-QT-02 | Đổi vai trò người dùng | F13.02, F13.06 |
 | US-QT-03 | Khóa và mở khóa tài khoản | F13.03, F13.06 |
@@ -2392,7 +2883,10 @@ Ghi chú: Khách ở M06 chỉ dùng phần thông tin cơ bản của F06.01 th
 | US-QT-10 | Nạp và cập nhật danh sách HSK | F06.07, F06.08 |
 | US-QT-11 | Xử lý báo lỗi của Người học | F14.02, F14.05 |
 | US-QT-12 | Kiểm duyệt ảnh tải lên | F13.04, F14.05 |
-| US-QT-13 | Cấu hình dịch vụ LLM và TTS | F13.05 |
+| US-QT-13 | Cấu hình dịch vụ LLM, TTS và công tắc hệ thống | F13.05 |
+| US-QT-14 | Xem và quản lý dữ liệu học tập của người dùng | F13.07, F13.06 |
+| US-QT-15 | Trang nội dung pháp lý | F13.08, F13.06 |
+| US-QT-16 | Xuất báo cáo vi phạm | F13.09 |
 | US-XL-01 | Nhận việc từ hàng đợi, xử lý tuần tự | F04.07 |
 | US-XL-02 | Phát hiện bong bóng chữ | F04.08 |
 | US-XL-03 | Nhận dạng ký tự (OCR) | F04.09 |
@@ -2413,4 +2907,4 @@ Ghi chú: Khách ở M06 chỉ dùng phần thông tin cơ bản của F06.01 th
 | US-HG-03 | Tối ưu tham số FSRS | F08.08, F15.03 |
 | US-HG-04 | Gửi nhắc ôn tập hằng ngày | F14.04, F14.05, F15.03 |
 
-**Tổng hợp độ phủ:** 98/98 user story (KH 6, NH 60, QT 13, XL 9, TTS 3, LLM 3, HG 4) được gán cho ít nhất một chức năng; 104 chức năng, trong đó 6 chức năng nội bộ (F01.09, F06.08, F08.09, F13.06, F14.05, F15.03) đều chỉ ra story được hỗ trợ, không có chức năng nào không gắn user story.
+**Tổng hợp độ phủ:** 118/118 user story (KH 6, NH 77, QT 16, XL 9, TTS 3, LLM 3, HG 4) được gán cho ít nhất một chức năng; 124 chức năng, trong đó 6 chức năng nội bộ (F01.09, F06.08, F08.09, F13.06, F14.05, F15.03) đều chỉ ra story được hỗ trợ, không có chức năng nào không gắn user story.
