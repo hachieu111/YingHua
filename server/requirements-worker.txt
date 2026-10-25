@@ -1,0 +1,24 @@
+# Worker xử lý ảnh YingHua (python -m worker.main) — phiên bản ghim theo môi trường đã kiểm thử (Python 3.10, CPU).
+#
+# Cài đặt (2 bước, vì paddleocr 2.7.0.3 khai báo opencv-contrib-python<=4.6.0.66 nhưng bản đã kiểm thử là 4.8.1.78,
+# nên pip không giải được nếu cài chung):
+#   1) python -m pip install -r requirements-worker.txt
+#   2) python -m pip install paddleocr==2.7.0.3 --no-deps
+# Lưu ý: ultralytics kéo theo opencv-python; nếu pip cài thêm gói đó thì gỡ đi và cài lại opencv-contrib-python==4.8.1.78
+# để chỉ còn một bản cv2 (môi trường đang chạy có bản contrib 4.8.1 và bản headless 4.11 cùng tồn tại, cv2 nạp là 4.8.1).
+# Chưa dựng thử trên máy sạch: danh sách lấy từ `pip list` của môi trường đang chạy được worker.
+-r requirements.txt
+numpy==1.26.4
+# cv2 đang dùng là bản contrib 4.8.1; không cài song song opencv-python hay -headless vì các bản ghi đè lên nhau
+opencv-contrib-python==4.8.1.78
+paddlepaddle==2.6.2
+torch==2.1.0          # bản CPU: pip install torch==2.1.0 --index-url https://download.pytorch.org/whl/cpu
+torchvision==0.16.0
+ultralytics==8.4.138
+# Phụ thuộc của paddleocr và pipeline ảnh (module xử lí ảnh/)
+shapely==2.1.2
+pyclipper==1.4.0
+scikit-image==0.25.2
+RapidFuzz==3.14.3
+lmdb==1.7.5
+albumentations==2.0.8

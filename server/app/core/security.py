@@ -58,6 +58,7 @@ def hash_token(token: str) -> str:
 class AccessClaims:
     user_id: int
     role: str
+    session_id: str
     token_id: str
 
 
@@ -70,11 +71,12 @@ class TokenService:
         self._ttl = timedelta(minutes=access_minutes)
         self._clock = clock
 
-    def issue_access_token(self, user_id: int, role: str) -> str:
+    def issue_access_token(self, user_id: int, role: str, session_id: str) -> str:
         now = self._clock.now()
         payload = {
             "sub": str(user_id),
             "role": role,
+            "sid": session_id,
             "type": "access",
             "jti": uuid.uuid4().hex,
             "iat": now,
@@ -88,7 +90,7 @@ class TokenService:
                 token,
                 self._secret,
                 algorithms=[self._algorithm],
-                options={"require": ["sub", "exp", "type"], "verify_exp": False},
+                options={"require": ["sub", "exp", "type", "sid"], "verify_exp": False},
             )
         except jwt.PyJWTError as exc:
             raise UnauthenticatedError("Phiên đăng nhập không hợp lệ") from exc
@@ -98,5 +100,6 @@ class TokenService:
         return AccessClaims(
             user_id=int(payload["sub"]),
             role=str(payload.get("role", "user")),
+            session_id=str(payload["sid"]),
             token_id=str(payload.get("jti", "")),
         )

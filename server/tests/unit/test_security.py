@@ -46,20 +46,20 @@ def test_opaque_token_is_random_and_hash_is_stable() -> None:
 
 def test_access_token_round_trip(fixed_clock) -> None:  # type: ignore[no-untyped-def]
     tokens = TokenService(SECRET, "HS256", 15, fixed_clock)
-    claims = tokens.decode_access_token(tokens.issue_access_token(user_id=7, role="admin"))
-    assert (claims.user_id, claims.role) == (7, "admin")
+    claims = tokens.decode_access_token(tokens.issue_access_token(user_id=7, role="admin", session_id="s1"))
+    assert (claims.user_id, claims.role, claims.session_id) == (7, "admin", "s1")
     assert claims.token_id
 
 
 def test_access_token_expires_after_ttl(fixed_clock) -> None:  # type: ignore[no-untyped-def]
     tokens = TokenService(SECRET, "HS256", 15, fixed_clock)
-    token = tokens.issue_access_token(user_id=1, role="user")
+    token = tokens.issue_access_token(user_id=1, role="user", session_id="s1")
     fixed_clock.at += timedelta(minutes=15, seconds=1)
     with pytest.raises(UnauthenticatedError):
         tokens.decode_access_token(token)
 
 
 def test_token_signed_with_other_secret_is_rejected(fixed_clock) -> None:  # type: ignore[no-untyped-def]
-    forged = TokenService("y" * 40, "HS256", 15, fixed_clock).issue_access_token(1, "admin")
+    forged = TokenService("y" * 40, "HS256", 15, fixed_clock).issue_access_token(1, "admin", "s1")
     with pytest.raises(UnauthenticatedError):
         TokenService(SECRET, "HS256", 15, fixed_clock).decode_access_token(forged)

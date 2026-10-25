@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 import app.modules
 from app.core.config import get_settings
 from app.core.db import Base
+from app.core.stored_files import StoredFileModel  # noqa: F401  (bảng dùng chung, không thuộc module nào)
 
 config = context.config
 if config.config_file_name is not None:

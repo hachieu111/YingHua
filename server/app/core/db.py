@@ -7,6 +7,7 @@ from types import TracebackType
 from sqlalchemy import MetaData
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
+from typing_extensions import Self
 
 # Tên ràng buộc cố định để Alembic sinh migration ổn định.
 NAMING_CONVENTION = {
@@ -22,6 +23,11 @@ class Base(DeclarativeBase):
     """Lớp gốc cho ORM model — chỉ dùng ở tầng infrastructure."""
 
     metadata = MetaData(naming_convention=NAMING_CONVENTION)
+
+
+def escape_like(value: str) -> str:
+    """Escape ký tự đặc biệt của LIKE/ILIKE; dùng với `escape="\\\\"`."""
+    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
 def create_engine(url: str, *, pool_size: int, echo: bool) -> AsyncEngine:
@@ -46,7 +52,7 @@ class SqlAlchemyUnitOfWork:
     def _init_repositories(self) -> None:
         """Lớp con tạo repository từ `self.session`."""
 
-    async def __aenter__(self) -> SqlAlchemyUnitOfWork:
+    async def __aenter__(self) -> Self:
         self.session = self._session_factory()
         self._init_repositories()
         return self
