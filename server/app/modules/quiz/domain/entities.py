@@ -69,6 +69,26 @@ class FallbackReason(str, Enum):
     DAILY_LIMIT = "daily_limit"
 
 
+@dataclass(frozen=True, slots=True)
+class PracticeQuestion:
+    """Câu luyện thêm 4 lựa chọn của "Vì sao sai?" (F09.10); không tính điểm, không đổi lịch ôn."""
+
+    prompt: str
+    options: tuple[str, ...]
+    answer: str
+    explanation: str
+
+
+@dataclass(frozen=True, slots=True)
+class MistakeReview:
+    """Nội dung "Vì sao sai?" của một câu làm sai; lưu theo câu hỏi để mở lại không gọi lại LLM (F09.10)."""
+
+    explanation: str
+    origin: QuestionOrigin  # llm | fallback
+    difference: str | None = None  # điểm khác giữa đáp án đã chọn và đáp án đúng
+    practice: PracticeQuestion | None = None
+
+
 @dataclass(slots=True)
 class Quiz:
     id: int
@@ -107,6 +127,7 @@ class QuizQuestion:
     example_id: int | None = None
     example_form: ExampleForm | None = None
     hint: str | None = None
+    mistake_review: MistakeReview | None = None
 
 
 @dataclass(frozen=True, slots=True)

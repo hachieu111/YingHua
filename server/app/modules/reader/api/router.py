@@ -11,6 +11,7 @@ from app.modules.reader.api.dependencies import (
     get_guest_session_id,
     get_reader_services,
 )
+from app.modules.reader.api.grammar_schemas import GrammarResponse
 from app.modules.reader.api.schemas import (
     AnnotationResponse,
     BookmarkPageResponse,
@@ -60,6 +61,26 @@ async def lookup_bubble_word(
     if result.guest is not None:
         response.headers[GUEST_SESSION_HEADER] = result.guest.session_id
     return BubbleLookupResponse.from_lookup(result)
+
+
+@router.post(
+    "/bubbles/{bubble_id}/grammar",
+    response_model=GrammarResponse,
+    summary="Phân tích ngữ pháp một câu thoại bằng AI: cây cú pháp và 1-3 điểm ngữ pháp (F05.09)",
+    description=(
+        "Dùng POST vì có thể gọi LLM (tốn hạn mức) và ghi bộ nhớ dùng chung. Câu đã được ai đó phân tích "
+        "thì trả ngay (`cached`), không tốn hạn mức. LLM tắt/lỗi/quá thời gian, hết hạn mức ngày hoặc không "
+        "còn phần nào hợp lệ vẫn trả 200 với `status` = `unavailable` | `limit_reached` | `unanalyzable` "
+        "và `message` hiển thị nhẹ cho người học. Bong bóng không có chữ Hán → 400 `BUBBLE_HAS_NO_HAN`; "
+        "không có quyền đọc → 404."
+    ),
+)
+async def analyze_grammar(
+    bubble_id: int,
+    identity: Identity = Depends(get_identity),
+    services: ReaderServices = Depends(get_reader_services),
+) -> GrammarResponse:
+    return GrammarResponse.from_view(await services.analyze_grammar.execute(identity, bubble_id))
 
 
 @router.put(

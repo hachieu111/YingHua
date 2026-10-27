@@ -10,6 +10,7 @@ from app.modules.quiz.domain.entities import (
     ExampleForm,
     FallbackReason,
     GradedAnswer,
+    MistakeReview,
     NewQuestion,
     NewQuiz,
     QuestionOrigin,
@@ -20,6 +21,7 @@ from app.modules.quiz.domain.entities import (
     QuizStatus,
     TargetKind,
 )
+from app.modules.quiz.domain.mistake_review import review_from_json, review_to_json
 from app.modules.quiz.infrastructure.orm_models import QuizModel, QuizQuestionModel
 
 
@@ -62,6 +64,7 @@ def _question(m: QuizQuestionModel) -> QuizQuestion:
         example_id=m.example_id,
         example_form=ExampleForm(m.example_form) if m.example_form else None,
         hint=m.hint,
+        mistake_review=review_from_json(m.mistake_review),
     )
 
 
@@ -190,6 +193,38 @@ class SqlQuizRepository:
             )
         )
         return {example_id for example_id in rows.scalars() if example_id is not None}
+
+    async def save_mistake_review(
+        self, quiz_id: int, question_id: int, review: MistakeReview, at: datetime
+    ) -> MistakeReview:
+        await self._session.execute(
+            update(QuizQuestionModel)
+            .where(
+                QuizQuestionModel.id == question_id,
+                QuizQuestionModel.quiz_id == quiz_id,
+                QuizQuestionModel.mistake_review.is_(None),
+            )
+            .values(mistake_review=review_to_json(review), mistake_review_at=at)
+        )
+        stored = (
+            await self._session.execute(
+                select(QuizQuestionModel.mistake_review).where(QuizQuestionModel.id == question_id)
+            )
+        ).scalar_one_or_none()
+        return review_from_json(stored) or review
+
+    async def count_llm_mistake_reviews_between(self, user_id: int, start: datetime, end: datetime) -> int:
+        stmt = (
+            select(func.count(QuizQuestionModel.id))
+            .join(QuizModel, QuizModel.id == QuizQuestionModel.quiz_id)
+            .where(
+                QuizModel.user_id == user_id,
+                QuizQuestionModel.mistake_review["origin"].astext == QuestionOrigin.LLM.value,
+                QuizQuestionModel.mistake_review_at >= start,
+                QuizQuestionModel.mistake_review_at < end,
+            )
+        )
+        return int((await self._session.execute(stmt)).scalar_one())
 
     async def delete(self, user_id: int, quiz_id: int) -> None:
         await self._session.execute(

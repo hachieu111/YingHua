@@ -7,6 +7,7 @@ from app.modules.dictionary.application.public import LookupResult
 from app.modules.imaging.application.public import Bubble, TranslationSummary
 from app.modules.library.application.public import PageAccess
 from app.modules.reader.domain.entities import Annotation, GuestQuota
+from app.modules.reader.domain.grammar import GrammarContent, GrammarStatus
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,3 +56,14 @@ class BookmarkItem:
 class BookmarkPage:
     items: list[BookmarkItem]
     total: int
+
+
+@dataclass(frozen=True, slots=True)
+class GrammarView:
+    """Kết quả phân tích ngữ pháp một bong bóng; `content` chỉ có khi `status` là `ok`."""
+
+    status: GrammarStatus
+    bubble_id: int
+    sentence: str
+    content: GrammarContent | None = None
+    cached: bool = False

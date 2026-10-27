@@ -91,3 +91,7 @@ class QuizQuestionModel(Base):
     )
     example_form: Mapped[str | None] = mapped_column(String(10))
     hint: Mapped[str | None] = mapped_column(Text)
+    mistake_review: Mapped[dict[str, Any] | None] = mapped_column(
+        JSONB
+    )  # "Vì sao sai?" (F09.10, migration 0011)
+    mistake_review_at: Mapped[datetime | None] = mapped_column(TS)

@@ -38,3 +38,23 @@ class InvalidAnnotationError(InvalidInputError):
 class AnnotationTooLargeError(PayloadTooLargeError):
     code = "ANNOTATION_TOO_LARGE"
     default_message = "Ghi chú trên trang quá lớn"
+
+
+class BubbleHasNoHanError(InvalidInputError):
+    code = "BUBBLE_HAS_NO_HAN"
+    default_message = "Vùng chữ này không có chữ Hán để phân tích ngữ pháp"
+
+
+class SentenceTooLongError(InvalidInputError):
+    code = "SENTENCE_TOO_LONG"
+    default_message = "Câu quá dài để phân tích ngữ pháp"
+
+
+class GrammarAnalyzerUnavailableError(Exception):
+    """Dịch vụ phân tích (LLM) không dùng được: tắt, lỗi mạng, quá thời gian. Không bao giờ lộ ra API."""
+
+    def __init__(
+        self, reason: str = "network", message: str = "Dịch vụ phân tích ngữ pháp không khả dụng"
+    ) -> None:
+        self.reason = reason
+        super().__init__(message)

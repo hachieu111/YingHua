@@ -51,6 +51,21 @@ class QuizNotSubmittedError(ConflictError):
     default_message = "Hãy nộp bài trước khi lưu từ"
 
 
+class QuestionNotWrongError(InvalidInputError):
+    code = "QUESTION_NOT_WRONG"
+    default_message = "Chỉ xem được giải thích lỗi sai của câu đã làm sai"
+
+
+class MistakePracticeNotFoundError(NotFoundError):
+    code = "MISTAKE_PRACTICE_NOT_FOUND"
+    default_message = "Câu này chưa có câu luyện thêm"
+
+
+class InvalidPracticeChoiceError(InvalidInputError):
+    code = "INVALID_PRACTICE_CHOICE"
+    default_message = "Lựa chọn không nằm trong các phương án của câu luyện"
+
+
 class WordNotSavableError(InvalidInputError):
     code = "WORD_NOT_SAVABLE"
     default_message = "Chỉ lưu được từ mở rộng; từ đã lưu đã có trong sổ tay"

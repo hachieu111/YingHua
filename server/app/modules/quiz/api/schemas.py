@@ -77,6 +77,9 @@ class QuizQuestionResponse(BaseModel):
     explanation: str | None = None
     is_correct: bool | None = None
     vocab_entry_id: int | None = None
+    has_mistake_review: bool | None = Field(
+        default=None, description="Câu đã có nội dung 'Vì sao sai?' được lưu (F09.10)"
+    )
 
     @classmethod
     def from_question(cls, q: QuizQuestion, detail: QuizDetail) -> QuizQuestionResponse:
@@ -118,6 +121,7 @@ class QuizQuestionResponse(BaseModel):
             explanation=q.explanation,
             is_correct=bool(q.is_correct),
             vocab_entry_id=q.vocab_entry_id,
+            has_mistake_review=q.mistake_review is not None,
         )
 
 

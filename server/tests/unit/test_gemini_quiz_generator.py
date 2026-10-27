@@ -345,7 +345,7 @@ async def test_drafter_falls_back_when_gemini_is_down() -> None:
     ("enabled", "key", "provider", "expected"),
     [
         (True, SecretStr(SECRET), "gemini", GeminiQuizGenerator),
-        (False, SecretStr(SECRET), "gemini", DisabledQuizGenerator),
+        (False, SecretStr(SECRET), "gemini", GeminiQuizGenerator),  # công tắc do use case kiểm (F13.05)
         (True, None, "gemini", DisabledQuizGenerator),
         (True, SecretStr(""), "gemini", DisabledQuizGenerator),
         (True, SecretStr(SECRET), "openai", DisabledQuizGenerator),

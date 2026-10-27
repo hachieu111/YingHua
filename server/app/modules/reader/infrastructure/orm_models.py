@@ -7,12 +7,15 @@ from datetime import datetime
 from typing import Any
 
 from sqlalchemy import (
+    CHAR,
     BigInteger,
     Boolean,
     DateTime,
     ForeignKey,
+    Identity,
     Index,
     SmallInteger,
+    String,
     Text,
     func,
     text,
@@ -47,6 +50,33 @@ class GuestSessionModel(Base):
     lookup_count: Mapped[int] = mapped_column(SmallInteger, server_default=text("0"))
     created_at: Mapped[datetime] = mapped_column(TS, server_default=func.now())
     expires_at: Mapped[datetime] = mapped_column(TS)
+
+
+class GrammarAnalysisModel(Base):
+    """Kết quả phân tích ngữ pháp dùng chung mọi người (F05.09, migration 0011)."""
+
+    __tablename__ = "grammar_analyses"
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(always=True), primary_key=True)
+    sentence_hash: Mapped[str] = mapped_column(CHAR(64), unique=True)
+    sentence_zh: Mapped[str] = mapped_column(Text)
+    content: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    model: Mapped[str | None] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(TS, server_default=func.now())
+
+
+class GrammarRequestModel(Base):
+    """Mỗi lượt người học phải gọi LLM, để đếm hạn mức ngày (F05.09, migration 0011)."""
+
+    __tablename__ = "grammar_requests"
+    __table_args__ = (Index("ix_grammar_requests_user_id_requested_at", "user_id", "requested_at"),)
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(always=True), primary_key=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"))
+    analysis_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("grammar_analyses.id", ondelete="SET NULL")
+    )
+    requested_at: Mapped[datetime] = mapped_column(TS, server_default=func.now())
 
 
 class PageAnnotationModel(Base):

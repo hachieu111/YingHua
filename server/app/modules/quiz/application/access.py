@@ -4,8 +4,13 @@ from __future__ import annotations
 
 from app.modules.quiz.application.dto import QuizDetail
 from app.modules.quiz.application.ports import QuizUnitOfWork
-from app.modules.quiz.domain.entities import Quiz, QuizStatus, TargetKind
-from app.modules.quiz.domain.errors import QuizNotFoundError
+from app.modules.quiz.domain.entities import Quiz, QuizQuestion, QuizStatus, TargetKind
+from app.modules.quiz.domain.errors import (
+    QuestionNotWrongError,
+    QuizNotFoundError,
+    QuizNotSubmittedError,
+    QuizQuestionNotFoundError,
+)
 
 
 async def load_quiz(uow: QuizUnitOfWork, owner_id: int, quiz_id: int, *, for_update: bool = False) -> Quiz:
@@ -16,6 +21,22 @@ async def load_quiz(uow: QuizUnitOfWork, owner_id: int, quiz_id: int, *, for_upd
     if quiz is None:
         raise QuizNotFoundError()
     return quiz
+
+
+async def load_wrong_question(
+    uow: QuizUnitOfWork, owner_id: int, quiz_id: int, question_id: int
+) -> QuizQuestion:
+    """Câu làm sai của bài ĐÃ NỘP thuộc chính chủ (F09.10). Bài của người khác → 404; bài chưa nộp → 409;
+    câu không thuộc bài → 404; câu đúng → 400."""
+    quiz = await load_quiz(uow, owner_id, quiz_id)
+    if quiz.status is not QuizStatus.SUBMITTED:
+        raise QuizNotSubmittedError("Hãy nộp bài trước khi xem giải thích lỗi sai")
+    question = next((q for q in await uow.quizzes.questions(quiz.id) if q.id == question_id), None)
+    if question is None:
+        raise QuizQuestionNotFoundError()
+    if question.is_correct is not False:
+        raise QuestionNotWrongError()
+    return question
 
 
 async def build_detail(uow: QuizUnitOfWork, quiz: Quiz) -> QuizDetail:

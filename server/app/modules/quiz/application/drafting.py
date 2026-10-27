@@ -127,6 +127,12 @@ class FallbackQuestionBuilder:
             )
         return questions
 
+    async def build_example_only(self, word: QuizWord, index: int, draft: DraftInput) -> NewQuestion | None:
+        """Một câu dựa trên câu ví dụ cho `word`, dạng theo `index`; không có câu phù hợp thì None, không
+        lùi về câu theo định nghĩa (F09.10 bước 6: chỉ hiện giải thích)."""
+        pools = await self._pools([word.hsk_level], draft)
+        return await self._with_example(word, index, draft, pools, {})
+
     async def _pools(self, word_levels: Sequence[int | None], draft: DraftInput) -> DistractorPools:
         exclude = [w.term for w in draft.words] + [c.term for c in draft.related]
         levels = sorted({lv for level in word_levels for lv in levels_to_fetch(level or draft.default_level)})

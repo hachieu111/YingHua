@@ -4,6 +4,11 @@ from fastapi import APIRouter, Depends, Query, Response, status
 
 from app.modules.auth.api.public import Identity, get_identity
 from app.modules.quiz.api.dependencies import QuizServices, get_quiz_services
+from app.modules.quiz.api.mistake_schemas import (
+    MistakeReviewResponse,
+    PracticeAnswerRequest,
+    PracticeAnswerResponse,
+)
 from app.modules.quiz.api.schemas import (
     CreateQuizRequest,
     QuizDetailResponse,
@@ -94,6 +99,46 @@ async def submit_quiz(
 ) -> QuizDetailResponse:
     answers = [AnswerInput(a.question_id, a.answer) for a in body.answers]
     return QuizDetailResponse.from_detail(await services.submit.execute(identity, quiz_id, answers))
+
+
+@router.post(
+    "/{quiz_id}/questions/{question_id}/mistake-review",
+    response_model=MistakeReviewResponse,
+    summary="Vì sao sai? Giải thích câu làm sai và câu luyện thêm cùng từ (F09.10)",
+    description=(
+        "Chỉ cho câu SAI của bài đã nộp (bài chưa nộp → 409 `QUIZ_NOT_SUBMITTED`; câu đúng → 400 "
+        "`QUESTION_NOT_WRONG`; bài người khác → 404). Đã có nội dung thì trả lại, không gọi LLM. LLM "
+        "lỗi/tắt/hết hạn mức → bản dự phòng (`origin` = `fallback`), vẫn 200. Câu luyện KHÔNG kèm đáp án."
+    ),
+)
+async def review_mistake(
+    quiz_id: int,
+    question_id: int,
+    identity: Identity = Depends(get_identity),
+    services: QuizServices = Depends(get_quiz_services),
+) -> MistakeReviewResponse:
+    view = await services.review_mistake.execute(identity, quiz_id, question_id)
+    return MistakeReviewResponse.from_view(view)
+
+
+@router.post(
+    "/{quiz_id}/questions/{question_id}/mistake-review/answer",
+    response_model=PracticeAnswerResponse,
+    summary="Chấm câu luyện của 'Vì sao sai?' ở máy chủ (F09.10)",
+    description=(
+        "Không lưu lựa chọn, không cộng điểm, không ghi lượt ôn, không đổi lịch thẻ. Chưa có câu luyện → "
+        "404 `MISTAKE_PRACTICE_NOT_FOUND`; lựa chọn ngoài 4 phương án → 400 `INVALID_PRACTICE_CHOICE`."
+    ),
+)
+async def answer_mistake_practice(
+    quiz_id: int,
+    question_id: int,
+    body: PracticeAnswerRequest,
+    identity: Identity = Depends(get_identity),
+    services: QuizServices = Depends(get_quiz_services),
+) -> PracticeAnswerResponse:
+    result = await services.answer_practice.execute(identity, quiz_id, question_id, body.choice)
+    return PracticeAnswerResponse.from_result(result)
 
 
 @router.post(

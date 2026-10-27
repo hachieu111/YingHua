@@ -13,8 +13,10 @@ from app.modules.quiz.domain.entities import (
     DistractorCandidate,
     ExampleRow,
     GradedAnswer,
+    MistakeReview,
     NewQuestion,
     NewQuiz,
+    QuestionOrigin,
     Quiz,
     QuizQuestion,
     QuizSource,
@@ -23,6 +25,7 @@ from app.modules.quiz.domain.entities import (
     RelatedCandidate,
     WordContext,
 )
+from tests.unit.activity_fakes import FakeActivity
 from tests.unit.review_fakes import FakeAudit, FakeCards
 
 
@@ -31,6 +34,7 @@ class FakeQuizRepo:
         self.quizzes: dict[int, Quiz] = {}
         self.items: dict[int, list[QuizQuestion]] = {}
         self.deleted: list[int] = []
+        self.review_times: dict[int, datetime] = {}
 
     async def add(
         self, new_quiz: NewQuiz, questions: Sequence[NewQuestion]
@@ -107,6 +111,28 @@ class FakeQuizRepo:
         return {
             q.example_id for quiz in latest[:quizzes] for q in self.items[quiz.id] if q.example_id is not None
         }
+
+    async def save_mistake_review(
+        self, quiz_id: int, question_id: int, review: MistakeReview, at: datetime
+    ) -> MistakeReview:
+        for q in self.items[quiz_id]:
+            if q.id == question_id:
+                if q.mistake_review is None:
+                    q.mistake_review = review
+                    self.review_times[question_id] = at
+                return q.mistake_review
+        raise KeyError(question_id)
+
+    async def count_llm_mistake_reviews_between(self, user_id: int, start: datetime, end: datetime) -> int:
+        return sum(
+            1
+            for quiz in self.quizzes.values()
+            if quiz.user_id == user_id
+            for q in self.items[quiz.id]
+            if q.mistake_review is not None
+            and q.mistake_review.origin is QuestionOrigin.LLM
+            and start <= self.review_times[q.id] < end
+        )
 
     async def delete(self, user_id: int, quiz_id: int) -> None:
         self.quizzes.pop(quiz_id, None)
@@ -199,6 +225,7 @@ class FakeQuizUow:
         self.vocab = vocab
         self.cards = cards or FakeCards()
         self.audit = FakeAudit()
+        self.activity = FakeActivity()
         self.commits = 0
 
     async def __aenter__(self) -> FakeQuizUow:

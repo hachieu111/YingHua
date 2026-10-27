@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from app.modules.quiz.domain.entities import ExampleRow, Quiz, QuizQuestion
+from app.modules.quiz.domain.entities import ExampleRow, MistakeReview, Quiz, QuizQuestion
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,6 +36,25 @@ class QuizDetail:
     savable_question_ids: set[int] = field(
         default_factory=set
     )  # câu từ mở rộng, đã nộp, chưa có trong sổ tay
+
+
+@dataclass(frozen=True, slots=True)
+class MistakeReviewView:
+    """ "Vì sao sai?" của một câu. Câu luyện chưa kèm đáp án: chỉ trả sau khi người học đã chọn (F09.10)."""
+
+    question_id: int
+    term: str
+    review: MistakeReview
+    cached: bool  # True nếu đã lưu từ trước, không gọi lại LLM
+
+
+@dataclass(frozen=True, slots=True)
+class PracticeResult:
+    """Kết quả một lần chọn đáp án câu luyện — chỉ để hiển thị, không lưu, không tính điểm."""
+
+    is_correct: bool
+    correct_answer: str
+    explanation: str
 
 
 @dataclass(frozen=True, slots=True)

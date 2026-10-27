@@ -13,6 +13,7 @@ from app.modules.quiz.domain.entities import (
     DistractorCandidate,
     ExampleRow,
     GradedAnswer,
+    MistakeReview,
     NewQuestion,
     NewQuiz,
     Quiz,
@@ -22,6 +23,7 @@ from app.modules.quiz.domain.entities import (
     WordContext,
 )
 from app.modules.review.application.public import CardRepository
+from app.modules.stats.application.public import ActivityRecorder
 from app.modules.vocab.application.public import SaveWordCommand, SaveWordResult
 
 
@@ -40,6 +42,20 @@ class QuizGenerationRequest:
     items: Sequence[GenerationItem]
     question_count: int
     learner_level: int | None = None  # chỉ là một con số, không định danh người học
+
+
+@dataclass(frozen=True, slots=True)
+class MistakeReviewRequest:
+    """Dữ liệu gửi LLM để giải thích một câu sai: từ, pinyin, nghĩa, cấp HSK, hai lựa chọn liên quan và trình
+    độ (một con số). Không có email, tên, mã người dùng, ngữ cảnh hay ghi chú riêng (security.md)."""
+
+    term: str
+    pinyin: str | None
+    meaning: str | None
+    hsk_level: int | None
+    chosen: str | None  # None: người học bỏ trống câu này
+    correct: str
+    learner_level: int | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -122,6 +138,22 @@ class QuizGenerator(Protocol):
     async def generate(self, request: QuizGenerationRequest) -> object: ...
 
 
+class MistakeReviewGenerator(Protocol):
+    """Dịch vụ giải thích lỗi sai (LLM, F09.10). Hiện thực chuyển mọi lỗi hạ tầng thành
+    `QuizGeneratorUnavailableError`. Trả JSON đã phân tích (hoặc `None` nếu không đọc được); kiểm lược đồ do
+    `domain.mistake_review` đảm nhiệm."""
+
+    async def generate(self, request: MistakeReviewRequest) -> object: ...
+
+
+class TermFactsSource(Protocol):
+    """Dữ liệu từ điển của một từ (M06), để giải thích được cả từ đã bị xóa khỏi sổ tay."""
+
+    async def facts(self, term: str) -> QuizWord | None:
+        """Pinyin, nghĩa ngắn và cấp HSK (`entry_id` = 0); None nếu từ điển không có từ này."""
+        ...
+
+
 class DistractorSource(Protocol):
     """Từ HSK ngẫu nhiên làm phương án nhiễu cho đề dự phòng (F09.08)."""
 
@@ -191,6 +223,19 @@ class QuizRepository(Protocol):
         """Mã câu ví dụ đã dùng trong `quizzes` bài gần nhất, để không lặp lại (F09.09)."""
         ...
 
+    async def save_mistake_review(
+        self, quiz_id: int, question_id: int, review: MistakeReview, at: datetime
+    ) -> MistakeReview:
+        """Lưu "Vì sao sai?" nếu câu chưa có; đã có (hai yêu cầu cùng lúc) thì giữ bản cũ.
+
+        Trả bản đang lưu.
+        """
+        ...
+
+    async def count_llm_mistake_reviews_between(self, user_id: int, start: datetime, end: datetime) -> int:
+        """Số "Vì sao sai?" do LLM tạo trong [start, end) của người dùng — hạn mức riêng của F09.10."""
+        ...
+
     async def delete(self, user_id: int, quiz_id: int) -> None: ...
 
 
@@ -211,6 +256,9 @@ class QuizUnitOfWork(Protocol):
 
     @property
     def audit(self) -> AuditLogRepository: ...
+
+    @property
+    def activity(self) -> ActivityRecorder: ...
 
     async def __aenter__(self) -> QuizUnitOfWork: ...
 

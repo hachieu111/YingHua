@@ -12,6 +12,7 @@ from app.modules.quiz.domain.entities import GradedAnswer, QuizQuestion, QuizSta
 from app.modules.quiz.domain.errors import InvalidQuizAnswersError, QuizAlreadySubmittedError
 from app.modules.quiz.domain.rules import is_correct_answer
 from app.modules.review.application.public import RescheduleCardsNowUseCase
+from app.modules.stats.application.public import ActivityDelta
 
 STATUS_IGNORED = "ignored"
 STATUS_KNOWN = "known"
@@ -27,6 +28,7 @@ class SubmitQuizUseCase:
     giao dịch: lưu điểm và đáp án, với từ sai đặt `due = now` cho mọi thẻ (giữ S, D, không ghi lượt ôn FSRS),
     bỏ tạm ngưng, chuyển "Đã thuộc" về "Đang học", rồi đánh dấu `wrong_cards_rescheduled_at`. Từ "Bỏ qua" và
     từ đã bị xóa khỏi sổ tay sau khi ra đề được bỏ qua. Bài của người khác → 404.
+    Cộng `quizzes_done` của ngày trong cùng giao dịch (F12.01).
     """
 
     def __init__(
@@ -64,6 +66,7 @@ class SubmitQuizUseCase:
             await self._reschedule_wrong(uow, user_id, list(dict.fromkeys(wrong_entries)), now)
             quiz.wrong_cards_rescheduled_at = now
             await uow.quizzes.save_result(quiz, graded)
+            await uow.activity.record(user_id, now, ActivityDelta(quizzes_done=1))
             await uow.commit()
             return await build_detail(uow, quiz)
 

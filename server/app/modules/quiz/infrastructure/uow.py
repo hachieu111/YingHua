@@ -9,6 +9,7 @@ from app.modules.admin.infrastructure.public import SqlAuditLogRepository
 from app.modules.quiz.application.ports import ExampleSource, QuizVocabSource
 from app.modules.quiz.infrastructure.repositories import SqlQuizRepository
 from app.modules.review.infrastructure.public import SqlCardRepository
+from app.modules.stats.infrastructure.public import SqlActivityRecorder
 
 VocabSourceFactory = Callable[[AsyncSession], QuizVocabSource]
 
@@ -23,6 +24,7 @@ class SqlQuizUnitOfWork(SqlAlchemyUnitOfWork):
     cards: SqlCardRepository
     audit: SqlAuditLogRepository
     examples: ExampleSource
+    activity: SqlActivityRecorder
 
     def __init__(
         self,
@@ -39,3 +41,4 @@ class SqlQuizUnitOfWork(SqlAlchemyUnitOfWork):
         self.vocab = self._vocab_factory(self.session)
         self.cards = SqlCardRepository(self.session)
         self.audit = SqlAuditLogRepository(self.session)
+        self.activity = SqlActivityRecorder(self.session)
