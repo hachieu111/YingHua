@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+from collections.abc import Sequence
 from datetime import datetime
 
 from sqlalchemy import delete, exists, func, or_, select, update
@@ -31,6 +32,7 @@ def _user(m: UserModel) -> User:
         created_at=m.created_at,
         chinese_name=m.chinese_name,
         avatar_file_id=m.avatar_file_id,
+        avatar_preset=m.avatar_preset,
         show_email=m.show_email,
         show_join_date=m.show_join_date,
         locked_reason=m.locked_reason,
@@ -51,6 +53,12 @@ class SqlUserRepository:
     async def get(self, user_id: int) -> User | None:
         model = await self._session.get(UserModel, user_id)
         return _user(model) if model else None
+
+    async def get_many(self, user_ids: Sequence[int]) -> dict[int, User]:
+        if not user_ids:
+            return {}
+        rows = await self._session.scalars(select(UserModel).where(UserModel.id.in_(set(user_ids))))
+        return {m.id: _user(m) for m in rows}
 
     async def get_by_email(self, email: str) -> User | None:
         result = await self._session.execute(select(UserModel).where(func.lower(UserModel.email) == email))
@@ -79,6 +87,7 @@ class SqlUserRepository:
         model.display_name = user.display_name
         model.chinese_name = user.chinese_name
         model.avatar_file_id = user.avatar_file_id
+        model.avatar_preset = user.avatar_preset
         model.role = user.role.value
         model.status = user.status.value
         model.locked_reason = user.locked_reason
@@ -109,6 +118,7 @@ def _session(m: RefreshTokenModel) -> RefreshSession:
         expires_at=m.expires_at,
         revoked_at=m.revoked_at,
         replaced_by_id=m.replaced_by_id,
+        created_at=m.created_at,
     )
 
 

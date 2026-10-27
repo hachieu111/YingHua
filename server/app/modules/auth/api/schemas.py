@@ -21,6 +21,13 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: str = Field(max_length=254)
     password: str = Password
+    remember_me: bool = Field(
+        default=True,
+        description=(
+            "Ghi nhớ đăng nhập (F01.11): true = mã làm mới 30 ngày; "
+            "false = phiên ngắn, giao diện chỉ lưu trong sessionStorage"
+        ),
+    )
 
 
 class RefreshRequest(BaseModel):
@@ -54,6 +61,7 @@ class UserResponse(BaseModel):
     display_name: str
     chinese_name: str | None
     avatar_url: str | None
+    avatar_preset: str | None = Field(description="Mã ảnh đại diện có sẵn; loại trừ với avatar_url")
     role: str
     status: str
     show_email: bool
@@ -68,6 +76,7 @@ class UserResponse(BaseModel):
             display_name=user.display_name,
             chinese_name=user.chinese_name,
             avatar_url=file_url(user.avatar_file_id),
+            avatar_preset=user.avatar_preset,
             role=user.role.value,
             status=user.status.value,
             show_email=user.show_email,
@@ -81,11 +90,15 @@ class TokenResponse(BaseModel):
     refresh_token: str
     token_type: str = "bearer"
     expires_in: int
+    remember_me: bool = Field(default=True, description="Chế độ ghi nhớ của phiên (F01.11)")
 
     @classmethod
     def from_pair(cls, pair: TokenPair) -> TokenResponse:
         return cls(
-            access_token=pair.access_token, refresh_token=pair.refresh_token, expires_in=pair.expires_in
+            access_token=pair.access_token,
+            refresh_token=pair.refresh_token,
+            expires_in=pair.expires_in,
+            remember_me=pair.remember_me,
         )
 
 
@@ -104,3 +117,16 @@ class MessageResponse(BaseModel):
 
 class LogoutAllResponse(BaseModel):
     revoked_sessions: int
+
+
+class AvatarPresetRequest(BaseModel):
+    preset: str = Field(min_length=1, max_length=32, description="Mã ảnh đại diện có sẵn")
+
+
+class AvatarPresetItem(BaseModel):
+    code: str
+    name: str
+
+
+class AvatarPresetListResponse(BaseModel):
+    items: list[AvatarPresetItem]

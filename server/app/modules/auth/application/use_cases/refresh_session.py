@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Callable
+from datetime import timedelta
 
 from app.core.clock import Clock
 from app.core.security import hash_token
@@ -9,19 +10,28 @@ from app.modules.auth.application.dto import AuthResult
 from app.modules.auth.application.ports import AuthUnitOfWork
 from app.modules.auth.application.session_issuer import SessionIssuer
 from app.modules.auth.domain.errors import AccountLockedError, SessionExpiredError
+from app.modules.auth.domain.rules import is_remembered_session
 
 log = logging.getLogger(__name__)
 
 
 class RefreshSessionUseCase:
-    """F01.03 — Làm mới phiên (US-NH-01): xoay vòng mã làm mới, đọc lại vai trò và trạng thái khóa."""
+    """F01.03 — Làm mới phiên (US-NH-01): xoay vòng mã làm mới, đọc lại vai trò và trạng thái khóa.
+
+    Phiên mới kế thừa chế độ ghi nhớ đăng nhập của phiên cũ (F01.11, US-NH-76 TC4).
+    """
 
     def __init__(
-        self, uow_factory: Callable[[], AuthUnitOfWork], clock: Clock, issuer: SessionIssuer
+        self,
+        uow_factory: Callable[[], AuthUnitOfWork],
+        clock: Clock,
+        issuer: SessionIssuer,
+        short_ttl: timedelta,
     ) -> None:
         self._uow_factory = uow_factory
         self._clock = clock
         self._issuer = issuer
+        self._short_ttl = short_ttl
 
     async def execute(self, refresh_token: str, user_agent: str | None, ip: str | None) -> AuthResult:
         now = self._clock.now()
@@ -46,6 +56,9 @@ class RefreshSessionUseCase:
                 await uow.sessions.revoke_family(session.family_id, now)
                 await uow.commit()
                 raise AccountLockedError()
-            tokens = await self._issuer.rotate(uow, user, session.family_id, session.id, user_agent, ip)
+            remember_me = is_remembered_session(session.created_at, session.expires_at, self._short_ttl)
+            tokens = await self._issuer.rotate(
+                uow, user, session.family_id, session.id, user_agent, ip, remember_me
+            )
             await uow.commit()
         return AuthResult(user, tokens)

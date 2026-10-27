@@ -32,6 +32,7 @@ class UploadAvatarUseCase:
                 )
                 old_id = user.avatar_file_id
                 user.avatar_file_id = stored.id
+                user.avatar_preset = None  # tải ảnh lên và ảnh có sẵn loại trừ nhau (F01.10)
                 await uow.users.update(user)
                 if old_id is not None:
                     staged.delete_after_commit(await uow.files.delete_many([old_id]))

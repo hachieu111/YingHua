@@ -48,3 +48,8 @@ class InvalidBubbleError(InvalidInputError):
 class InvalidResultKindError(InvalidInputError):
     code = "INVALID_RESULT_KIND"
     default_message = "Chỉ lưu ảnh đã xóa chữ hoặc ảnh đã dịch"
+
+
+class SamplePageNotConfiguredError(NotFoundError):
+    code = "SAMPLE_PAGE_NOT_CONFIGURED"
+    default_message = "Chưa có trang mẫu để thử"

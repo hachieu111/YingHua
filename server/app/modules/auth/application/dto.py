@@ -9,6 +9,7 @@ from app.modules.auth.domain.entities import Role, User
 @dataclass(frozen=True, slots=True)
 class AuthConfig:
     refresh_ttl: timedelta
+    short_refresh_ttl: timedelta  # hạn mã làm mới khi không ghi nhớ đăng nhập (F01.11)
     reset_ttl: timedelta
     access_expires_in: int  # giây
     frontend_url: str
@@ -21,6 +22,7 @@ class TokenPair:
     access_token: str
     refresh_token: str
     expires_in: int
+    remember_me: bool = True  # giao diện lưu bền (true) hay chỉ sessionStorage (false)
 
 
 @dataclass(frozen=True, slots=True)

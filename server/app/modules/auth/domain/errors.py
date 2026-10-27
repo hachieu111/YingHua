@@ -45,6 +45,11 @@ class SamePasswordError(InvalidInputError):
     default_message = "Mật khẩu mới phải khác mật khẩu cũ"
 
 
+class InvalidAvatarPresetError(InvalidInputError):
+    code = "INVALID_AVATAR_PRESET"
+    default_message = "Ảnh đại diện có sẵn không hợp lệ"
+
+
 class ResetLinkInvalidError(InvalidInputError):
     code = "RESET_LINK_INVALID"
     default_message = "Liên kết đặt lại mật khẩu không còn hiệu lực"

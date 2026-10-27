@@ -7,6 +7,12 @@ Nhẹ có chủ đích (không import use case) để M03 import được mà kh
 from __future__ import annotations
 
 from app.modules.imaging.infrastructure.repositories import SqlBubbleRepository, SqlTranslationRepository
+from app.modules.imaging.infrastructure.stats_source import SqlImagingCountsSource
 from app.modules.imaging.infrastructure.uow import SqlImagingUnitOfWork
 
-__all__ = ["SqlBubbleRepository", "SqlImagingUnitOfWork", "SqlTranslationRepository"]
+__all__ = [
+    "SqlBubbleRepository",
+    "SqlImagingCountsSource",
+    "SqlImagingUnitOfWork",
+    "SqlTranslationRepository",
+]

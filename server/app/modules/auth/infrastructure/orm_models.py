@@ -61,6 +61,7 @@ class UserModel(Base):
             name="fk_users_avatar_file_id_stored_files",
         ),
     )
+    avatar_preset: Mapped[str | None] = mapped_column(String(32))
     role: Mapped[str] = mapped_column(String(16), server_default="user")
     status: Mapped[str] = mapped_column(String(16), server_default="active")
     locked_reason: Mapped[str | None] = mapped_column(String(500))

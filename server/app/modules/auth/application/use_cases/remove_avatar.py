@@ -9,7 +9,7 @@ from app.modules.auth.application.ports import AuthUnitOfWork
 
 
 class RemoveAvatarUseCase:
-    """F01.10 — Xóa ảnh đại diện (US-NH-65): gỡ tham chiếu `users.avatar_file_id` và xóa tệp khỏi kho.
+    """F01.10 — Xóa ảnh đại diện (US-NH-65): gỡ `users.avatar_file_id`, mã ảnh có sẵn và xóa tệp khỏi kho.
 
     Idempotent: chưa có ảnh đại diện thì không làm gì. Tệp thật chỉ bị xóa sau khi giao dịch commit.
     """
@@ -25,10 +25,12 @@ class RemoveAvatarUseCase:
             if user is None:
                 raise NotFoundError("Không tìm thấy tài khoản")
             old_id = user.avatar_file_id
-            if old_id is None:
+            if old_id is None and user.avatar_preset is None:
                 return
             user.avatar_file_id = None
+            user.avatar_preset = None
             await uow.users.update(user)
-            staged.delete_after_commit(await uow.files.delete_many([old_id]))
+            if old_id is not None:
+                staged.delete_after_commit(await uow.files.delete_many([old_id]))
             await uow.commit()
         await staged.finalize()

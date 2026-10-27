@@ -28,6 +28,7 @@ class User:
     created_at: datetime
     chinese_name: str | None = None
     avatar_file_id: int | None = None
+    avatar_preset: str | None = None  # mã ảnh có sẵn (F01.10); loại trừ với avatar_file_id
     show_email: bool = True
     show_join_date: bool = True
     locked_reason: str | None = None
@@ -59,6 +60,7 @@ class RefreshSession:
     expires_at: datetime
     revoked_at: datetime | None
     replaced_by_id: int | None
+    created_at: datetime
 
 
 @dataclass(frozen=True, slots=True)

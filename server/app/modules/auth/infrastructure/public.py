@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from app.modules.auth.infrastructure.repositories import SqlSessionRepository, SqlUserRepository
+from app.modules.auth.infrastructure.stats_source import SqlUserCountsSource
 from app.modules.auth.infrastructure.uow import SqlAuthUnitOfWork
 
-__all__ = ["SqlAuthUnitOfWork", "SqlSessionRepository", "SqlUserRepository"]
+__all__ = ["SqlAuthUnitOfWork", "SqlSessionRepository", "SqlUserCountsSource", "SqlUserRepository"]

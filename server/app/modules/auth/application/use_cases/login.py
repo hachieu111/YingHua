@@ -20,7 +20,10 @@ _DUMMY_HASH = hash_password("khong-ai-dung-mat-khau-nay")
 
 
 class LoginUseCase:
-    """F01.02 — Đăng nhập (US-KH-03). Sai email hay sai mật khẩu đều trả cùng một thông báo."""
+    """F01.02, F01.11 — Đăng nhập (US-KH-03, US-NH-76). Sai email hay sai mật khẩu đều trả cùng một thông báo.
+
+    `remember_me=False` cấp mã làm mới đời ngắn; cờ chỉ đổi thời hạn phiên, không đổi quyền hay xoay vòng.
+    """
 
     def __init__(
         self,
@@ -36,7 +39,14 @@ class LoginUseCase:
         self._limiter = limiter
         self._config = config
 
-    async def execute(self, email: str, password: str, user_agent: str | None, ip: str | None) -> AuthResult:
+    async def execute(
+        self,
+        email: str,
+        password: str,
+        user_agent: str | None,
+        ip: str | None,
+        remember_me: bool = True,
+    ) -> AuthResult:
         email = normalize_email(email)
         email_key, ip_key = f"email:{email}", f"ip:{ip or '-'}"
         if self._limiter.is_blocked(
@@ -59,7 +69,7 @@ class LoginUseCase:
                 user.password_hash = hash_password(password)
             user.last_login_at = self._clock.now()
             await uow.users.update(user)
-            tokens = await self._issuer.open_session(uow, user, user_agent, ip)
+            tokens = await self._issuer.open_session(uow, user, user_agent, ip, remember_me)
             await uow.commit()
         log.info("Đăng nhập thành công user_id=%s", user.id)
         return AuthResult(user, tokens)

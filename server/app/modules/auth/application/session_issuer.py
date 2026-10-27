@@ -18,9 +18,14 @@ class SessionIssuer:
         self._config = config
 
     async def open_session(
-        self, uow: AuthUnitOfWork, user: User, user_agent: str | None, ip: str | None
+        self,
+        uow: AuthUnitOfWork,
+        user: User,
+        user_agent: str | None,
+        ip: str | None,
+        remember_me: bool = True,
     ) -> TokenPair:
-        return await self._issue(uow, user, str(uuid.uuid4()), user_agent, ip)
+        return await self._issue(uow, user, str(uuid.uuid4()), user_agent, ip, remember_me)
 
     async def rotate(
         self,
@@ -30,32 +35,46 @@ class SessionIssuer:
         old_session_id: int,
         user_agent: str | None,
         ip: str | None,
+        remember_me: bool = True,
     ) -> TokenPair:
-        pair, new_id = await self._issue_with_id(uow, user, family_id, user_agent, ip)
+        pair, new_id = await self._issue_with_id(uow, user, family_id, user_agent, ip, remember_me)
         await uow.sessions.mark_replaced(old_session_id, new_id)
         return pair
 
     async def _issue(
-        self, uow: AuthUnitOfWork, user: User, family_id: str, user_agent: str | None, ip: str | None
+        self,
+        uow: AuthUnitOfWork,
+        user: User,
+        family_id: str,
+        user_agent: str | None,
+        ip: str | None,
+        remember_me: bool,
     ) -> TokenPair:
-        pair, _ = await self._issue_with_id(uow, user, family_id, user_agent, ip)
+        pair, _ = await self._issue_with_id(uow, user, family_id, user_agent, ip, remember_me)
         return pair
 
     async def _issue_with_id(
-        self, uow: AuthUnitOfWork, user: User, family_id: str, user_agent: str | None, ip: str | None
+        self,
+        uow: AuthUnitOfWork,
+        user: User,
+        family_id: str,
+        user_agent: str | None,
+        ip: str | None,
+        remember_me: bool,
     ) -> tuple[TokenPair, int]:
         now = self._clock.now()
+        ttl = self._config.refresh_ttl if remember_me else self._config.short_refresh_ttl
         refresh_token = new_opaque_token()
         stored = await uow.sessions.add(
             NewRefreshSession(
                 user_id=user.id,
                 family_id=family_id,
                 token_hash=hash_token(refresh_token),
-                expires_at=now + self._config.refresh_ttl,
+                expires_at=now + ttl,
                 created_at=now,
                 user_agent=(user_agent or "")[:255] or None,
                 ip=(ip or "")[:64] or None,
             )
         )
         access = self._tokens.issue_access_token(user.id, user.role.value, family_id)
-        return TokenPair(access, refresh_token, self._config.access_expires_in), stored.id
+        return TokenPair(access, refresh_token, self._config.access_expires_in, remember_me), stored.id

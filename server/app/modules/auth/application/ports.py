@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import datetime
 from typing import Any, Protocol
 
@@ -17,6 +18,10 @@ from app.modules.auth.domain.entities import (
 
 class UserRepository(Protocol):
     async def get(self, user_id: int) -> User | None: ...
+
+    async def get_many(self, user_ids: Sequence[int]) -> dict[int, User]:
+        """Người dùng theo lô (một truy vấn); mã không tồn tại thì vắng mặt."""
+        ...
 
     async def get_by_email(self, email: str) -> User | None:
         """`email` đã chuẩn hóa chữ thường."""

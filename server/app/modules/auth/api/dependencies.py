@@ -23,6 +23,7 @@ from app.modules.auth.application.use_cases.register import RegisterUseCase
 from app.modules.auth.application.use_cases.remove_avatar import RemoveAvatarUseCase
 from app.modules.auth.application.use_cases.request_password_reset import RequestPasswordResetUseCase
 from app.modules.auth.application.use_cases.reset_password import ResetPasswordUseCase
+from app.modules.auth.application.use_cases.set_avatar_preset import SetAvatarPresetUseCase
 from app.modules.auth.application.use_cases.update_profile import UpdateProfileUseCase
 from app.modules.auth.application.use_cases.upload_avatar import UploadAvatarUseCase
 from app.modules.auth.infrastructure.email_outbox import FileOutboxEmailSender
@@ -44,6 +45,7 @@ class AuthServices:
     update_profile: UpdateProfileUseCase
     upload_avatar: UploadAvatarUseCase
     remove_avatar: RemoveAvatarUseCase
+    set_avatar_preset: SetAvatarPresetUseCase
     change_password: ChangePasswordUseCase
     authenticate: AuthenticateUseCase
 
@@ -52,6 +54,7 @@ def _auth_config(container: Container) -> AuthConfig:
     s = container.settings
     return AuthConfig(
         refresh_ttl=timedelta(days=s.refresh_token_days),
+        short_refresh_ttl=timedelta(hours=s.refresh_token_short_hours),
         reset_ttl=timedelta(minutes=s.password_reset_minutes),
         access_expires_in=s.access_token_minutes * 60,
         frontend_url=s.frontend_url,
@@ -72,7 +75,7 @@ def build_auth_services(container: Container) -> AuthServices:
     return AuthServices(
         register=RegisterUseCase(uow_factory, clock, issuer),
         login=LoginUseCase(uow_factory, clock, issuer, container.login_limiter, config),
-        refresh=RefreshSessionUseCase(uow_factory, clock, issuer),
+        refresh=RefreshSessionUseCase(uow_factory, clock, issuer, config.short_refresh_ttl),
         logout=LogoutUseCase(uow_factory, clock),
         logout_all=LogoutAllUseCase(uow_factory, clock),
         request_reset=RequestPasswordResetUseCase(uow_factory, clock, email_sender, config),
@@ -81,6 +84,7 @@ def build_auth_services(container: Container) -> AuthServices:
         update_profile=UpdateProfileUseCase(uow_factory),
         upload_avatar=UploadAvatarUseCase(uow_factory, clock, container.storage),
         remove_avatar=RemoveAvatarUseCase(uow_factory, container.storage),
+        set_avatar_preset=SetAvatarPresetUseCase(uow_factory, container.storage),
         change_password=ChangePasswordUseCase(uow_factory, clock),
         authenticate=AuthenticateUseCase(uow_factory, clock, tokens),
     )

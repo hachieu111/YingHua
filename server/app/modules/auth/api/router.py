@@ -7,6 +7,9 @@ from app.core.uploads import read_image_upload
 from app.modules.auth.api.dependencies import AuthServices, client_info, get_auth_services, get_identity
 from app.modules.auth.api.schemas import (
     AuthResponse,
+    AvatarPresetItem,
+    AvatarPresetListResponse,
+    AvatarPresetRequest,
     ChangePasswordRequest,
     ForgotPasswordRequest,
     LoginRequest,
@@ -19,6 +22,7 @@ from app.modules.auth.api.schemas import (
     UserResponse,
 )
 from app.modules.auth.application.dto import Identity
+from app.modules.auth.domain.rules import AVATAR_PRESETS
 
 auth_router = APIRouter(prefix="/auth", tags=["M01 Xác thực"])
 account_router = APIRouter(prefix="/account", tags=["M01 Tài khoản"])
@@ -43,7 +47,9 @@ async def login(
     body: LoginRequest, request: Request, services: AuthServices = Depends(get_auth_services)
 ) -> AuthResponse:
     user_agent, ip = client_info(request)
-    return AuthResponse.from_result(await services.login.execute(body.email, body.password, user_agent, ip))
+    return AuthResponse.from_result(
+        await services.login.execute(body.email, body.password, user_agent, ip, body.remember_me)
+    )
 
 
 @auth_router.post("/refresh", response_model=AuthResponse, summary="Làm mới phiên đăng nhập (F01.03)")
@@ -153,3 +159,28 @@ async def remove_avatar(
 ) -> Response:
     await services.remove_avatar.execute(identity)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@account_router.get(
+    "/avatar-presets",
+    response_model=AvatarPresetListResponse,
+    summary="Danh sách ảnh đại diện có sẵn (F01.10)",
+)
+async def list_avatar_presets(_: Identity = Depends(get_identity)) -> AvatarPresetListResponse:
+    return AvatarPresetListResponse(
+        items=[AvatarPresetItem(code=code, name=name) for code, name in AVATAR_PRESETS.items()]
+    )
+
+
+@account_router.put(
+    "/me/avatar-preset",
+    response_model=UserResponse,
+    summary="Chọn ảnh đại diện có sẵn (F01.10)",
+    description="Gỡ ảnh tải lên (nếu có); tải ảnh lên sau đó sẽ thay lại lựa chọn này.",
+)
+async def set_avatar_preset(
+    body: AvatarPresetRequest,
+    identity: Identity = Depends(get_identity),
+    services: AuthServices = Depends(get_auth_services),
+) -> UserResponse:
+    return UserResponse.from_entity(await services.set_avatar_preset.execute(identity, body.preset))

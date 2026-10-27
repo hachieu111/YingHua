@@ -6,12 +6,25 @@ from fastapi import Depends
 
 from app.container import Container, get_container
 from app.modules.admin.application.use_cases.ensure_target_user import EnsureTargetUserUseCase
+from app.modules.admin.infrastructure.content_owner_notifier import NotificationsContentOwnerNotifier
 from app.modules.admin.infrastructure.uow import SqlAdminUnitOfWork
 from app.modules.auth.api.public import Identity, require_admin
+from app.modules.notifications.application.public import SendNotificationUseCase
+from app.modules.notifications.infrastructure.public import FileOutboxEmailSender, SqlNotificationsUnitOfWork
 
 
 def build_ensure_target(container: Container) -> EnsureTargetUserUseCase:
     return EnsureTargetUserUseCase(lambda: SqlAdminUnitOfWork(container.session_factory))
+
+
+def build_content_owner_notifier(container: Container) -> NotificationsContentOwnerNotifier:
+    """Thông báo gỡ ảnh (F13.04) đi qua use case công khai của M14, không gửi email."""
+    send = SendNotificationUseCase(
+        lambda: SqlNotificationsUnitOfWork(container.session_factory),
+        FileOutboxEmailSender(container.settings.storage_dir / "outbox"),
+        container.clock,
+    )
+    return NotificationsContentOwnerNotifier(send)
 
 
 async def get_target_user_id(
