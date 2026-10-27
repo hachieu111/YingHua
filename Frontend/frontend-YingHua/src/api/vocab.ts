@@ -142,6 +142,38 @@ export function listVocab(params: VocabListParams = {}, signal?: AbortSignal): P
   return apiRequest<VocabPage>(`/vocab-entries?${query.toString()}`, { signal });
 }
 
+export type VocabExportFormat = 'csv' | 'anki';
+
+export interface VocabExportFile {
+  blob: Blob;
+  filename: string;
+}
+
+/** Xuất sổ tay theo bộ lọc đang áp dụng (F07.08). Tên tệp lấy từ Content-Disposition do máy chủ tạo. */
+export async function exportVocab(
+  format: VocabExportFormat,
+  params: Omit<VocabListParams, 'page' | 'size'> = {}
+): Promise<VocabExportFile> {
+  const query = new URLSearchParams({ format });
+  if (params.status) query.set('status', params.status);
+  if (params.hsk !== undefined) query.set('hsk', String(params.hsk));
+  if (params.q) query.set('q', params.q);
+  if (params.starred !== undefined) query.set('starred', String(params.starred));
+  if (params.seriesId !== undefined) query.set('series_id', String(params.seriesId));
+  if (params.due !== undefined) query.set('due', String(params.due));
+  let disposition = '';
+  const blob = await apiRequest<Blob>(`/vocab-entries/export?${query.toString()}`, {
+    responseType: 'blob',
+    onResponse: res => {
+      disposition = res.headers.get('Content-Disposition') ?? '';
+    }
+  });
+  const match = /filename="?([\w.\-]+)"?/.exec(disposition);
+  return { blob, filename: match ? match[1] : `so-tay.${format === 'csv' ? 'csv' : 'txt'}` };
+}
+
+export const isExportEmpty = (err: unknown): boolean => err instanceof ApiError && err.code === 'VOCAB_EXPORT_EMPTY';
+
 /** Tổng số từ trong Sổ tay (dùng cho số liệu tóm tắt). */
 export async function countVocab(signal?: AbortSignal): Promise<number> {
   return (await listVocab({ size: 1 }, signal)).total;
@@ -205,3 +237,24 @@ export const regenerateAiNote = (entryId: number): Promise<AiNote> =>
 
 /** 429 AI_NOTE_REGENERATE_LIMIT: hết lượt Tạo lại cho từ này. */
 export const isAiRegenerateLimit = (err: unknown): boolean => err instanceof ApiError && err.code === 'AI_NOTE_REGENERATE_LIMIT';
+
+/** Trạng thái "đã lưu" lấy từ máy chủ: đúng cả sau khi tải lại trang hay khi từ vừa bị xóa ở Sổ tay. */
+export interface SavedStatus {
+  /** Từ đã có trong Sổ tay (ở bất kỳ ngữ cảnh nào). */
+  terms: string[];
+  /** Từ đã có ngữ cảnh lấy từ trang `pageId` (đã lưu ở trang này). */
+  page_terms: string[];
+  /** Bong bóng đã lưu câu thoại. */
+  bubble_ids: number[];
+}
+
+export function getSavedStatus(
+  input: { terms: string[]; bubbleIds: number[]; pageId: number | null },
+  signal?: AbortSignal
+): Promise<SavedStatus> {
+  const query = new URLSearchParams();
+  input.terms.forEach(term => query.append('terms', term));
+  input.bubbleIds.forEach(id => query.append('bubble_ids', String(id)));
+  if (input.pageId !== null) query.set('page_id', String(input.pageId));
+  return apiRequest<SavedStatus>(`/vocab-entries/saved-status?${query.toString()}`, { signal });
+}

@@ -6,6 +6,8 @@ export interface ApiUser {
   display_name: string;
   chinese_name: string | null;
   avatar_url: string | null;
+  /** Mã ảnh đại diện có sẵn; loại trừ với avatar_url. */
+  avatar_preset: string | null;
   role: 'user' | 'admin';
   status: 'active' | 'locked';
   show_email: boolean;
@@ -15,11 +17,14 @@ export interface ApiUser {
 
 interface AuthResponse {
   user: ApiUser;
-  tokens: { access_token: string; refresh_token: string; expires_in: number };
+  tokens: { access_token: string; refresh_token: string; expires_in: number; remember_me?: boolean };
 }
 
 function adopt(response: AuthResponse): ApiUser {
-  saveTokens({ accessToken: response.tokens.access_token, refreshToken: response.tokens.refresh_token });
+  saveTokens(
+    { accessToken: response.tokens.access_token, refreshToken: response.tokens.refresh_token },
+    response.tokens.remember_me ?? true
+  );
   return response.user;
 }
 
@@ -31,9 +36,13 @@ export async function register(email: string, password: string, displayName: str
   return adopt(await apiRequest<AuthResponse>('/auth/register', { method: 'POST', body, auth: false }));
 }
 
-export async function login(email: string, password: string): Promise<ApiUser> {
+export async function login(email: string, password: string, rememberMe = true): Promise<ApiUser> {
   return adopt(
-    await apiRequest<AuthResponse>('/auth/login', { method: 'POST', body: { email: email.trim(), password }, auth: false })
+    await apiRequest<AuthResponse>('/auth/login', {
+      method: 'POST',
+      body: { email: email.trim(), password, remember_me: rememberMe },
+      auth: false
+    })
   );
 }
 
@@ -95,3 +104,15 @@ export async function removeAvatar(): Promise<ApiUser> {
   await apiRequest<void>('/account/me/avatar', { method: 'DELETE' });
   return getMe();
 }
+
+export interface AvatarPreset {
+  code: string;
+  name: string;
+}
+
+export const listAvatarPresets = async (signal?: AbortSignal): Promise<AvatarPreset[]> =>
+  (await apiRequest<{ items: AvatarPreset[] }>('/account/avatar-presets', { signal })).items;
+
+/** Chọn ảnh đại diện có sẵn (F01.10); thay ảnh tải lên nếu có. */
+export const setAvatarPreset = (preset: string): Promise<ApiUser> =>
+  apiRequest<ApiUser>('/account/me/avatar-preset', { method: 'PUT', body: { preset } });

@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { ApiError, errorMessage } from '../api/client';
 import { ApiCharacter, ApiExample, WordLookup, hskLabel, lookupWord } from '../api/dictionary';
 import { isAlreadySaved, saveResultMessage, saveWord } from '../api/vocab';
+import { useInNotebook } from '../utils/useInNotebook';
+import { useSystemStatus } from '../utils/useSystemStatus';
 import { speakChinese } from '../utils/speech';
 import StrokeAnimation from './StrokeAnimation';
 
@@ -30,10 +32,12 @@ const ExampleLine: React.FC<{ example: ApiExample }> = ({ example }) => (
 );
 
 export const WordLookupModal: React.FC<WordLookupModalProps> = ({ term, onClose, isLoggedIn, onRequireLogin, showToast }) => {
+  const { tts_enabled } = useSystemStatus();
   const [data, setData] = useState<WordLookup | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [inNotebook, markSaved] = useInNotebook(data?.term ?? term, isLoggedIn);
 
   useEffect(() => {
     if (!term) return;
@@ -78,7 +82,9 @@ export const WordLookupModal: React.FC<WordLookupModalProps> = ({ term, onClose,
     setSaving(true);
     try {
       showToast(saveResultMessage(word, await saveWord({ term: word, source: 'lookup' })));
+      markSaved();
     } catch (err) {
+      if (isAlreadySaved(err)) markSaved();
       showToast(isAlreadySaved(err) ? 'Từ này đã có với ngữ cảnh này' : errorMessage(err));
     } finally {
       setSaving(false);
@@ -107,8 +113,9 @@ export const WordLookupModal: React.FC<WordLookupModalProps> = ({ term, onClose,
               </span>
               <button
                 onClick={() => void speakChinese(data?.term ?? term, 0.9)}
-                className="w-8 h-8 shrink-0 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-600 flex items-center justify-center transition-colors"
-                title="Nghe phát âm"
+                disabled={!tts_enabled}
+                className="w-8 h-8 shrink-0 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-600 flex items-center justify-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                title={tts_enabled ? 'Nghe phát âm' : 'Tính năng nghe đang tạm tắt'}
               >
                 <span className="material-symbols-outlined text-[18px]">volume_up</span>
               </button>
@@ -247,11 +254,11 @@ export const WordLookupModal: React.FC<WordLookupModalProps> = ({ term, onClose,
 
         <button
           onClick={() => void handleSave()}
-          disabled={saving}
+          disabled={saving || inNotebook}
           className="w-full py-2.5 rounded-full text-xs font-bold text-white bg-gradient-to-r from-pink-500 to-rose-400 hover:from-pink-600 hover:to-rose-500 flex items-center justify-center gap-1.5 transition-all disabled:opacity-60"
         >
-          <span className="material-symbols-outlined text-[16px]">bookmark_add</span>
-          <span>{saving ? 'Đang lưu...' : 'Lưu vào Sổ tay'}</span>
+          <span className="material-symbols-outlined text-[16px]">{inNotebook ? 'check' : 'bookmark_add'}</span>
+          <span>{saving ? 'Đang lưu...' : inNotebook ? 'Đã có trong Sổ tay' : 'Lưu vào Sổ tay'}</span>
         </button>
 
         {usesCvdict && <p className="text-[10px] text-slate-400 text-center">Nghĩa: CVDICT (CC BY-SA 4.0)</p>}

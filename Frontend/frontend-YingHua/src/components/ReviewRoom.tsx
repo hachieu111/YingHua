@@ -15,6 +15,7 @@ import { getVocab, updateVocab } from '../api/vocab';
 import { ReaderTarget } from '../types';
 import { formatDateTime, formatInterval } from '../utils/format';
 import { speakChinese } from '../utils/speech';
+import { notifyActivity } from '../utils/useStreak';
 import { AiNotePanel } from './AiNotePanel';
 import { AuthImage } from './AuthImage';
 
@@ -33,7 +34,12 @@ interface ReviewRoomProps {
 
 type Phase = 'loading' | 'error' | 'card' | 'empty';
 
-const BATCH_SIZE = 20;
+// Đủ lớn để vẫn còn thẻ của từ khác sau khi bỏ qua các thẻ cùng từ đã hỏi trong phiên.
+const BATCH_SIZE = 50;
+/** Thời gian xoay thẻ (khớp `duration-500`) cộng chút dư, trước khi thay nội dung mặt sau. */
+const FLIP_MS = 550;
+/** Chấm dưới mức này ("Quên", "Khó") thì chính thẻ đó được hỏi lại khi FSRS cho đến hạn trong phiên. */
+const RELEARN_BELOW_RATING = 3;
 const FEEDBACK_MS = 2600;
 const SPEECH_RATE = 0.85;
 
@@ -71,7 +77,12 @@ const frontMeaning = (meaning: string): string => {
   text = text.replace(/^\s*\[[^\]]*\]\s*/, '');
   const second = text.indexOf('②');
   if (second > 0) text = text.slice(0, second);
-  text = text.replace('①', '').replace(HAN_RUN_RE, '～').replace(/\s+/g, ' ').trim();
+  // Bỏ ký hiệu thô của CVDICT ("LT: 個|个[ge4]", "一塊|一块[yi1 kuai4]") trước khi che chữ Hán.
+  text = text
+    .replace(/[;,]?\s*(LT|Lượng từ)\s*:[^;]*/g, '')
+    .replace(/[^\s;,]+\|[^\s;,]+\[[^\]]*\]/g, '')
+    .replace(/\[[^\]]*\d[^\]]*\]/g, '');
+  text = text.replace('①', '').replace(HAN_RUN_RE, '～').replace(/\s+/g, ' ').replace(/[\s;,]+$/, '').trim();
   if (text.length <= FRONT_MEANING_MAX) return text;
   const cut = text.lastIndexOf(' ', FRONT_MEANING_MAX);
   return `${text.slice(0, cut > 0 ? cut : FRONT_MEANING_MAX)}…`;
@@ -184,17 +195,48 @@ export const ReviewRoom: React.FC<ReviewRoomProps> = ({
   const presentationId = useRef<string>('');
   const shownAt = useRef<number>(0);
   const skipped = useRef<Set<number>>(new Set());
+  // Mỗi từ chỉ hỏi một lần trong phiên: mục từ đã chấm → id thẻ còn được hỏi lại (thẻ vừa "Quên"/"Khó",
+  // khi FSRS cho đến hạn) hoặc null. Các thẻ khác của từ vẫn giữ lịch, ôn ở phiên sau.
+  const buriedEntries = useRef<Map<number, number | null>>(new Map());
   const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const loadToken = useRef<number>(0);
+
+  // Thẻ đang rời đi khi lật về mặt trước: mặt sau giữ đáp án của thẻ cũ cho tới khi xoay xong, mặt trước hiện ngay câu
+  // hỏi mới — vẫn có hiệu ứng lật mà không lộ đáp án của thẻ mới.
+  const [backCard, setBackCard] = useState<ApiDueCard | null>(null);
+  const backTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cardRef = useRef<ApiDueCard | null>(null);
+  const flippedRef = useRef(false);
+  useEffect(() => {
+    cardRef.current = card;
+    flippedRef.current = flipped;
+  }, [card, flipped]);
+  useEffect(
+    () => () => {
+      if (backTimer.current) clearTimeout(backTimer.current);
+    },
+    []
+  );
 
   const showCard = useCallback((next: ApiDueCard, total: number) => {
     presentationId.current = newPresentationId();
     shownAt.current = Date.now();
+    const leaving = flippedRef.current ? cardRef.current : null;
+    if (backTimer.current) clearTimeout(backTimer.current);
+    setBackCard(leaving);
+    if (leaving) backTimer.current = setTimeout(() => setBackCard(null), FLIP_MS);
     setCard(next);
     setRemaining(total);
     setFlipped(false);
     setPhase('card');
   }, []);
+
+  // Lật thẻ: muốn xem mặt sau thì mặt sau phải là thẻ hiện tại, kể cả khi hiệu ứng chuyển thẻ chưa xong.
+  const toggleFlip = () => {
+    if (backTimer.current) clearTimeout(backTimer.current);
+    setBackCard(null);
+    setFlipped(value => !value);
+  };
 
   const flashFeedback = useCallback((message: string) => {
     setFeedback(message);
@@ -202,15 +244,26 @@ export const ReviewRoom: React.FC<ReviewRoomProps> = ({
     feedbackTimer.current = setTimeout(() => setFeedback(null), FEEDBACK_MS);
   }, []);
 
+  // Ba thẻ của một từ nằm liền nhau trong danh sách đến hạn; hiện liền nhau thì trông như thẻ cũ bị lật lại.
+  // Nên ưu tiên thẻ của từ khác với từ vừa chấm, và không hỏi thẻ khác của từ đã chấm trong phiên.
+  const isAvailable = (item: ApiDueCard): boolean => {
+    if (skipped.current.has(item.id)) return false;
+    const buried = buriedEntries.current;
+    return !buried.has(item.vocab_entry_id) || buried.get(item.vocab_entry_id) === item.id;
+  };
+
+  const pickNext = (items: ApiDueCard[], avoidEntryId: number | null): ApiDueCard | undefined =>
+    items.find(item => isAvailable(item) && item.vocab_entry_id !== avoidEntryId) ?? items.find(isAvailable);
+
   // Nạp một đợt thẻ đến hạn của bộ thẻ, bỏ qua các thẻ nghe người học đã chọn bỏ qua.
-  const loadBatch = useCallback(async (): Promise<void> => {
+  const loadBatch = useCallback(async (avoidEntryId: number | null = null): Promise<void> => {
     const token = ++loadToken.current;
     setPhase('loading');
     setError(null);
     try {
       const batch = await getDueCards(deck, BATCH_SIZE);
       if (token !== loadToken.current) return;
-      const pick = batch.items.find(item => !skipped.current.has(item.id));
+      const pick = pickNext(batch.items, avoidEntryId);
       if (pick) showCard(pick, batch.total);
       else {
         setCard(null);
@@ -225,6 +278,7 @@ export const ReviewRoom: React.FC<ReviewRoomProps> = ({
 
   useEffect(() => {
     skipped.current = new Set();
+    buriedEntries.current = new Map();
     setSessionReviewed(0);
     setNotice(null);
     void loadBatch();
@@ -256,11 +310,19 @@ export const ReviewRoom: React.FC<ReviewRoomProps> = ({
         deck
       });
       if (!result.duplicate) setSessionReviewed(count => count + 1);
-      flashFeedback(`Đã ghi nhận “${RATING_LABEL[rating]}”. Lần ôn kế tiếp: sau ${formatInterval(result.interval_seconds)}`);
+      const gradedEntryId = card.vocab_entry_id;
+      const relearn = rating < RELEARN_BELOW_RATING;
+      buriedEntries.current.set(gradedEntryId, relearn ? card.id : null);
+      flashFeedback(
+        relearn
+          ? `Đã ghi nhận “${RATING_LABEL[rating]}”. Thẻ này sẽ hỏi lại sau ${formatInterval(result.interval_seconds)}`
+          : `Đã ghi nhận “${RATING_LABEL[rating]}”. Lần ôn kế tiếp: sau ${formatInterval(result.interval_seconds)}`
+      );
       onProgress();
+      notifyActivity();
       const next = result.next_card;
-      if (next && !skipped.current.has(next.id)) showCard(next, result.remaining_due);
-      else if (result.remaining_due > 0) await loadBatch();
+      if (next && isAvailable(next) && next.vocab_entry_id !== gradedEntryId) showCard(next, result.remaining_due);
+      else if (result.remaining_due > 0) await loadBatch(gradedEntryId);
       else {
         setCard(null);
         setPhase('empty');
@@ -325,7 +387,7 @@ export const ReviewRoom: React.FC<ReviewRoomProps> = ({
     if (phase !== 'card' || !card) return;
     if (e.code === 'Space') {
       e.preventDefault();
-      setFlipped(value => !value);
+      toggleFlip();
     } else if (['1', '2', '3', '4'].includes(e.key)) {
       void handleGrade(Number(e.key) as 1 | 2 | 3 | 4);
     }
@@ -383,6 +445,7 @@ export const ReviewRoom: React.FC<ReviewRoomProps> = ({
     );
   };
 
+  const backSide: ApiDueCard | null = backCard ?? card;
   const unsupportedListening = card?.card_type === 'listening' && audioFailed;
 
   return (
@@ -429,12 +492,10 @@ export const ReviewRoom: React.FC<ReviewRoomProps> = ({
 
         {phase === 'empty' && renderEmpty()}
 
-        {phase === 'card' && card && (
+        {phase === 'card' && card && backSide && (
           <>
-            {/* key theo lượt hiển thị: thẻ mới dựng lại ở mặt trước, không xoay ngược qua mặt sau làm lộ đáp án. */}
             <div
-              key={presentationId.current}
-              onClick={() => setFlipped(value => !value)}
+              onClick={toggleFlip}
               className="w-full h-[520px] cursor-pointer select-none perspective-1200"
             >
               <div
@@ -487,12 +548,12 @@ export const ReviewRoom: React.FC<ReviewRoomProps> = ({
                 <div className="absolute inset-0 w-full h-full rounded-3xl bg-gradient-to-b from-white to-[#eff4ff] p-6 flex flex-col gap-3 backface-hidden rotate-y-180 border-2 border-pink-200 shadow-soft overflow-y-auto custom-scrollbar">
                   <div className="flex items-center justify-between w-full">
                     <div className="flex items-center gap-2">
-                      <span className="text-2xl font-bold text-[#a43073] font-['Noto_Serif_SC']">{card.term}</span>
-                      {card.back.pinyin && <span className="text-base text-blue-600 font-semibold font-mono">({card.back.pinyin})</span>}
+                      <span className="text-2xl font-bold text-[#a43073] font-['Noto_Serif_SC']">{backSide.term}</span>
+                      {backSide.back.pinyin && <span className="text-base text-blue-600 font-semibold font-mono">({backSide.back.pinyin})</span>}
                       <button
                         onClick={e => {
                           e.stopPropagation();
-                          speak(card.term);
+                          speak(backSide.term);
                         }}
                         className="w-7 h-7 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-700 flex items-center justify-center"
                         title="Phát âm chuẩn"
@@ -506,24 +567,24 @@ export const ReviewRoom: React.FC<ReviewRoomProps> = ({
                   <div className="p-4 rounded-2xl bg-white shadow-xs border border-pink-100 flex flex-col gap-1">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Định nghĩa tiếng Việt</span>
                     <span className="text-base font-bold text-slate-800 leading-snug break-words whitespace-pre-line">
-                      {card.back.meaning_vi ? fullMeaning(card.back.meaning_vi) : 'Chưa có nghĩa trong từ điển'}
+                      {backSide.back.meaning_vi ? fullMeaning(backSide.back.meaning_vi) : 'Chưa có nghĩa trong từ điển'}
                     </span>
-                    {card.back.sino_vietnamese && (
-                      <span className="text-xs text-slate-500">Âm Hán Việt: <strong className="text-slate-800">{card.back.sino_vietnamese}</strong></span>
+                    {backSide.back.sino_vietnamese && (
+                      <span className="text-xs text-slate-500">Âm Hán Việt: <strong className="text-slate-800">{backSide.back.sino_vietnamese}</strong></span>
                     )}
                   </div>
 
-                  {card.context && (
+                  {backSide.context && (
                     <div className="p-4 rounded-2xl bg-[#ffd8e7]/30 border border-pink-200 flex flex-col gap-1.5">
                       <div className="flex items-center justify-between">
                         <span className="text-[11px] font-bold text-[#a43073] flex items-center gap-1">
                           <span className="material-symbols-outlined text-[16px]">menu_book</span>
-                          {card.context.source_label ?? 'Câu thoại gốc trong Manhua'}
+                          {backSide.context.source_label ?? 'Câu thoại gốc trong Manhua'}
                         </span>
                         <button
                           onClick={e => {
                             e.stopPropagation();
-                            speak(card.context?.sentence_zh ?? '');
+                            speak(backSide.context?.sentence_zh ?? '');
                           }}
                           className="text-blue-700 hover:text-blue-900 flex items-center gap-1 text-[11px] font-bold"
                         >
@@ -531,28 +592,28 @@ export const ReviewRoom: React.FC<ReviewRoomProps> = ({
                           Nghe câu
                         </button>
                       </div>
-                      {card.context.snippet_url && (
+                      {backSide.context.snippet_url && (
                         <AuthImage
-                          src={card.context.snippet_url}
-                          alt={`Ngữ cảnh của ${card.term}`}
+                          src={backSide.context.snippet_url}
+                          alt={`Ngữ cảnh của ${backSide.term}`}
                           className="w-full max-h-40 object-contain rounded-xl bg-white"
                         />
                       )}
-                      <p className="text-sm font-['Noto_Serif_SC'] font-bold text-slate-800 mt-0.5">“{card.context.sentence_zh}”</p>
-                      {card.context.sentence_vi && <p className="text-xs text-slate-600 italic">“{card.context.sentence_vi}”</p>}
-                      {card.contexts_count > 1 && <p className="text-[10px] text-slate-400">Từ này còn {card.contexts_count - 1} ngữ cảnh khác trong Sổ tay.</p>}
+                      <p className="text-sm font-['Noto_Serif_SC'] font-bold text-slate-800 mt-0.5">“{backSide.context.sentence_zh}”</p>
+                      {backSide.context.sentence_vi && <p className="text-xs text-slate-600 italic">“{backSide.context.sentence_vi}”</p>}
+                      {backSide.contexts_count > 1 && <p className="text-[10px] text-slate-400">Từ này còn {backSide.contexts_count - 1} ngữ cảnh khác trong Sổ tay.</p>}
                     </div>
                   )}
 
-                  {card.note && (
+                  {backSide.note && (
                     <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-900 whitespace-pre-wrap break-words">
                       <span className="font-bold">Ghi chú của bạn: </span>
-                      {card.note}
+                      {backSide.note}
                     </div>
                   )}
 
                   {/* Chỉ tải khi lật thẻ lần đầu; khối tự cuộn cùng mặt sau nên thẻ không tràn chữ. */}
-                  <AiNotePanel vocabEntryId={card.vocab_entry_id} active={flipped} onSpeak={speak} />
+                  <AiNotePanel vocabEntryId={backSide.vocab_entry_id} active={flipped} onSpeak={speak} />
 
                   <div className="flex items-center justify-between pt-2 mt-auto border-t border-slate-100">
                     <button
@@ -607,7 +668,7 @@ export const ReviewRoom: React.FC<ReviewRoomProps> = ({
                   <span />
                 )}
                 <button
-                  onClick={() => setFlipped(value => !value)}
+                  onClick={toggleFlip}
                   className="flex items-center gap-1.5 text-xs font-bold text-[#a43073] bg-[#ffd8e7]/60 hover:bg-[#ffd8e7] py-2 px-5 rounded-full transition-colors shadow-xs"
                 >
                   <span className="material-symbols-outlined text-[18px]">sync</span>

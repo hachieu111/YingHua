@@ -1,50 +1,74 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
+import { Route, Routes, useLocation, useNavigate, useSearchParams } from 'react-router';
 import { NavigationTab, ReaderTarget, UserProfileData } from './types';
 import { CURRENT_USER } from './data/mockData';
-import { ApiUser, getMe, hasStoredSession, logout, logoutAllDevices, removeAvatar, updateMe, uploadAvatar } from './api/auth';
+import { ApiUser, getMe, hasStoredSession, logout, logoutAllDevices, removeAvatar, setAvatarPreset, updateMe, uploadAvatar } from './api/auth';
 import { ApiError, SESSION_EXPIRED_EVENT } from './api/client';
 import { ApiSettings, getSettings } from './api/settings';
-import { toUserProfile } from './api/profile';
+import { avatarFields, toUserProfile } from './api/profile';
 import { ResetPasswordModal } from './components/ResetPasswordModal';
 import { Navbar } from './components/Navbar';
+import { StreakProvider } from './utils/useStreak';
+import { SystemStatusProvider } from './utils/useSystemStatus';
+import { MaintenanceBanner } from './components/MaintenanceBanner';
 import { Footer } from './components/Footer';
-import { ComicReader } from './components/ComicReader';
-import { CatalogPage } from './components/CatalogPage';
-import { LibraryPage } from './components/LibraryPage';
-import { FlashcardsPage } from './components/FlashcardsPage';
-import { LeaderboardPage } from './components/LeaderboardPage';
-import { ProfilePage } from './components/ProfilePage';
+import { LoginRequiredPage } from './components/LoginRequiredPage';
+import { NotFoundPage } from './components/NotFoundPage';
 import { AuthModals } from './components/AuthModals';
 import { UploadModal } from './components/UploadModal';
 import { AccountSettingsModal } from './components/AccountSettingsModal';
 import { EditProfileModal } from './components/EditProfileModal';
 import { AccountSettingsTab } from './components/AccountSettingsModal';
-import { AdminDashboard } from './components/AdminDashboard';
 import { WordLookupModal } from './components/WordLookupModal';
 import { SeriesManagerModal } from './components/SeriesManagerModal';
 import { ApiPage } from './api/library';
 import { setSpeechNoticeListener } from './utils/speech';
+import { useDocumentTitle } from './utils/useDocumentTitle';
+import { QUIZ_SECTION_PARAM, QUIZ_SECTION_VALUE, SAMPLE_PAGE_PATH, TAB_PATHS, readerPath, tabFromPathname } from './routes';
 
-const RESET_TOKEN_PARAM = 'reset_token';
+// Tách mã theo trang: mỗi trang lớn chỉ tải khi người dùng mở tới.
+const CatalogPage = lazy(() => import('./components/CatalogPage').then(m => ({ default: m.CatalogPage })));
+const LibraryPage = lazy(() => import('./components/LibraryPage').then(m => ({ default: m.LibraryPage })));
+const LeaderboardPage = lazy(() => import('./components/LeaderboardPage').then(m => ({ default: m.LeaderboardPage })));
+const ProfilePage = lazy(() => import('./components/ProfilePage').then(m => ({ default: m.ProfilePage })));
+const AdminDashboard = lazy(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
+const ReaderRoute = lazy(() => import('./components/ReaderRoute').then(m => ({ default: m.ReaderRoute })));
+const SamplePage = lazy(() => import('./components/SamplePage').then(m => ({ default: m.SamplePage })));
+const FlashcardsRoute = lazy(() => import('./components/FlashcardsRoute').then(m => ({ default: m.FlashcardsRoute })));
 
-// Đọc mã đặt lại mật khẩu từ liên kết trong email (F01.06): /?reset_token=...
-const readResetTokenFromUrl = (): string | null => new URLSearchParams(window.location.search).get(RESET_TOKEN_PARAM);
-
-const clearResetTokenFromUrl = () => {
-  const url = new URL(window.location.href);
-  url.searchParams.delete(RESET_TOKEN_PARAM);
-  window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+const PAGE_TITLES: Record<NavigationTab, string> = {
+  catalog: 'Trang chủ',
+  reader: 'Đọc truyện',
+  library: 'Thư viện',
+  flashcards: 'Từ vựng',
+  leaderboard: 'Bảng xếp hạng',
+  profile: 'Hồ sơ',
+  admin: 'Quản trị'
 };
 
+const PageFallback: React.FC = () => (
+  <div className="flex items-center justify-center gap-2 py-24 text-sm text-slate-500">
+    <span className="w-5 h-5 border-2 border-pink-300 border-t-transparent rounded-full animate-spin"></span>
+    Đang tải...
+  </div>
+);
+
+const RESET_TOKEN_PARAM = 'reset_token';
+// Thử khôi phục phiên khi máy chủ tạm không phản hồi lúc mở trang.
+const SESSION_RETRY_DELAYS_MS = [2000, 4000, 8000];
+
 export default function App() {
-  // Trang Chủ (catalog) is default home page
-  const [activeTab, setActiveTab] = useState<NavigationTab>('catalog');
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  // Mục đang chọn suy ra từ URL; null ở trang 404.
+  const activeTab = tabFromPathname(location.pathname);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [userProfile, setUserProfile] = useState<UserProfileData>(CURRENT_USER);
   // Chờ khôi phục phiên đăng nhập đã lưu để không nhấp nháy trang "Yêu cầu đăng nhập".
   const [authReady, setAuthReady] = useState<boolean>(() => !hasStoredSession());
-  const [resetToken, setResetToken] = useState<string | null>(readResetTokenFromUrl);
+  const [resetToken, setResetToken] = useState<string | null>(() => searchParams.get(RESET_TOKEN_PARAM));
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register' | null>(null);
   const [authPrompt, setAuthPrompt] = useState<string | null>(null);
   const [uploadModalOpen, setUploadModalOpen] = useState<boolean>(false);
@@ -53,17 +77,36 @@ export default function App() {
   const [editProfileOpen, setEditProfileOpen] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [lookupTerm, setLookupTerm] = useState<string | null>(null);
-  // Chương/trang đang mở trong trình đọc; Khách vẫn mở được chương đọc thử (F03.03, F05.04).
-  const [readerTarget, setReaderTarget] = useState<ReaderTarget | null>(null);
+  // Đường dẫn trình đọc gần nhất để mục "Đọc truyện" quay lại đúng chương; Khách vẫn mở được chương đọc thử (F03.03, F05.04).
+  const [lastReaderPath, setLastReaderPath] = useState<string | null>(null);
   // Tăng lên khi tải ảnh hoặc tạo truyện xong để Trang Chủ/Thư viện tải lại dữ liệu.
   const [dataVersion, setDataVersion] = useState<number>(0);
-  const [focusQuiz, setFocusQuiz] = useState<boolean>(false);
   const [managerState, setManagerState] = useState<{ open: boolean; seriesId: number | null }>({ open: false, seriesId: null });
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3200);
   };
+
+  useDocumentTitle(activeTab ? PAGE_TITLES[activeTab] : location.pathname === SAMPLE_PAGE_PATH ? 'Trang mẫu' : 'Không tìm thấy trang');
+
+  // Sang trang khác thì cuộn về đầu trang.
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [location.pathname]);
+
+  // Mã đặt lại mật khẩu đã được giữ trong state: xóa khỏi thanh địa chỉ ngay để không rò rỉ qua lịch sử/Referer (F01.06).
+  useEffect(() => {
+    if (!searchParams.has(RESET_TOKEN_PARAM)) return;
+    setSearchParams(
+      previous => {
+        const next = new URLSearchParams(previous);
+        next.delete(RESET_TOKEN_PARAM);
+        return next;
+      },
+      { replace: true }
+    );
+  }, [searchParams, setSearchParams]);
 
   // Thông báo nhẹ khi phát âm phải dùng phương án dự phòng (F11.06, F02.03).
   useEffect(() => setSpeechNoticeListener(msg => showToast(msg)), []);
@@ -88,23 +131,48 @@ export default function App() {
     setEditProfileOpen(false);
     setUploadModalOpen(false);
     setManagerState({ open: false, seriesId: null });
-    setReaderTarget(null);
-    setActiveTab('catalog'); // Trở về trang chủ khi không còn phiên
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setLastReaderPath(null);
+    navigate(TAB_PATHS.catalog); // Trở về trang chủ khi không còn phiên
   };
 
   // Khôi phục phiên khi tải lại trang (F01.03).
   useEffect(() => {
     if (!hasStoredSession()) return;
     let cancelled = false;
-    getMe()
-      .then(user => (cancelled ? undefined : applySession(user)))
-      .catch(() => undefined) // Phiên hỏng: client đã dọn mã, người dùng ở trạng thái chưa đăng nhập.
-      .finally(() => {
-        if (!cancelled) setAuthReady(true);
-      });
+    let restored = false;
+    let attempt = 0;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+    // Máy chủ tạm không phản hồi (đang khởi động lại, mất mạng) thì mã phiên vẫn còn: thử lại thay vì để người dùng
+    // ở trạng thái "chưa đăng nhập". Phiên hỏng thật (401 không làm mới được) thì client đã dọn mã, dừng thử.
+    const restore = () => {
+      if (cancelled || restored || !hasStoredSession()) return;
+      if (retryTimer) clearTimeout(retryTimer);
+      getMe()
+        .then(user => {
+          if (cancelled) return;
+          restored = true;
+          applySession(user);
+        })
+        .catch(err => {
+          // Bảo trì (503) cũng chỉ là tạm thời: giữ phiên và thử lại, không coi là đăng xuất.
+          if (cancelled || !(err instanceof ApiError) || (err.code !== 'NETWORK_ERROR' && err.code !== 'MAINTENANCE_MODE')) return;
+          if (attempt < SESSION_RETRY_DELAYS_MS.length) retryTimer = setTimeout(restore, SESSION_RETRY_DELAYS_MS[attempt++]);
+        })
+        .finally(() => {
+          if (!cancelled) setAuthReady(true);
+        });
+    };
+    const retryWhenBack = () => {
+      if (document.visibilityState === 'visible') restore();
+    };
+    restore();
+    window.addEventListener('online', restore);
+    window.addEventListener('focus', retryWhenBack);
     return () => {
       cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
+      window.removeEventListener('online', restore);
+      window.removeEventListener('focus', retryWhenBack);
     };
   }, []);
 
@@ -117,7 +185,7 @@ export default function App() {
     };
     window.addEventListener(SESSION_EXPIRED_EVENT, onExpired);
     return () => window.removeEventListener(SESSION_EXPIRED_EVENT, onExpired);
-  }, []);
+  }, [navigate]);
 
   // Only Trang Chủ and Bảng Vàng Danh Dự are publicly viewable without authentication
   const isPublicTab = (tab: NavigationTab) => tab === 'catalog' || tab === 'leaderboard';
@@ -141,14 +209,12 @@ export default function App() {
       showToast('Vui lòng đăng nhập để tiếp tục.');
       return;
     }
-    setActiveTab(tab);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    navigate(tab === 'reader' && lastReaderPath ? lastReaderPath : TAB_PATHS[tab]);
   };
 
   // Mở trình đọc đúng chương/trang. Khách được mở: máy chủ chỉ cho đọc chương đọc thử và báo lỗi nếu không được phép.
   const handleOpenReader = (target: ReaderTarget) => {
-    setReaderTarget(target);
-    setActiveTab('reader');
+    navigate(readerPath(target));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -156,9 +222,6 @@ export default function App() {
     setAuthPrompt(message);
     setAuthModalMode('login');
   };
-
-  // Trình đọc là trang công khai khi đã có chương được chọn (đọc thử); các trang khác theo quy tắc cũ.
-  const canViewTab = (tab: NavigationTab) => isLoggedIn || isPublicTab(tab) || (tab === 'reader' && readerTarget !== null);
 
   const handleOpenUpload = () => {
     if (!isLoggedIn) {
@@ -192,8 +255,6 @@ export default function App() {
     }
   };
 
-  const handleFocusQuizHandled = useCallback(() => setFocusQuiz(false), []);
-
   const openAccountSettings = (tab: AccountSettingsTab) => {
     setAccountSettingsTab(tab);
     setAccountSettingsOpen(true);
@@ -212,16 +273,22 @@ export default function App() {
   // Tải avatar lên máy chủ (F01.10); lỗi được ném lại để hộp thoại hiển thị tại chỗ.
   const handleUploadAvatar = async (file: File) => {
     const user = await uploadAvatar(file);
-    setUserProfile(prev => ({ ...prev, avatarUrl: user.avatar_url }));
+    setUserProfile(prev => ({ ...prev, ...avatarFields(user) }));
+  };
+
+  // Chọn ảnh đại diện có sẵn (F01.10): máy chủ lưu mã, Navbar và hồ sơ đổi theo.
+  const handleSetAvatarPreset = async (code: string) => {
+    const user = await setAvatarPreset(code);
+    setUserProfile(prev => ({ ...prev, ...avatarFields(user) }));
   };
 
   // Gỡ avatar đã tải lên (F01.10): Navbar và hồ sơ dùng chung avatarUrl nên tự quay về ảnh mặc định.
   const handleRemoveAvatar = async () => {
     const user = await removeAvatar();
-    setUserProfile(prev => ({ ...prev, avatarUrl: user.avatar_url }));
+    setUserProfile(prev => ({ ...prev, ...avatarFields(user) }));
   };
 
-  // Tên hiển thị, tên tiếng Trung và avatar tải lên được lưu ở máy chủ; huy hiệu và avatar gợi ý chỉ giữ trong phiên này.
+  // Tên hiển thị, tên tiếng Trung và avatar tải lên được lưu ở máy chủ; huy hiệu chỉ giữ trong phiên này.
   const handleSaveProfile = async (updated: Partial<UserProfileData>): Promise<boolean> => {
     try {
       const user = await updateMe({ display_name: updated.name ?? userProfile.name, chinese_name: updated.chineseName ?? '' });
@@ -264,11 +331,32 @@ export default function App() {
     }
   };
 
+  const requestLogin = (message: string) => {
+    setAuthPrompt(message);
+    setAuthModalMode('login');
+  };
+
+  const requestRegister = () => {
+    setAuthPrompt(null);
+    setAuthModalMode('register');
+  };
+
+  const loginRequiredPage = (
+    <LoginRequiredPage
+      onLogin={() => requestLogin('Vui lòng đăng nhập để truy cập trang này!')}
+      onRegister={requestRegister}
+      onGoHome={() => handleNavigate('catalog')}
+    />
+  );
+
   if (!authReady) {
     return <div className="min-h-screen bg-[#f8f9ff] flex items-center justify-center text-sm text-slate-500">Đang tải...</div>;
   }
 
   return (
+    <SystemStatusProvider>
+    <StreakProvider isLoggedIn={isLoggedIn}>
+      <MaintenanceBanner />
     <div className="min-h-screen bg-[#f8f9ff] text-[#0b1c30] flex flex-col font-['Inter'] selection:bg-[#ffd8e7] selection:text-[#3d0026]">
       
       {/* Top Navbar */}
@@ -288,131 +376,129 @@ export default function App() {
         userAvatarUrl={userProfile.avatarUrl}
       />}
 
-      {/* Main Screen Content */}
+      {/* Main Screen Content: mỗi trang có URL riêng (xem src/routes.ts) */}
       <main className={`flex-1 w-full ${activeTab === 'admin' ? '' : 'pt-20'}`}>
-        {/* Route Guard Fallback: If not logged in and not on public tab */}
-        {activeTab === 'admin' && isAdmin ? (
-          <AdminDashboard onOpenLearnerView={() => handleNavigate('catalog')} currentUserEmail={userProfile.email} />
-        ) : activeTab === 'admin' ? (
-          <div className="mx-auto max-w-xl px-4 py-20 text-center text-slate-600">Bạn không có quyền truy cập khu vực quản trị.</div>
-        ) : !canViewTab(activeTab) ? (
-          <div className="w-full max-w-[700px] mx-auto px-4 py-16 flex flex-col items-center text-center gap-6">
-            <div className="w-20 h-20 rounded-3xl bg-pink-100 flex items-center justify-center text-[#a43073] shadow-md border border-pink-200">
-              <span className="material-symbols-outlined text-[42px]">lock</span>
-            </div>
-            <div className="flex flex-col gap-2">
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-800 font-['Plus_Jakarta_Sans']">
-                Yêu cầu đăng nhập tài khoản
-              </h2>
-              <p className="text-sm text-slate-600 max-w-lg leading-relaxed">
-                Trang này dành riêng cho thành viên của Yinghua để lưu tiến độ học tập, đánh dấu từ vựng và xem lịch sử đọc truyện. Trừ <strong>Trang Chủ</strong> và <strong>Bảng Vàng Danh Dự</strong>, vui lòng đăng nhập để trải nghiệm toàn bộ tính năng!
-              </p>
-            </div>
+        <Suspense fallback={<PageFallback />}>
+          <Routes>
+            <Route
+              path={TAB_PATHS.catalog}
+              element={
+                <CatalogPage
+                  isLoggedIn={isLoggedIn}
+                  onOpenReader={handleOpenReader}
+                  onRequireLogin={handleRequireLogin}
+                  onNavigateToFlashcards={() => handleNavigate('flashcards')}
+                  onLookupWord={setLookupTerm}
+                  showToast={showToast}
+                  refreshKey={dataVersion}
+                />
+              }
+            />
 
-            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-              <button
-                onClick={() => {
-                  setAuthPrompt('Vui lòng đăng nhập để truy cập trang này!');
-                  setAuthModalMode('login');
-                }}
-                className="px-6 py-3 rounded-full bg-[#a43073] hover:bg-[#85145a] text-white font-bold text-xs sm:text-sm shadow-md shadow-pink-300/30 transition-all flex items-center gap-2"
-              >
-                <span className="material-symbols-outlined text-[18px]">login</span>
-                <span>Đăng nhập ngay</span>
-              </button>
-              <button
-                onClick={() => {
-                  setAuthPrompt(null);
-                  setAuthModalMode('register');
-                }}
-                className="px-6 py-3 rounded-full bg-white hover:bg-pink-50 text-[#a43073] border border-pink-200 font-bold text-xs sm:text-sm shadow-xs transition-all flex items-center gap-2"
-              >
-                <span className="material-symbols-outlined text-[18px]">person_add</span>
-                <span>Đăng ký thành viên mới</span>
-              </button>
-              <button
-                onClick={() => handleNavigate('catalog')}
-                className="px-5 py-3 rounded-full text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-xs sm:text-sm font-semibold transition-all"
-              >
-                Về Trang Chủ
-              </button>
-            </div>
-          </div>
-        ) : (
-          <>
-            {activeTab === 'catalog' && (
-              <CatalogPage
-                isLoggedIn={isLoggedIn}
-                onOpenReader={handleOpenReader}
-                onRequireLogin={handleRequireLogin}
-                onNavigateToFlashcards={() => handleNavigate('flashcards')}
-                onLookupWord={setLookupTerm}
-                showToast={showToast}
-                refreshKey={dataVersion}
-              />
-            )}
+            <Route
+              path={TAB_PATHS.leaderboard}
+              element={
+                <LeaderboardPage
+                  onStartQuiz={() => {
+                    if (!isLoggedIn) {
+                      handleNavigate('flashcards');
+                      return;
+                    }
+                    navigate({ pathname: TAB_PATHS.flashcards, search: `?${QUIZ_SECTION_PARAM}=${QUIZ_SECTION_VALUE}` });
+                  }}
+                />
+              }
+            />
 
-            {activeTab === 'leaderboard' && (
-              <LeaderboardPage
-                onStartQuiz={() => {
-                  setFocusQuiz(true);
-                  handleNavigate('flashcards');
-                }}
+            {['', '/:chapterId', '/anh/:pageId'].map(suffix => (
+              <Route
+                key={suffix}
+                path={`${TAB_PATHS.reader}${suffix}`}
+                element={
+                  <ReaderRoute
+                    isLoggedIn={isLoggedIn}
+                    onOpenUpload={handleOpenUpload}
+                    onBrowse={() => handleNavigate('catalog')}
+                    onOpenReader={handleOpenReader}
+                    onRequireLogin={handleRequireLogin}
+                    onLookupWord={setLookupTerm}
+                    onOpenLearningSettings={() => openAccountSettings('learning')}
+                    onLogin={() => requestLogin('Vui lòng đăng nhập để truy cập trang này!')}
+                    onRegister={requestRegister}
+                    onGoHome={() => handleNavigate('catalog')}
+                    onPathChange={setLastReaderPath}
+                  />
+                }
               />
-            )}
+            ))}
 
-            {activeTab === 'reader' && (
-              <ComicReader
-                target={readerTarget}
-                isLoggedIn={isLoggedIn}
-                onOpenUpload={handleOpenUpload}
-                onBrowse={() => handleNavigate('catalog')}
-                onOpenReader={handleOpenReader}
-                onRequireLogin={handleRequireLogin}
-                onLookupWord={setLookupTerm}
-                onOpenLearningSettings={() => openAccountSettings('learning')}
-              />
-            )}
+            <Route
+              path={TAB_PATHS.library}
+              element={
+                isLoggedIn ? (
+                  <LibraryPage
+                    isAdmin={isAdmin}
+                    refreshKey={dataVersion}
+                    onOpenUpload={handleOpenUpload}
+                    onOpenReader={handleOpenReader}
+                    onOpenManager={(seriesId) => setManagerState({ open: true, seriesId })}
+                    onNavigateToFlashcards={() => handleNavigate('flashcards')}
+                    onOpenLearningSettings={() => openAccountSettings('learning')}
+                    showToast={showToast}
+                  />
+                ) : loginRequiredPage
+              }
+            />
 
-            {activeTab === 'library' && (
-              <LibraryPage
-                isAdmin={isAdmin}
-                refreshKey={dataVersion}
-                onOpenUpload={handleOpenUpload}
-                onOpenReader={handleOpenReader}
-                onOpenManager={(seriesId) => setManagerState({ open: true, seriesId })}
-                onNavigateToFlashcards={() => handleNavigate('flashcards')}
-                onOpenLearningSettings={() => openAccountSettings('learning')}
-                showToast={showToast}
-              />
-            )}
+            <Route
+              path={TAB_PATHS.flashcards}
+              element={
+                isLoggedIn ? (
+                  <FlashcardsRoute
+                    onNavigateToReader={() => handleNavigate('reader')}
+                    onOpenReader={handleOpenReader}
+                    showToast={showToast}
+                  />
+                ) : loginRequiredPage
+              }
+            />
 
-            {activeTab === 'flashcards' && (
-              <FlashcardsPage
-                onNavigateToReader={() => handleNavigate('reader')}
-                onOpenReader={handleOpenReader}
-                showToast={showToast}
-                focusQuiz={focusQuiz}
-                onFocusQuizHandled={handleFocusQuizHandled}
-              />
-            )}
+            <Route
+              path={TAB_PATHS.profile}
+              element={
+                isLoggedIn ? (
+                  <ProfilePage
+                    onNavigateToReader={() => handleNavigate('reader')}
+                    onNavigateToFlashcards={() => handleNavigate('flashcards')}
+                    userProfile={userProfile}
+                    onOpenAccountSettings={() => openAccountSettings('email')}
+                    onOpenEditProfile={() => setEditProfileOpen(true)}
+                    onNavigateToCatalog={() => handleNavigate('catalog')}
+                    onOpenReader={handleOpenReader}
+                    onRequireLogin={handleRequireLogin}
+                    showToast={showToast}
+                    onOpenLearningSettings={() => openAccountSettings('learning')}
+                  />
+                ) : loginRequiredPage
+              }
+            />
 
-            {activeTab === 'profile' && (
-              <ProfilePage
-                onNavigateToReader={() => handleNavigate('reader')}
-                onNavigateToFlashcards={() => handleNavigate('flashcards')}
-                userProfile={userProfile}
-                onOpenAccountSettings={() => openAccountSettings('email')}
-                onOpenEditProfile={() => setEditProfileOpen(true)}
-                onNavigateToCatalog={() => handleNavigate('catalog')}
-                onOpenReader={handleOpenReader}
-                onRequireLogin={handleRequireLogin}
-                showToast={showToast}
-                onOpenLearningSettings={() => openAccountSettings('learning')}
-              />
-            )}
-          </>
-        )}
+            <Route
+              path={TAB_PATHS.admin}
+              element={
+                isAdmin ? (
+                  <AdminDashboard onOpenLearnerView={() => handleNavigate('catalog')} currentUserEmail={userProfile.email} />
+                ) : (
+                  <div className="mx-auto max-w-xl px-4 py-20 text-center text-slate-600">Bạn không có quyền truy cập khu vực quản trị.</div>
+                )
+              }
+            />
+
+            <Route path={SAMPLE_PAGE_PATH} element={isLoggedIn ? <SamplePage onLookupWord={setLookupTerm} /> : loginRequiredPage} />
+
+            <Route path="*" element={<NotFoundPage onGoHome={() => handleNavigate('catalog')} />} />
+          </Routes>
+        </Suspense>
       </main>
 
       {/* Global Toast Alert */}
@@ -489,6 +575,7 @@ export default function App() {
         onSaveProfile={handleSaveProfile}
         onUploadAvatar={handleUploadAvatar}
         onRemoveAvatar={handleRemoveAvatar}
+        onSetAvatarPreset={handleSetAvatarPreset}
         showToast={showToast}
       />
 
@@ -497,11 +584,9 @@ export default function App() {
         <ResetPasswordModal
           token={resetToken}
           onClose={() => {
-            clearResetTokenFromUrl();
             setResetToken(null);
           }}
           onDone={() => {
-            clearResetTokenFromUrl();
             setResetToken(null);
             setAuthPrompt(null);
             setAuthModalMode('login');
@@ -517,5 +602,7 @@ export default function App() {
       />}
 
     </div>
+    </StreakProvider>
+    </SystemStatusProvider>
   );
 }

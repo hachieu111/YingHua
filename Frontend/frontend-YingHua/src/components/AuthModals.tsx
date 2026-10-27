@@ -77,7 +77,7 @@ export const AuthModals: React.FC<AuthModalsProps> = ({
     setLoginError(null);
     setLoginInfo(null);
     try {
-      onSuccess(await login(loginEmail, loginPassword));
+      onSuccess(await login(loginEmail, loginPassword, rememberMe));
     } catch (err) {
       setLoginError(errorMessage(err, 'Không thể đăng nhập, vui lòng thử lại.'));
     } finally {

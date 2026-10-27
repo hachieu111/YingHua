@@ -2,9 +2,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import { NavigationTab } from '../types';
 import { SearchHit, hskLabel, searchWords } from '../api/dictionary';
 import { ProfileAvatar } from './ProfileAvatar';
+import { NotificationBell } from './NotificationBell';
+import { useStreak } from '../utils/useStreak';
 
 interface NavbarProps {
-  activeTab: NavigationTab;
+  activeTab: NavigationTab | null;
   setActiveTab: (tab: NavigationTab) => void;
   onOpenUpload: () => void;
   onOpenAuth: (mode: 'login' | 'register') => void;
@@ -12,7 +14,6 @@ interface NavbarProps {
   isAdmin: boolean;
   onToggleLogin: () => void;
   onLookupWord: (term: string) => void;
-  streakDays?: number;
   userAvatar?: string;
   /** Avatar đã tải lên máy chủ (ưu tiên hơn userAvatar). */
   userAvatarUrl?: string | null;
@@ -26,10 +27,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   isLoggedIn,
   isAdmin,
   onLookupWord,
-  streakDays = 7,
   userAvatar,
   userAvatarUrl
 }) => {
+  const { streak } = useStreak();
+  const streakDays = isLoggedIn ? streak?.current_streak ?? 0 : 0;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState<SearchHit[]>([]);
@@ -251,10 +253,13 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span className="flex items-center gap-1 text-xs font-semibold text-slate-800 whitespace-nowrap shrink-0">
               {streakDays} ngày <span className="text-[#a43073] text-[15px] leading-none">🔥</span>
             </span>
+            {/* TODO(M16): XP chưa có API (GĐ6.5); giữ hiển thị như thiết kế. */}
             <span className="hidden sm:inline text-[11px] text-[#0060ac] font-bold whitespace-nowrap shrink-0">
               +50 XP
             </span>
           </div>
+
+          {isLoggedIn && <NotificationBell />}
 
           {/* User Profile / Auth Toggle */}
           {isLoggedIn ? (

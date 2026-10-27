@@ -2,7 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { countVocab } from '../api/vocab';
 import { ReaderTarget, UserProfileData } from '../types';
 import { AVAILABLE_BADGES } from '../data/achievements';
+import { useLearningStats } from '../utils/useLearningStats';
+import { useStreak } from '../utils/useStreak';
+import { ProfileActivityChart } from './ProfileActivityChart';
 import { ProfileAvatar } from './ProfileAvatar';
+import { ProfileErrorReports } from './ProfileErrorReports';
 import { ProfileReadingList } from './ProfileReadingList';
 import { ProfileRecommendations } from './ProfileRecommendations';
 import { SavedSentencesTab } from './SavedSentencesTab';
@@ -35,7 +39,10 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   onOpenLearningSettings
 }) => {
   const [openSeriesId, setOpenSeriesId] = useState<number | null>(null);
-  const [activeProfileTab, setActiveProfileTab] = useState<'reading' | 'flashcards' | 'badges' | 'saved_bubbles'>('reading');
+  const [activeProfileTab, setActiveProfileTab] = useState<'reading' | 'flashcards' | 'badges' | 'saved_bubbles' | 'error_reports'>('reading');
+  const { streak } = useStreak();
+  const stats = useLearningStats();
+  const { overview, activity } = stats;
 
   // Số từ tích lũy là số mục trong Sổ tay trên máy chủ; chưa tải được thì dùng số trong hồ sơ.
   const [vocabTotal, setVocabTotal] = useState<number | null>(null);
@@ -50,6 +57,14 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
       cancelled = true;
     };
   }, []);
+
+  const wordsTotal = overview?.words_total ?? 0;
+  const knownPercent = wordsTotal > 0 && overview ? (overview.words_known / wordsTotal) * 100 : 0;
+  const learningPercent = wordsTotal > 0 && overview ? (overview.words_learning / wordsTotal) * 100 : 0;
+  const pagesDelta = activity?.delta.pages_read ?? 0;
+  const studyHours = overview ? Math.round((overview.study_seconds_total / 3600) * 10) / 10 : userProfile.hoursLearned;
+  const weekStudyMinutes = activity ? Math.round(activity.current_week.study_seconds / 60) : 0;
+  const weekdayOf = (iso: string): string => ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'][new Date(`${iso}T00:00:00`).getDay()];
 
   const equippedBadge = AVAILABLE_BADGES.find((badge) => badge.title === userProfile.badge) ?? AVAILABLE_BADGES[0];
   const EquippedBadgeIcon = equippedBadge.icon;
@@ -100,10 +115,12 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                 <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight font-['Plus_Jakarta_Sans']">
                   {userProfile.name}
                 </h1>
-                <span className="text-xl font-bold text-[#a43073] font-['Noto_Serif_SC']">
-                  ({userProfile.chineseName})
-                </span>
-                
+                {userProfile.chineseName.trim() && (
+                  <span className="text-xl font-bold text-[#a43073] font-['Noto_Serif_SC']">
+                    ({userProfile.chineseName})
+                  </span>
+                )}
+
                 {/* Equipped Achievement Badge */}
                 <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full shadow-xs ${equippedBadge.color}`}>
                   <EquippedBadgeIcon className="w-3.5 h-3.5" strokeWidth={2.2} aria-hidden="true" />
@@ -178,29 +195,38 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
           <div className="my-3">
             <div className="flex items-baseline gap-1">
               <span className="text-4xl font-extrabold text-slate-800 leading-none">
-                {userProfile.streak}
+                {streak?.current_streak ?? 0}
               </span>
               <span className="text-sm font-bold text-[#a43073]">Ngày liên tục 🔥</span>
             </div>
-            <p className="text-xs text-slate-500 mt-1">Đã giữ lửa liên tục 1 tuần lễ!</p>
+            <p className="text-xs text-slate-500 mt-1">
+              {streak
+                ? streak.studied_today
+                  ? `Hôm nay bạn đã học rồi! Chuỗi dài nhất: ${streak.longest_streak} ngày.`
+                  : `Học hôm nay để giữ lửa! Chuỗi dài nhất: ${streak.longest_streak} ngày.`
+                : 'Chưa tải được chuỗi ngày học.'}
+            </p>
           </div>
 
           {/* Weekly mini calendar check-in */}
           <div className="pt-2 flex items-center justify-between">
-            {['T2', 'T3', 'T4', 'T5', 'T6', 'T7'].map((d, i) => (
-              <div key={i} className="flex flex-col items-center gap-1">
-                <span className="text-[10px] text-slate-400">{d}</span>
-                <span className="w-6 h-6 rounded-full bg-[#ffd8e7] text-[#a43073] flex items-center justify-center text-[10px] font-bold">
-                  ✓
-                </span>
-              </div>
-            ))}
-            <div className="flex flex-col items-center gap-1">
-              <span className="text-[10px] text-[#a43073] font-bold">CN</span>
-              <span className="w-6 h-6 rounded-full bg-[#a43073] text-white flex items-center justify-center text-[10px] font-bold animate-pulse">
-                ★
-              </span>
-            </div>
+            {(streak?.week ?? []).map((day, index, days) => {
+              const isToday = index === days.length - 1;
+              return (
+                <div key={day.date} className="flex flex-col items-center gap-1" title={`${day.date}: ${day.reviews_count} lượt ôn, ${day.pages_read} trang`}>
+                  <span className={`text-[10px] ${isToday ? 'text-[#a43073] font-bold' : 'text-slate-400'}`}>{weekdayOf(day.date)}</span>
+                  <span
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                      day.studied
+                        ? isToday ? 'bg-[#a43073] text-white' : 'bg-[#ffd8e7] text-[#a43073]'
+                        : 'bg-slate-100 text-slate-300'
+                    }`}
+                  >
+                    {day.studied ? (isToday ? '★' : '✓') : '·'}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -221,14 +247,14 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               <span className="text-sm font-semibold text-[#0060ac]">từ trong Sổ tay</span>
             </div>
             <div className="mt-2 h-2 rounded-full bg-slate-100 overflow-hidden flex">
-              <div className="bg-[#0060ac] h-full" style={{ width: '65%' }}></div>
-              <div className="bg-pink-400 h-full" style={{ width: '25%' }}></div>
+              <div className="bg-[#0060ac] h-full" style={{ width: `${knownPercent}%` }}></div>
+              <div className="bg-pink-400 h-full" style={{ width: `${learningPercent}%` }}></div>
             </div>
           </div>
 
           <div className="pt-2 flex items-center justify-between text-xs font-semibold">
-            <span className="text-[#0060ac]">128 đã thuộc</span>
-            <span className="text-[#a43073]">58 cần ôn lại</span>
+            <span className="text-[#0060ac]">{overview ? `${overview.words_known} đã thuộc` : '— đã thuộc'}</span>
+            <span className="text-[#a43073]">{overview ? `${overview.cards_due} thẻ cần ôn lại` : '— cần ôn lại'}</span>
           </div>
         </div>
 
@@ -244,16 +270,22 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
           <div className="my-3">
             <div className="flex items-baseline gap-1.5">
               <span className="text-4xl font-extrabold text-slate-800 leading-none">
-                {userProfile.pagesRead}
+                {overview?.pages_read_total ?? userProfile.pagesRead}
               </span>
               <span className="text-sm font-semibold text-amber-800">trang manhua</span>
             </div>
-            <p className="text-xs text-slate-500 mt-1">+18 trang so với tuần trước</p>
+            <p className="text-xs text-slate-500 mt-1">
+              {activity
+                ? pagesDelta === 0
+                  ? 'Bằng tuần trước'
+                  : `${pagesDelta > 0 ? '+' : ''}${pagesDelta} trang so với tuần trước`
+                : 'Chưa tải được so sánh tuần'}
+            </p>
           </div>
 
           <div className="pt-2 flex items-center gap-2 text-xs text-slate-500">
             <span className="inline-block w-2 h-2 rounded-full bg-amber-500"></span>
-            <span>Khoảng 24 chương truyện gốc</span>
+            <span>{activity ? `7 ngày qua: ${activity.current_week.pages_read} trang` : '7 ngày qua: —'}</span>
           </div>
         </div>
 
@@ -269,20 +301,28 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
           <div className="my-3">
             <div className="flex items-baseline gap-1.5">
               <span className="text-4xl font-extrabold text-slate-800 leading-none">
-                {userProfile.hoursLearned}
+                {studyHours}
               </span>
               <span className="text-sm font-semibold text-slate-500">giờ</span>
             </div>
-            <p className="text-xs text-slate-500 mt-1">Trung bình 45 phút mỗi ngày</p>
+            <p className="text-xs text-slate-500 mt-1">{activity ? `Trung bình ${Math.round(weekStudyMinutes / 7)} phút mỗi ngày (7 ngày qua)` : 'Chưa tải được thời gian học'}</p>
           </div>
 
           <div className="pt-2 flex items-center gap-1 text-xs font-bold text-emerald-600">
             <span className="material-symbols-outlined text-[16px]">trending_up</span>
-            <span>Đạt 112% mục tiêu tháng</span>
+            <span>{activity ? `${weekStudyMinutes} phút trong 7 ngày qua` : '—'}</span>
           </div>
         </div>
 
       </div>
+
+      <ProfileActivityChart
+        activity={activity}
+        overview={overview}
+        loading={stats.loading}
+        error={stats.error}
+        onRetry={stats.reload}
+      />
 
       {/* MAIN TWO-COLUMN DASHBOARD (8 cols Left, 4 cols Right) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -336,7 +376,20 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               <span className="material-symbols-outlined text-[18px]">bookmarks</span>
               <span>Ô thoại đã lưu</span>
             </button>
+            <button
+              onClick={() => setActiveProfileTab('error_reports')}
+              className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                activeProfileTab === 'error_reports'
+                  ? 'bg-[#f472b6] text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[18px]">flag</span>
+              <span>Báo lỗi của tôi</span>
+            </button>
           </div>
+
+          {activeProfileTab === 'error_reports' && <ProfileErrorReports />}
 
           {/* TAB 1: TRUYỆN ĐANG ĐỌC DỞ */}
           {activeProfileTab === 'reading' && (

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { errorMessage, isAbortedError } from '../api/client';
 import { hskLabel } from '../api/dictionary';
-import { ApiVocabItem, VocabStatus, deleteVocab, listVocab, updateVocab } from '../api/vocab';
+import { ApiVocabItem, VocabExportFormat, VocabStatus, deleteVocab, exportVocab, isExportEmpty, listVocab, updateVocab } from '../api/vocab';
 import { ReaderTarget } from '../types';
 import { speakChinese } from '../utils/speech';
 import { ConfirmDialog } from './ConfirmDialog';
@@ -57,6 +57,8 @@ export const VocabNotebook: React.FC<VocabNotebookProps> = ({ refreshKey, shuffl
   const [deleteTarget, setDeleteTarget] = useState<ApiVocabItem | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [busyId, setBusyId] = useState<number | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -149,6 +151,34 @@ export const VocabNotebook: React.FC<VocabNotebookProps> = ({ refreshKey, shuffl
     }
   };
 
+  // Xuất theo đúng bộ lọc đang áp dụng (F07.08); tệp tạo bằng blob: URL rồi thu hồi ngay sau khi tải.
+  const handleExport = async (format: VocabExportFormat) => {
+    setExportOpen(false);
+    setExporting(true);
+    try {
+      const dueOnly = statusFilter === 'due';
+      const file = await exportVocab(format, {
+        status: dueOnly || statusFilter === 'all' ? undefined : statusFilter,
+        due: dueOnly ? true : undefined,
+        hsk: hskFilter === 'all' ? undefined : hskFilter,
+        q: debouncedQuery || undefined
+      });
+      const objectUrl = URL.createObjectURL(file.blob);
+      const link = document.createElement('a');
+      link.href = objectUrl;
+      link.download = file.filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(objectUrl);
+      showToast(`Đã xuất Sổ tay (${format === 'csv' ? 'CSV' : 'Anki'}).`);
+    } catch (err) {
+      showToast(isExportEmpty(err) ? 'Không có từ nào để xuất theo bộ lọc hiện tại.' : errorMessage(err));
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const filtersActive = statusFilter !== 'all' || hskFilter !== 'all' || debouncedQuery !== '';
 
   return (
@@ -238,6 +268,31 @@ export const VocabNotebook: React.FC<VocabNotebookProps> = ({ refreshKey, shuffl
               <option value="due">Cần ôn lại</option>
               <option value="ignored">Tạm bỏ qua</option>
             </select>
+
+            <div className="relative shrink-0">
+              <button
+                type="button"
+                onClick={() => setExportOpen(open => !open)}
+                disabled={exporting}
+                aria-haspopup="menu"
+                aria-expanded={exportOpen}
+                className="flex items-center gap-1 px-3.5 py-1.5 rounded-full bg-white border border-pink-200 text-[#a43073] text-xs font-bold hover:bg-pink-50 disabled:opacity-60"
+                title="Xuất các từ đang hiển thị theo bộ lọc"
+              >
+                <span className="material-symbols-outlined text-[16px]">download</span>
+                <span>{exporting ? 'Đang xuất...' : 'Xuất'}</span>
+              </button>
+              {exportOpen && (
+                <div role="menu" className="absolute right-0 top-full mt-1 w-52 bg-white rounded-2xl shadow-floating border border-pink-100 py-1.5 z-20">
+                  <button role="menuitem" onClick={() => void handleExport('csv')} className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-pink-50">
+                    Tệp CSV (Excel)
+                  </button>
+                  <button role="menuitem" onClick={() => void handleExport('anki')} className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-pink-50">
+                    Tệp nhập vào Anki
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

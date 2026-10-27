@@ -39,6 +39,8 @@ export interface QuizQuestion {
   explanation?: string | null;
   is_correct?: boolean | null;
   vocab_entry_id?: number | null;
+  /** Đã có nội dung "Vì sao sai?" được lưu (F09.10). */
+  has_mistake_review?: boolean | null;
 }
 
 export interface QuizItem {
@@ -99,6 +101,36 @@ export function submitQuiz(quizId: number, answers: QuizAnswer[]): Promise<QuizD
 
 export function saveQuizWord(quizId: number, questionId: number): Promise<SaveWordResult> {
   return apiRequest<SaveWordResult>(`/quizzes/${quizId}/questions/${questionId}/save-word`, { method: 'POST' });
+}
+
+export interface MistakeReview {
+  question_id: number;
+  term: string;
+  origin: 'llm' | 'fallback' | string;
+  explanation: string;
+  difference: string | null;
+  ai_label: string | null;
+  practice: { prompt: string; options: string[] } | null;
+  cached: boolean;
+}
+
+export interface PracticeResult {
+  is_correct: boolean;
+  correct_answer: string;
+  explanation: string;
+}
+
+/** "Vì sao sai?" (F09.10): lấy hoặc tạo giải thích cho câu làm sai. */
+export function getMistakeReview(quizId: number, questionId: number, signal?: AbortSignal): Promise<MistakeReview> {
+  return apiRequest<MistakeReview>(`/quizzes/${quizId}/questions/${questionId}/mistake-review`, { method: 'POST', signal });
+}
+
+/** Chấm câu luyện thêm: chỉ để ôn tập, không đổi điểm bài kiểm tra. */
+export function answerMistakePractice(quizId: number, questionId: number, choice: string): Promise<PracticeResult> {
+  return apiRequest<PracticeResult>(`/quizzes/${quizId}/questions/${questionId}/mistake-review/answer`, {
+    method: 'POST',
+    body: { choice }
+  });
 }
 
 export const isNotEnoughWords = (err: unknown): err is ApiError =>

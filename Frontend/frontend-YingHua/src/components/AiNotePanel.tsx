@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { errorMessage, isAbortedError } from '../api/client';
 import { AiExample, AiNote, getAiNote, isAiRegenerateLimit, regenerateAiNote } from '../api/vocab';
+import { useSystemStatus } from '../utils/useSystemStatus';
 
 interface AiNotePanelProps {
   vocabEntryId: number;
@@ -35,6 +36,7 @@ const ExampleRow: React.FC<{ item: AiExample; onSpeak: (text: string) => void }>
 
 /** Khối "Thẻ mở rộng AI" của một mục từ (F08.11): mẹo chiết tự, ví dụ, cụm từ đi kèm. */
 export const AiNotePanel: React.FC<AiNotePanelProps> = ({ vocabEntryId, active, onSpeak }) => {
+  const { llm_enabled } = useSystemStatus();
   const [note, setNote] = useState<AiNote | null>(() => noteCache.get(vocabEntryId) ?? null);
   const [loading, setLoading] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
@@ -62,7 +64,7 @@ export const AiNotePanel: React.FC<AiNotePanelProps> = ({ vocabEntryId, active, 
   );
 
   useEffect(() => {
-    if (!active || requested.current || noteCache.has(vocabEntryId)) return;
+    if (!llm_enabled || !active || requested.current || noteCache.has(vocabEntryId)) return;
     requested.current = true;
     const controller = new AbortController();
     load(controller.signal);
@@ -70,7 +72,7 @@ export const AiNotePanel: React.FC<AiNotePanelProps> = ({ vocabEntryId, active, 
       controller.abort();
       requested.current = false;
     };
-  }, [active, vocabEntryId, load]);
+  }, [active, vocabEntryId, load, llm_enabled]);
 
   const handleRegenerate = async () => {
     if (regenerating) return;
@@ -98,7 +100,8 @@ export const AiNotePanel: React.FC<AiNotePanelProps> = ({ vocabEntryId, active, 
     }
   };
 
-  if (!active && !note) return null;
+  // Quản trị viên đã tắt tính năng AI (F13.05): ẩn khối này, phần còn lại của thẻ vẫn dùng bình thường.
+  if (!llm_enabled || (!active && !note)) return null;
 
   const busy = loading || regenerating;
   const hasContent = note !== null && (note.mnemonic || note.examples.length > 0 || note.phrases.length > 0);

@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { errorMessage } from '../api/client';
+import { listAvatarPresets } from '../api/auth';
+import { DEFAULT_AVATAR_PRESET, PRESET_AVATARS } from '../data/avatarPresets';
 import { validateImageFile } from '../api/library';
 import { ConfirmDialog } from './ConfirmDialog';
 import { ProfileAvatar } from './ProfileAvatar';
@@ -16,41 +18,10 @@ interface EditProfileModalProps {
   onUploadAvatar: (file: File) => Promise<void>;
   /** Gỡ avatar đã tải lên (F01.10); ném lỗi nếu thất bại. */
   onRemoveAvatar: () => Promise<void>;
+  /** Lưu ảnh đại diện có sẵn lên máy chủ (F01.10); ném lỗi nếu thất bại. */
+  onSetAvatarPreset: (code: string) => Promise<void>;
   showToast: (msg: string) => void;
 }
-
-const PRESET_AVATARS = [
-  {
-    id: 'original',
-    name: 'Lam Hiên Vũ',
-    url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDouZjBIU9lI8mNPf-eu9v9WtamqAGj2p9GPjLNQt-W3hkLMoboWClFeN1wnO4reJTt623UqgtV7sJWTBZNtrFULAAXa_41CVt1ROrHqL64Mt0hCpqhgY5UTLxSAkXf-fdF7PnB-_CsuutWeSJYspalRkRCCKxE8AkIKcYGrOLBFHbjBFp6Ljll9-mSx90EzZUcRzR8Cj7_VM-vjsotklPmMQYldFasjlGLovnzMABNqni9r2ipQklp'
-  },
-  {
-    id: 'sakura_flower',
-    name: 'Hoa Anh Đào Yinghua',
-    url: '/assets/aistudio/image_638c8baa.png'
-  },
-  {
-    id: 'bach_thien',
-    name: 'Bạch Thiển (Quán quân)',
-    url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDjUr4FMb4MgwcGmdyBYosbOItcdlvEkxu9VuOkv4yChU6EPBmWHSxMyaIG2w7JyQSlJ3zh4VkfCAHFuSSY-0bwHegxn1MY8EwBXQDq5YEuIMo6kduC811ATR-vUrWSRZiJDDw4Dv4kfEcji9H1h-Frrh68cI9XZpGjabLqD7QeFSRUy5m8nMQbUcYmyVvydukRzllNvxE0yWo2vXMWSiwKMCQRmHm73bSNJPX1IKlAOx5ut-6odYJ9'
-  },
-  {
-    id: 'tieu_vu_tru',
-    name: 'Tiểu Vũ Trụ',
-    url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA_uMPLrijjganO12yjzcqBT4iRom9EHHW5tkEKYy0s6bzONjjZJOsKMo1tHWZ8Mi_cej435rLx8tBS0eHe8LCMLexJUN5tPcGo1NTdFzzBTxXd91zyr0yJy6Da72aTL-lo0Szz_EN_4TtVoml8l2HoF628gmirX8rQ_7mEIpNRWkRQZ9pB6UXBT70FsGbmfLvFNCAM-h3ZCTUHpDJNDHRqG45SO6jydevpkFNc0CxToqjFs2LON3aY'
-  },
-  {
-    id: 'mac_van',
-    name: 'Mạc Vấn',
-    url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBVjkBiWmwVafJMFy9b38FOH42tFaihJElRLi9nDAV5kkc2iezdzuP8nQD_WcpKsTydMuQn7_BGS5NPclc7mAdJJyAjVL3PVN0CQfH4wExm8ENDZuz7UW0VNFXP-dC-NzRpy-7pc9aq-C3NNor8-m5kSohpalM-Ea01ca-lKrmXCfBGC1iQjCcKw3fvo3hfAom1pRQq31RocIYeNSPlzBzO6CsCRH05YkdOae0ppcgrnQlYGso1XlIQ'
-  },
-  {
-    id: 'lac_ly',
-    name: 'Lạc Ly',
-    url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA9DFVyAwp3qs6bCCAS8H7_nzT-vbOYDPJDn1sNqw2e5llwn6Uto6fdyGaQKtiWpeJBD07ciJ_TsXHxC_7piD5Mb4fO5S3MIAIWQPQsagQhycr6kl0mfSytJWJ3I1ik8Bu9TPR-bvLR4y9YezoQpbtLX9ir-kDT0dKus1c04xqvISFIQWbYsZ-l5T0KOSCsSCNoPqxw5lOdQofxtc9g1tSnZlOZgE_5h1ddlLI2IfB1P52BGomg0e5T'
-  }
-];
 
 export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   isOpen,
@@ -59,13 +30,16 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   onSaveProfile,
   onUploadAvatar,
   onRemoveAvatar,
+  onSetAvatarPreset,
   showToast
 }) => {
   const [name, setName] = useState<string>(userProfile?.name || '');
   const [chineseName, setChineseName] = useState<string>(userProfile?.chineseName || '');
   const [selectedBadge, setSelectedBadge] = useState<string>(userProfile?.badge || '');
-  // Avatar gợi ý được chọn (chỉ áp dụng trong phiên) và ảnh tự tải lên đang chờ lưu lên máy chủ.
-  const [presetAvatar, setPresetAvatar] = useState<string | null>(null);
+  // Mã avatar có sẵn được chọn và ảnh tự tải lên đang chờ lưu lên máy chủ.
+  const [presetId, setPresetId] = useState<string | null>(null);
+  // Mã máy chủ chấp nhận; null = chưa biết (hiện đủ bộ ảnh).
+  const [serverPresetCodes, setServerPresetCodes] = useState<string[] | null>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [pendingPreview, setPendingPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState<boolean>(false);
@@ -79,9 +53,14 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
     setName(userProfile?.name || '');
     setChineseName(userProfile?.chineseName || '');
     setSelectedBadge(userProfile?.badge || '');
-    setPresetAvatar(null);
+    setPresetId(null);
     setPendingFile(null);
     setAvatarError(null);
+    const controller = new AbortController();
+    listAvatarPresets(controller.signal)
+      .then(items => setServerPresetCodes(items.map(item => item.code)))
+      .catch(() => setServerPresetCodes(null));
+    return () => controller.abort();
     // Chỉ nạp lại khi mở hộp thoại, không ghi đè lúc người dùng đang gõ.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
@@ -98,6 +77,10 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   }, [pendingFile]);
 
   if (!isOpen) return null;
+
+  const visiblePresets = serverPresetCodes ? PRESET_AVATARS.filter(av => serverPresetCodes.includes(av.id)) : PRESET_AVATARS;
+  const presetPreviewUrl = presetId ? PRESET_AVATARS.find(av => av.id === presetId)?.url : undefined;
+  const selectedPresetId = presetId ?? (userProfile.avatarUrl ? null : userProfile.avatarPreset ?? DEFAULT_AVATAR_PRESET);
 
   const handleRemoveAvatar = async () => {
     setRemoving(true);
@@ -125,15 +108,14 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
       return;
     }
     setAvatarError(null);
-    setPresetAvatar(null);
+    setPresetId(null);
     setPendingFile(file);
   };
 
-  // TODO(F01.10): lưu avatar có sẵn lên máy chủ - GĐ6. Hiện avatar gợi ý chỉ áp dụng trong phiên này.
-  const handlePresetPick = (url: string) => {
+  const handlePresetPick = (id: string) => {
     setPendingFile(null);
     setAvatarError(null);
-    setPresetAvatar(url);
+    setPresetId(id);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -153,15 +135,21 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
           return;
         }
       }
+      if (presetId) {
+        try {
+          await onSetAvatarPreset(presetId);
+        } catch (err) {
+          setAvatarError(errorMessage(err));
+          return;
+        }
+      }
       const saved = await onSaveProfile({
         name: name.trim(),
         chineseName: chineseName.trim(),
-        badge: selectedBadge,
-        ...(presetAvatar ? { avatar: presetAvatar, avatarUrl: null } : {})
+        badge: selectedBadge
       });
       if (!saved) return;
-      if (presetAvatar) showToast('Đã cập nhật hồ sơ. Avatar gợi ý chỉ áp dụng trong phiên này; hãy tải ảnh lên để lưu lâu dài.');
-      else showToast('Cập nhật hồ sơ cá nhân thành công!');
+      showToast('Cập nhật hồ sơ cá nhân thành công!');
       onClose();
     } finally {
       setSaving(false);
@@ -206,9 +194,9 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
             {/* Current Selected Avatar Preview & Upload */}
             <div className="flex items-center gap-4 p-3.5 rounded-2xl bg-[#eff4ff] border border-blue-100">
               <div className="relative shrink-0">
-                {pendingPreview || presetAvatar ? (
+                {pendingPreview || presetPreviewUrl ? (
                   <img
-                    src={pendingPreview ?? presetAvatar ?? ''}
+                    src={pendingPreview ?? presetPreviewUrl ?? ''}
                     alt="Avatar Preview"
                     className="w-16 h-16 rounded-full object-cover ring-4 ring-pink-300 shadow-md bg-white"
                   />
@@ -228,7 +216,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               <div className="flex flex-col gap-1 flex-1">
                 <span className="text-xs font-bold text-slate-800">Ảnh đang chọn</span>
                 <span className="text-[11px] text-slate-500">
-                  Tải ảnh JPG, PNG hoặc WebP (tối đa 10 MB) để lưu lâu dài, hoặc chọn nhân vật gợi ý bên dưới (chỉ áp dụng trong phiên này)
+                  Tải ảnh JPG, PNG hoặc WebP (tối đa 10 MB) để lưu lâu dài, hoặc chọn nhân vật gợi ý bên dưới (được lưu vào tài khoản)
                 </span>
                 {pendingFile && (
                   <span className="text-[11px] text-[#a43073] font-semibold truncate">Ảnh sẽ được tải lên khi bạn bấm “Lưu thay đổi hồ sơ”: {pendingFile.name}</span>
@@ -279,13 +267,13 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 Gợi ý avatar manhua & biểu trưng:
               </span>
               <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
-                {PRESET_AVATARS.map((av) => {
-                  const isSelected = !pendingFile && (presetAvatar ?? (userProfile.avatarUrl ? null : userProfile.avatar)) === av.url;
+                {visiblePresets.map((av) => {
+                  const isSelected = !pendingFile && selectedPresetId === av.id;
                   return (
                     <button
                       type="button"
                       key={av.id}
-                      onClick={() => handlePresetPick(av.url)}
+                      onClick={() => handlePresetPick(av.id)}
                       className={`relative rounded-2xl p-1 flex flex-col items-center gap-1 transition-all ${
                         isSelected
                           ? 'ring-2 ring-[#a43073] bg-pink-50 scale-105'

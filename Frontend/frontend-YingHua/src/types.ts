@@ -128,6 +128,8 @@ export interface UserProfileData {
   avatar: string;
   /** Địa chỉ avatar đã tải lên máy chủ (cần AuthImage); null = đang dùng avatar gợi ý. */
   avatarUrl?: string | null;
+  /** Mã ảnh đại diện có sẵn đã lưu ở máy chủ; null = chưa chọn. */
+  avatarPreset?: string | null;
   streak: number;
   totalVocab: number;
   pagesRead: number;

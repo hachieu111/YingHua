@@ -8,6 +8,8 @@ const STORAGE_KEY = 'yinghua-auth';
 
 /** Phát ra khi phiên không còn hiệu lực và không làm mới được. App lắng nghe để đưa người dùng về đăng nhập. */
 export const SESSION_EXPIRED_EVENT = 'yinghua:session-expired';
+/** Phát ra khi API trả 503 MAINTENANCE_MODE: hiện băng bảo trì, không đăng xuất. */
+export const MAINTENANCE_EVENT = 'yinghua:maintenance';
 
 export class ApiError extends Error {
   readonly status: number;
@@ -28,9 +30,13 @@ interface StoredTokens {
   refreshToken: string;
 }
 
-export function loadTokens(): StoredTokens | null {
+type TokenArea = 'local' | 'session';
+
+const storageOf = (area: TokenArea): Storage => (area === 'local' ? localStorage : sessionStorage);
+
+function readTokens(area: TokenArea): StoredTokens | null {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = storageOf(area).getItem(STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<StoredTokens>;
     if (typeof parsed.accessToken === 'string' && typeof parsed.refreshToken === 'string') {
@@ -42,10 +48,31 @@ export function loadTokens(): StoredTokens | null {
   return null;
 }
 
-export function saveTokens(tokens: StoredTokens | null): void {
+/** Nơi đang giữ phiên: localStorage khi "ghi nhớ đăng nhập", sessionStorage khi phiên ngắn (F01.11). */
+function currentArea(): TokenArea | null {
+  if (readTokens('local')) return 'local';
+  if (readTokens('session')) return 'session';
+  return null;
+}
+
+export function loadTokens(): StoredTokens | null {
+  return readTokens('local') ?? readTokens('session');
+}
+
+/**
+ * Lưu mã phiên. `remember` chọn nơi lưu (true = localStorage, false = sessionStorage);
+ * bỏ trống thì giữ đúng nơi đang lưu (làm mới phiên). `null` xóa ở cả hai nơi.
+ */
+export function saveTokens(tokens: StoredTokens | null, remember?: boolean): void {
+  const area: TokenArea = remember === undefined ? (currentArea() ?? 'local') : remember ? 'local' : 'session';
   try {
-    if (tokens) localStorage.setItem(STORAGE_KEY, JSON.stringify(tokens));
-    else localStorage.removeItem(STORAGE_KEY);
+    if (tokens) {
+      storageOf(area === 'local' ? 'session' : 'local').removeItem(STORAGE_KEY);
+      storageOf(area).setItem(STORAGE_KEY, JSON.stringify(tokens));
+    } else {
+      localStorage.removeItem(STORAGE_KEY);
+      sessionStorage.removeItem(STORAGE_KEY);
+    }
   } catch {
     // Phiên vẫn dùng được đến khi tải lại trang nếu không lưu được.
   }
@@ -159,7 +186,11 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     }
   }
 
-  if (!res.ok) throw await toApiError(res);
+  if (!res.ok) {
+    const apiError = await toApiError(res);
+    if (apiError.status === 503 && apiError.code === 'MAINTENANCE_MODE') window.dispatchEvent(new Event(MAINTENANCE_EVENT));
+    throw apiError;
+  }
   onResponse?.(res);
   if (res.status === 204) return undefined as T;
   if (responseType === 'blob') return (await res.blob()) as T;

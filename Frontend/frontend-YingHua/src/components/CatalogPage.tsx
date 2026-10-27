@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { speakChinese } from '../utils/speech';
 import { WordOfTheDay, getWordOfTheDay, hskLabel } from '../api/dictionary';
 import { isAlreadySaved, saveResultMessage, saveWord } from '../api/vocab';
+import { useInNotebook } from '../utils/useInNotebook';
+import { useStreak } from '../utils/useStreak';
 import { errorMessage, isAbortedError } from '../api/client';
 import {
   ApiSeries,
@@ -19,6 +21,7 @@ import { ReaderTarget } from '../types';
 import { formatChapterNumber, timeAgo } from '../utils/format';
 import { AuthImage } from './AuthImage';
 import { SeriesDetailModal } from './SeriesDetailModal';
+import { TodayPanel } from './TodayPanel';
 
 interface CatalogPageProps {
   isLoggedIn: boolean;
@@ -54,6 +57,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
   showToast,
   refreshKey = 0
 }) => {
+  const { streak } = useStreak();
   const [selectedHsk, setSelectedHsk] = useState<number | null>(null);
   const [genre, setGenre] = useState<string>('');
   const [knownGenres, setKnownGenres] = useState<string[]>([]);
@@ -71,6 +75,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
   const [openSeriesId, setOpenSeriesId] = useState<number | null>(null);
   // Từ vựng trong ngày lấy từ API (M06); lỗi hoặc đang tải thì giữ nội dung mặc định.
   const [dailyWord, setDailyWord] = useState<WordOfTheDay | null>(null);
+  const [dailyInNotebook, markDailySaved] = useInNotebook(dailyWord?.term ?? null, isLoggedIn);
   const [savingDaily, setSavingDaily] = useState<boolean>(false);
 
   useEffect(() => {
@@ -170,7 +175,9 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
     setSavingDaily(true);
     try {
       showToast(saveResultMessage(dailyWord.term, await saveWord({ term: dailyWord.term, source: 'lookup' })));
+      markDailySaved();
     } catch (err) {
+      if (isAlreadySaved(err)) markDailySaved();
       showToast(isAlreadySaved(err) ? 'Từ này đã có với ngữ cảnh này' : errorMessage(err));
     } finally {
       setSavingDaily(false);
@@ -342,6 +349,9 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
 
         </div>
       </section>
+
+      {/* Việc nên làm hôm nay (F12.04) */}
+      <TodayPanel isLoggedIn={isLoggedIn} onRequireLogin={onRequireLogin} />
 
       {/* ROADMAP HEADER: grouped title and search, distinct from catalog content */}
       <section className="mb-6 rounded-3xl border border-blue-100 bg-gradient-to-r from-white via-white to-[#eff4ff] p-5 sm:p-7 shadow-soft">
@@ -672,11 +682,11 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
 
             <button
               onClick={() => void handleSaveDailyWord()}
-              disabled={savingDaily || !dailyWord}
+              disabled={savingDaily || !dailyWord || dailyInNotebook}
               className="w-full py-2.5 rounded-full text-xs font-bold shadow-xs transition-all flex items-center justify-center gap-1.5 bg-gradient-to-r from-pink-500 to-rose-400 text-white hover:from-pink-600 hover:to-rose-500 disabled:opacity-60"
             >
-              <span className="material-symbols-outlined text-[16px]">bookmark_add</span>
-              <span>{savingDaily ? 'Đang lưu...' : 'Thêm vào Sổ Từ Vựng Yinghua'}</span>
+              <span className="material-symbols-outlined text-[16px]">{dailyInNotebook ? 'check' : 'bookmark_add'}</span>
+              <span>{savingDaily ? 'Đang lưu...' : dailyInNotebook ? 'Đã có trong Sổ Từ Vựng' : 'Thêm vào Sổ Từ Vựng Yinghua'}</span>
             </button>
           </div>
 
@@ -734,9 +744,18 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
               <span className="text-2xl">🔥</span>
               <div>
                 <span className="text-xs font-bold text-slate-800 block">Chuỗi học tập</span>
-                <span className="text-[11px] text-slate-500">7 ngày kiên trì liên tục!</span>
+                <span className="text-[11px] text-slate-500">
+                  {!isLoggedIn
+                    ? 'Đăng nhập để theo dõi chuỗi ngày học!'
+                    : !streak
+                      ? 'Đang tải chuỗi ngày học...'
+                      : streak.current_streak > 0
+                        ? `${streak.current_streak} ngày kiên trì liên tục!`
+                        : 'Học hôm nay để bắt đầu chuỗi mới!'}
+                </span>
               </div>
             </div>
+            {/* TODO(M16): XP chưa có API (GĐ6.5); giữ hiển thị như thiết kế. */}
             <span className="px-3 py-1 rounded-full bg-[#a43073] text-white font-bold text-xs shadow-xs">
               +50 XP
             </span>

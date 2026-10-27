@@ -32,6 +32,8 @@ type View = { kind: 'home' } | { kind: 'taking'; quiz: QuizDetail } | { kind: 'r
 
 const HISTORY_SIZE = 5;
 
+const FOCUS_SCROLL_DELAYS_MS = [350, 1200];
+
 export const QuizSection: React.FC<QuizSectionProps> = ({ onNavigateToReader, onGoReview, onChanged, showToast, focusTick }) => {
   const [view, setView] = useState<View>({ kind: 'home' });
   const [summary, setSummary] = useState<QuizSummary | null>(null);
@@ -49,8 +51,13 @@ export const QuizSection: React.FC<QuizSectionProps> = ({ onNavigateToReader, on
   const creatingRef = useRef(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
 
+  // Cuộn sau một nhịp: khi vừa đổi trang, App cuộn về đầu trang (effect của App chạy sau effect này) và các khối
+  // phía trên còn đang tải dữ liệu nên còn cao thêm; căn lại lần nữa khi bố cục đã ổn định.
   useEffect(() => {
-    if (focusTick > 0) rootRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (focusTick <= 0) return;
+    const scroll = () => rootRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const timers = FOCUS_SCROLL_DELAYS_MS.map(delay => setTimeout(scroll, delay));
+    return () => timers.forEach(clearTimeout);
   }, [focusTick]);
 
   useEffect(() => {

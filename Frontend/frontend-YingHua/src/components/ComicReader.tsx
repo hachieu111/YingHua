@@ -16,7 +16,7 @@ import {
   saveBubbleEdit,
   setBookmark
 } from '../api/reader';
-import { isAlreadySaved, saveResultMessage, saveWord } from '../api/vocab';
+import { getSavedStatus, isAlreadySaved, saveResultMessage, saveWord } from '../api/vocab';
 import {
   isPageWithoutWords,
   isSentenceAlreadySaved,
@@ -35,9 +35,12 @@ import {
 import { ReaderTarget } from '../types';
 import { formatChapterNumber } from '../utils/format';
 import { speakChinese } from '../utils/speech';
+import { notifyActivity, useStreak } from '../utils/useStreak';
 import { AuthImage } from './AuthImage';
 import { ChapterCoverageBar } from './ChapterCoverageBar';
 import { ChapterSuggestions } from './ChapterSuggestions';
+import { GrammarPanel } from './GrammarPanel';
+import { ReportErrorDialog, ReportTarget } from './ReportErrorDialog';
 import { StatusPill } from './StatusPill';
 import { usePageStatuses } from './usePageStatuses';
 
@@ -82,6 +85,8 @@ const FONT_SCALE_SAVE_DELAY_MS = 600;
 const BUBBLE_BASE_FONT_PX = 11;
 const MAX_VOCAB_PER_PAGE = 40;
 const HAS_CJK = /[一-鿿]/;
+// Khớp giới hạn của máy chủ cho một lần hỏi trạng thái đã lưu.
+const MAX_STATUS_ITEMS = 200;
 const VARIANT_OF_MODE: Record<ViewMode, 'original' | 'inpainted' | 'rendered'> = {
   bubble: 'original',
   inpainted: 'inpainted',
@@ -103,8 +108,13 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
   onLookupWord,
   onOpenLearningSettings
 }) => {
-  // Từ đã lưu từ trang này (khóa `trang|từ`), ghi nhớ sau khi máy chủ xác nhận hoặc báo trùng ngữ cảnh.
+  // Từ đã lưu từ trang này (khóa `trang|từ`). Lấy từ máy chủ mỗi khi mở trang / quay lại tab, nên vẫn đúng sau F5.
+  const { streak } = useStreak();
+  const [reportTarget, setReportTarget] = useState<ReportTarget | null>(null);
   const [savedKeys, setSavedKeys] = useState<Set<string>>(() => new Set());
+  // Từ đã có trong Sổ tay nhưng có thể từ trang khác: vẫn bấm được để thêm ngữ cảnh của trang này (F07.02).
+  const [notebookTerms, setNotebookTerms] = useState<Set<string>>(() => new Set());
+  const [savedStatusTick, setSavedStatusTick] = useState(0);
   const [savingKeys, setSavingKeys] = useState<Set<string>>(() => new Set());
   const [pages, setPages] = useState<ApiPage[]>([]);
   const [meta, setMeta] = useState<ReaderMeta | null>(null);
@@ -161,6 +171,16 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
     setSavedSuccessMsg(message);
     setTimeout(() => setSavedSuccessMsg(null), 3000);
   }, []);
+
+  // Báo lỗi cần đăng nhập (F14.01): Khách được mời đăng nhập thay vì bị từ chối sau khi gõ mô tả.
+  const openReport = (bubbleId: number | null) => {
+    if (!activePage) return;
+    if (!isLoggedIn) {
+      onRequireLogin('Vui lòng đăng nhập để báo lỗi bản dịch!');
+      return;
+    }
+    setReportTarget({ pageId: activePage.id, bubbleId });
+  };
 
   // Cỡ chữ lớp dịch lấy từ cài đặt của người học (F02.04); Khách chỉ dùng trạng thái cục bộ.
   useEffect(() => {
@@ -298,7 +318,9 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
     const chapterId = meta.chapterId;
     const isLast = currentPageIndex === pages.length - 1;
     const timer = setTimeout(() => {
-      saveProgress(chapterId, { page_no: activePage.page_no, mode: 'read', completed: isLast }).catch(() => undefined);
+      saveProgress(chapterId, { page_no: activePage.page_no, mode: 'read', completed: isLast })
+        .then(notifyActivity)
+        .catch(() => undefined);
     }, PROGRESS_SAVE_DELAY_MS);
     return () => clearTimeout(timer);
   }, [isLoggedIn, meta, activePage, currentPageIndex, pages.length]);
@@ -329,6 +351,49 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
     });
     return entries;
   }, [bubbles]);
+
+  // Đồng bộ dấu "đã lưu" (từ và câu thoại) với máy chủ: khi đổi trang, khi quay lại tab (có thể vừa xóa từ ở Sổ tay).
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === 'visible') setSavedStatusTick(value => value + 1);
+    };
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      window.removeEventListener('focus', refresh);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isLoggedIn || activePageId === null || bubbles.length === 0) return;
+    const pageId = activePageId;
+    const pageBubbleIds = bubbles.map(bubble => bubble.id);
+    const terms = [...new Set(bubbles.flatMap(bubble => bubble.tokens.map(token => token.word)))]
+      .filter(word => HAS_CJK.test(word))
+      .slice(0, MAX_STATUS_ITEMS);
+    const controller = new AbortController();
+    getSavedStatus({ terms, bubbleIds: pageBubbleIds.slice(0, MAX_STATUS_ITEMS), pageId }, controller.signal)
+      .then(status => {
+        const prefix = `${pageId}|`;
+        setSavedKeys(current => {
+          const next = new Set([...current].filter(key => !key.startsWith(prefix)));
+          status.page_terms.forEach(term => next.add(prefix + term));
+          return next;
+        });
+        setNotebookTerms(new Set(status.terms));
+        const onPage = new Set(pageBubbleIds);
+        setSavedSentenceIds(current => {
+          const next = new Set([...current].filter(id => !onPage.has(id)));
+          status.bubble_ids.forEach(id => next.add(id));
+          return next;
+        });
+      })
+      .catch(() => {
+        // Lỗi mạng: giữ trạng thái đang có, lần đổi trang/quay lại tab sau sẽ thử lại.
+      });
+    return () => controller.abort();
+  }, [isLoggedIn, activePageId, bubbles, savedStatusTick]);
 
   const handlePlayVoice = (text: string) => {
     speakChinese(text, speechRate);
@@ -367,6 +432,7 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
   const keyOf = (word: string) => `${activePageId}|${word}`;
   const isSaved = (word: string) => savedKeys.has(keyOf(word));
   const isSaving = (word: string) => savingKeys.has(keyOf(word));
+  const isInNotebook = (word: string) => notebookTerms.has(word);
 
   type SaveOutcome = 'created' | 'context' | 'duplicate' | 'failed';
 
@@ -382,6 +448,7 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
     try {
       const result = await saveWord({ term: word, source: 'highlight', bubble_id: bubbleId, page_id: activePageId });
       setSavedKeys(current => new Set(current).add(key));
+      setNotebookTerms(current => new Set(current).add(word));
       if (announce) showMessage(saveResultMessage(word, result));
       return result.created ? 'created' : 'context';
     } catch (err) {
@@ -416,6 +483,7 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
         [...result.saved, ...result.existing].forEach(term => next.add(`${pageId}|${term}`));
         return next;
       });
+      setNotebookTerms(current => new Set([...current, ...result.saved, ...result.existing]));
       setRemainingWords(result.remaining > 0 ? { pageId, count: result.remaining } : null);
       setCoverageTick(value => value + 1);
       showMessage(saveAllMessage(result));
@@ -743,7 +811,7 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
               <span className="ml-2 text-[10px] text-slate-500">{vocab.pinyin}</span>
             </div>
             <button onClick={() => void saveVocabulary(vocab.word, vocab.bubbleId)} disabled={isSaved(vocab.word) || isSaving(vocab.word)} className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold disabled:bg-emerald-50 disabled:text-emerald-700 enabled:bg-white enabled:text-blue-700 enabled:hover:bg-blue-100">
-              {isSaved(vocab.word) ? 'Đã lưu' : isSaving(vocab.word) ? 'Đang lưu...' : '+ Sổ tay'}
+              {isSaved(vocab.word) ? 'Đã lưu' : isSaving(vocab.word) ? 'Đang lưu...' : isInNotebook(vocab.word) ? '+ Ngữ cảnh' : '+ Sổ tay'}
             </button>
           </div>
         ))}
@@ -848,6 +916,16 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
             title="Tải ảnh đang xem về máy"
           >
             <Download size={18}/>
+          </button>
+
+          <button
+            onClick={() => openReport(null)}
+            disabled={!activePage}
+            className="w-9 h-9 rounded-xl bg-white border border-pink-100 text-slate-500 hover:text-[#a43073] hover:border-pink-300 flex items-center justify-center shadow-xs transition-all disabled:opacity-40"
+            title="Báo lỗi trang này"
+            aria-label="Báo lỗi trang này"
+          >
+            <span className="material-symbols-outlined text-[18px]">flag</span>
           </button>
 
           <button
@@ -1119,6 +1197,13 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
                           <span className="material-symbols-outlined text-[12px]">{savedSentenceIds.has(bubble.id) ? 'bookmark_added' : 'bookmark_add'}</span>
                           {savedSentenceIds.has(bubble.id) ? 'Đã lưu' : savingSentenceIds.has(bubble.id) ? 'Đang lưu...' : 'Lưu câu'}
                         </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); openReport(bubble.id); }}
+                          className="inline-flex items-center gap-1 rounded-full bg-slate-100 hover:bg-rose-100 px-2.5 py-1 text-[10px] font-bold text-slate-600 hover:text-rose-700"
+                          title="Báo lỗi nhận diện hoặc bản dịch của câu này"
+                        >
+                          <span className="material-symbols-outlined text-[12px]">flag</span>Báo lỗi
+                        </button>
                         {bubble.has_edit && (
                           <button
                             onClick={(e) => { e.stopPropagation(); void undoEdit(bubble.id); }}
@@ -1242,7 +1327,13 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
                       className="inline-flex items-center gap-1 rounded-full bg-pink-50 px-3 py-1.5 text-[11px] font-bold text-[#a43073] hover:bg-pink-100 disabled:bg-emerald-50 disabled:text-emerald-700"
                     >
                       <span className="material-symbols-outlined text-[14px]">{isSaved(lookupCard.word) ? 'check' : 'bookmark_add'}</span>
-                      {isSaved(lookupCard.word) ? 'Đã lưu vào Sổ tay' : isSaving(lookupCard.word) ? 'Đang lưu...' : 'Lưu vào Sổ tay'}
+                      {isSaved(lookupCard.word)
+                        ? 'Đã lưu vào Sổ tay'
+                        : isSaving(lookupCard.word)
+                          ? 'Đang lưu...'
+                          : isInNotebook(lookupCard.word)
+                            ? 'Đã có · thêm ngữ cảnh trang này'
+                            : 'Lưu vào Sổ tay'}
                     </button>
                     <button onClick={() => onLookupWord(lookupCard.word)} className="text-[11px] font-bold text-[#a43073] hover:underline">Xem chi tiết đầy đủ</button>
                   </div>
@@ -1307,9 +1398,11 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
                         onClick={(e) => { e.stopPropagation(); void saveVocabulary(vocab.word, vocab.bubbleId); }}
                         disabled={isSaved(vocab.word) || isSaving(vocab.word)}
                         className="w-7 h-7 rounded-lg bg-white text-slate-400 hover:bg-blue-100 hover:text-blue-700 disabled:text-emerald-600 disabled:bg-emerald-50 flex items-center justify-center transition-colors"
-                        title={isSaved(vocab.word) ? 'Đã lưu vào Sổ tay' : 'Lưu từ vào Sổ tay'}
+                        title={isSaved(vocab.word) ? 'Đã lưu vào Sổ tay' : isInNotebook(vocab.word) ? 'Đã có trong Sổ tay — bấm để thêm ngữ cảnh từ trang này' : 'Lưu từ vào Sổ tay'}
                       >
-                        <span className="material-symbols-outlined text-[16px]">{isSaved(vocab.word) ? 'check' : 'style'}</span>
+                        <span className={`material-symbols-outlined text-[16px] ${!isSaved(vocab.word) && isInNotebook(vocab.word) ? 'text-blue-600' : ''}`}>
+                          {isSaved(vocab.word) ? 'check' : isInNotebook(vocab.word) ? 'bookmark_added' : 'style'}
+                        </span>
                       </button>
                     </div>
                   </div>
@@ -1347,18 +1440,14 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
             onOpenLearningSettings={onOpenLearningSettings}
           />
 
-          {/* Card: Grammar Spotlight (chưa có API phân tích ngữ pháp) */}
-          <div className="bg-gradient-to-br from-blue-50/80 via-white to-pink-50/50 rounded-3xl p-5 shadow-soft border border-blue-100/70">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="w-2 h-2 rounded-full bg-blue-400"></span>
-              <span className="text-xs font-bold text-blue-600 uppercase tracking-wide">
-                Cấu trúc trọng điểm
-              </span>
-            </div>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              Phân tích ngữ pháp theo từng trang sẽ có ở bản cập nhật tới. Hiện bạn có thể rê chuột vào từng bóng thoại để xem Pinyin, nghĩa và tra từng từ.
-            </p>
-          </div>
+          {/* Card: Cấu trúc trọng điểm — phân tích ngữ pháp bằng AI (F05.09) */}
+          <GrammarPanel
+            bubbles={bubbles}
+            preferredBubbleId={lookupCard?.bubbleId ?? null}
+            pageId={activePageId}
+            isLoggedIn={isLoggedIn}
+            onRequireLogin={onRequireLogin}
+          />
 
           {/* Card: Streak */}
           <div className="bg-white rounded-3xl p-4 shadow-soft border border-amber-100 flex items-center justify-between">
@@ -1367,10 +1456,17 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
                 🔥
               </div>
               <div>
-                <div className="text-xs font-bold text-slate-800">Chuỗi học 7 ngày</div>
-                <div className="text-[11px] text-slate-500">Đã đọc 12 trang hôm nay</div>
+                <div className="text-xs font-bold text-slate-800">
+                  {streak ? `Chuỗi học ${streak.current_streak} ngày` : 'Chuỗi ngày học'}
+                </div>
+                <div className="text-[11px] text-slate-500">
+                  {streak
+                    ? `Đã đọc ${streak.week[streak.week.length - 1]?.pages_read ?? 0} trang hôm nay`
+                    : isLoggedIn ? 'Đang tải...' : 'Đăng nhập để theo dõi chuỗi học'}
+                </div>
               </div>
             </div>
+            {/* TODO(M16): XP chưa có API (GĐ6.5); giữ hiển thị như thiết kế. */}
             <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-xl border border-amber-200">
               +50 XP
             </span>
@@ -1470,6 +1566,10 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
 
         </div>
       </div>
+
+      {reportTarget && (
+        <ReportErrorDialog target={reportTarget} onClose={() => setReportTarget(null)} onDone={showMessage} />
+      )}
 
     </div>
   );

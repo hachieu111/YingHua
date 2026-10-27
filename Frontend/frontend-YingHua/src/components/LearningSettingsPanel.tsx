@@ -79,6 +79,8 @@ export const LearningSettingsPanel: React.FC<LearningSettingsPanelProps> = ({ on
 
   const set = <K extends keyof ApiSettings>(key: K, value: ApiSettings[K]) => setForm({ ...form, [key]: value });
   const goalInvalid = form.weekly_page_goal !== null && (form.weekly_page_goal < 1 || form.weekly_page_goal > WEEKLY_GOAL_MAX);
+  // Bật nhắc ôn mà chưa chọn giờ thì máy chủ không biết nhắc lúc nào (F14.03).
+  const reminderInvalid = form.reminder_enabled && !form.reminder_time;
 
   const handleSave = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -86,6 +88,7 @@ export const LearningSettingsPanel: React.FC<LearningSettingsPanelProps> = ({ on
       showToast(`Mục tiêu trang mỗi tuần phải từ 1 đến ${WEEKLY_GOAL_MAX}.`);
       return;
     }
+    if (reminderInvalid) return;
     const changes: Partial<ApiSettings> = {};
     (Object.keys(form) as (keyof ApiSettings)[]).forEach(key => {
       if (form[key] !== saved[key]) Object.assign(changes, { [key]: form[key] });
@@ -224,10 +227,39 @@ export const LearningSettingsPanel: React.FC<LearningSettingsPanelProps> = ({ on
         </span>
       </label>
 
+      <div className="flex flex-col gap-2 p-3 rounded-2xl bg-pink-50/60 border border-pink-100">
+        <label className="flex items-start gap-2.5 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={form.reminder_enabled}
+            onChange={e => set('reminder_enabled', e.target.checked)}
+            className="mt-0.5"
+          />
+          <span>
+            <span className="text-xs font-bold text-slate-800 block">Nhắc ôn thẻ mỗi ngày</span>
+            <span className="text-[11px] text-slate-500">Nhận thông báo trong ứng dụng vào giờ bạn chọn khi có thẻ đến hạn.</span>
+          </span>
+        </label>
+        {form.reminder_enabled && (
+          <div className="flex flex-col gap-1 pl-6">
+            <label className={labelClass} htmlFor="setting-reminder-time">Giờ nhắc</label>
+            <input
+              id="setting-reminder-time"
+              type="time"
+              value={form.reminder_time ?? ''}
+              onChange={e => set('reminder_time', e.target.value === '' ? null : e.target.value)}
+              className={`${fieldClass} sm:w-40 ${reminderInvalid ? 'ring-2 ring-red-300' : ''}`}
+              aria-invalid={reminderInvalid}
+            />
+            {reminderInvalid && <span className="text-[11px] text-red-600" role="alert">Hãy chọn giờ nhắc để bật nhắc ôn.</span>}
+          </div>
+        )}
+      </div>
+
       <div className="flex justify-end">
         <button
           type="submit"
-          disabled={busy || goalInvalid}
+          disabled={busy || goalInvalid || reminderInvalid}
           className="px-6 py-2.5 rounded-full bg-gradient-to-r from-pink-500 to-[#a43073] text-white font-bold text-xs shadow-md disabled:opacity-60 flex items-center gap-1.5"
         >
           <span className="material-symbols-outlined text-[16px]">save</span>

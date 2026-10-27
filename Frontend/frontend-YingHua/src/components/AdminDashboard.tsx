@@ -2,11 +2,17 @@ import React, { useMemo, useState } from 'react';
 import { AdminUsersPanel } from './AdminUsersPanel';
 import { AdminImagingPanel } from './AdminImagingPanel';
 import { AdminJobsPanel } from './AdminJobsPanel';
+import { AdminOverviewStats } from './AdminOverviewStats';
+import { AdminErrorReportsPanel } from './AdminErrorReportsPanel';
+import { AdminSettingsPanel } from './AdminSettingsPanel';
+import { AdminModerationPanel } from './AdminModerationPanel';
+import { AdminAuditPanel } from './AdminAuditPanel';
+import { AdminLibraryPanel } from './AdminLibraryPanel';
 import {
-  Activity, AlertCircle, ArrowDownToLine, ArrowLeft, ArrowRight, BadgeCheck, BookOpen,
-  Check, CheckCheck, ChevronDown, CircleHelp, Clock3, Eye, FileSearch, Filter, Flag,
-  GraduationCap, LayoutDashboard, LifeBuoy, ListFilter, Menu, MessageSquareWarning,
-  MoreHorizontal, Search, Settings, Shield, ShieldCheck, Sparkles, UserRound, Users,
+  AlertCircle, ArrowDownToLine, ArrowLeft, ArrowRight, BadgeCheck, BookOpen,
+  Check, CheckCheck, ChevronDown, CircleHelp, Clock3, Eye, FileSearch, Flag,
+  GraduationCap, LayoutDashboard, LifeBuoy, Menu,
+  MoreHorizontal, ScrollText, Search, Settings, ShieldCheck, Sparkles, UserRound, Users,
   X
 } from 'lucide-react';
 
@@ -15,7 +21,7 @@ interface AdminDashboardProps {
   currentUserEmail: string;
 }
 
-type AdminSection = 'overview' | 'moderation' | 'users' | 'authors' | 'complaints' | 'library' | 'imaging' | 'jobs' | 'settings';
+type AdminSection = 'overview' | 'moderation' | 'users' | 'authors' | 'complaints' | 'library' | 'imaging' | 'jobs' | 'settings' | 'audit';
 type QueueStatus = 'Chờ duyệt' | 'Đang xử lý' | 'Đã duyệt';
 type QueueItem = {
   id: number;
@@ -46,7 +52,8 @@ const sections: { id: AdminSection; label: string; icon: React.ElementType; grou
   { id: 'library', label: 'Kho truyện Manhua', icon: BookOpen, group: 'main' },
   { id: 'imaging', label: 'Xử lý ảnh', icon: FileSearch, group: 'main' },
   { id: 'jobs', label: 'Tác vụ nền', icon: Clock3, group: 'main' },
-  { id: 'settings', label: 'Cài đặt hệ thống', icon: Settings, group: 'main' }
+  { id: 'settings', label: 'Cài đặt hệ thống', icon: Settings, group: 'main' },
+  { id: 'audit', label: 'Nhật ký quản trị', icon: ScrollText, group: 'main' }
 ];
 
 const statusClass: Record<QueueStatus, string> = {
@@ -66,7 +73,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenLearnerVie
   const [notice, setNotice] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeQuickTab, setActiveQuickTab] = useState<AdminSection>('moderation');
-  const [systemSettings, setSystemSettings] = useState([true, true, true, false]);
 
   const filteredQueue = useMemo(() => {
     const query = searchQuery.trim().toLocaleLowerCase('vi');
@@ -176,7 +182,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenLearnerVie
       <div className="flex min-h-[calc(100vh-62px)]">
         <aside className={`${sidebarOpen ? 'block' : 'hidden'} lg:block fixed lg:sticky top-[62px] left-0 z-20 w-[230px] h-[calc(100vh-62px)] overflow-y-auto bg-white border-r border-slate-200 p-3`}>
           <p className="px-2 py-3 text-[9px] font-bold tracking-wider text-slate-400">ĐIỀU HƯỚNG CHÍNH</p>
-          <nav className="flex flex-col gap-1">{sections.filter(section => section.group === 'main').map(({ id, label, icon: Icon }) => <button key={id} onClick={() => changeSection(id)} className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-[11px] font-semibold ${activeSection === id ? 'bg-pink-500 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'}`}><Icon size={15}/>{label}{id === 'complaints' && <span className="ml-auto rounded-full bg-rose-100 px-1.5 py-0.5 text-[9px] text-rose-700">9+</span>}</button>)}</nav>
+          <nav className="flex flex-col gap-1">{sections.filter(section => section.group === 'main').map(({ id, label, icon: Icon }) => <button key={id} onClick={() => changeSection(id)} className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-[11px] font-semibold ${activeSection === id ? 'bg-pink-500 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'}`}><Icon size={15}/>{label}</button>)}</nav>
           <p className="px-2 pt-6 pb-2 text-[9px] font-bold tracking-wider text-slate-400">GIAO DIỆN HỌC VIÊN</p>
           <button onClick={onOpenLearnerView} className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-[11px] font-semibold text-slate-600 hover:bg-pink-50"><GraduationCap size={15}/>Mở trang học viên</button>
           <div className="mt-8 rounded-xl bg-blue-50 p-3"><div className="flex justify-between text-[9px] font-semibold"><span>Máy chủ hệ thống</span><span className="text-emerald-600">Ổn định</span></div><div className="mt-2 h-1 rounded-full bg-blue-200"><div className="h-full w-[92%] rounded-full bg-blue-600"/></div><div className="mt-1 text-[9px] text-slate-500">HSK 1–6 · Dữ liệu v2.4.0</div></div>
@@ -190,32 +196,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenLearnerVie
             </div>
 
             {activeSection === 'overview' && <>
-              <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-4">
-                <StatCard title="Chờ duyệt công khai" value={`${queueCount + 12}`} suffix="nội dung" note="5 cần gấp" detail="Cập nhật 4 phút trước" color="pink" icon={<CheckCheck size={16}/>}/>
-                <StatCard title="Tổng người dùng" value="24,850" suffix="học viên" note="+12% tuần này" detail="12 bị cảnh báo" color="blue" icon={<Users size={16}/>}/>
-                <StatCard title="Đơn duyệt tác giả" value="7" suffix="hồ sơ mới" note="4 HSK 5+" detail="3 dịch giả HSK 6" color="amber" icon={<Shield size={16}/>}/>
-                <StatCard title="Tỷ lệ chuẩn OCR" value="96.4%" suffix="tự động" note="" detail="≈ 0.88 giây" color="rose" icon={<Activity size={16}/>} progress={96.4}/>
-              </div>
+              <AdminOverviewStats />
               <div className="grid grid-cols-1 xl:grid-cols-4 gap-3 mb-5">
-                <div className="rounded-2xl border border-pink-100 bg-white p-4 xl:col-span-1"><div className="flex items-center justify-between text-[10px] font-bold text-pink-700"><span>CSKH & Khiếu nại</span><MessageSquareWarning size={15}/></div><div className="mt-2 text-2xl font-extrabold text-rose-600">14 <span className="text-xs font-semibold text-slate-500">cần xử lý</span></div><div className="mt-1 text-[9px] text-slate-500">6 vi phạm dịch/OCR · 6 VIP · 3 nội dung</div></div>
-                <div className="xl:col-span-3 rounded-2xl bg-white border border-slate-100 p-2 flex flex-wrap items-center justify-around gap-1">{([
-                  { id: 'moderation', label: 'Duyệt bài công khai', count: queueCount, icon: CheckCheck },
-                  { id: 'users', label: 'Quản lý người dùng', count: '24.8k', icon: Users },
-                  { id: 'authors', label: 'Duyệt tác giả truyện', count: '7 mới', icon: ShieldCheck },
-                  { id: 'complaints', label: 'Trung tâm CSKH & Khiếu nại', count: '14 mới', icon: LifeBuoy }
-                ] as const).map(({ id, label, count, icon: Icon }) => <button key={id} onClick={() => changeSection(id)} className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-3 text-center text-[10px] font-semibold transition ${activeQuickTab === id ? 'bg-blue-50 text-[#a43073]' : 'text-slate-600 hover:bg-slate-50'}`}><Icon size={14}/><span>{label}<span className="ml-1 rounded-full bg-blue-100 px-1.5 py-0.5 text-[9px] text-blue-700">{count}</span></span></button>)}</div>
+                <div className="xl:col-span-4 rounded-2xl bg-white border border-slate-100 p-2 flex flex-wrap items-center justify-around gap-1">{([
+                  { id: 'moderation', label: 'Duyệt bài công khai', icon: CheckCheck },
+                  { id: 'users', label: 'Quản lý người dùng', icon: Users },
+                  { id: 'authors', label: 'Duyệt tác giả truyện', icon: ShieldCheck },
+                  { id: 'complaints', label: 'Trung tâm CSKH & Khiếu nại', icon: LifeBuoy }
+                ] as const).map(({ id, label, icon: Icon }) => <button key={id} onClick={() => changeSection(id)} className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-3 text-center text-[10px] font-semibold transition ${activeQuickTab === id ? 'bg-blue-50 text-[#a43073]' : 'text-slate-600 hover:bg-slate-50'}`}><Icon size={14}/><span>{label}</span></button>)}</div>
               </div>
               <Panel title="Hàng chờ kiểm duyệt" action={<button onClick={() => changeSection('moderation')} className="text-[10px] font-bold text-pink-600">Xem tất cả →</button>}>{renderQueue(true)}</Panel>
             </>}
 
-            {activeSection === 'moderation' && <Panel title="Duyệt bài công khai" action={<button onClick={() => notify('Đã tải danh sách mới nhất.')} className="text-xs text-blue-700 inline-flex gap-1 items-center"><ListFilter size={13}/>Làm mới</button>}>{renderQueue()}</Panel>}
+            {activeSection === 'moderation' && <Panel title="Kiểm duyệt ảnh tải lên"><AdminModerationPanel notify={notify} /></Panel>}
             {activeSection === 'authors' && <Panel title="Hồ sơ tác giả cần thẩm định">{renderQueue(true)}</Panel>}
             {activeSection === 'users' && <Panel title="Quản lý người dùng"><AdminUsersPanel currentUserEmail={currentUserEmail} searchQuery={searchQuery} notify={notify} /></Panel>}
-            {activeSection === 'complaints' && <Panel title="CSKH & Khiếu nại" action={<button onClick={() => notify('Đã lọc các yêu cầu mới.')} className="text-xs text-blue-700 inline-flex gap-1"><Filter size={13}/>Chỉ yêu cầu mới</button>}><div className="divide-y divide-slate-100">{['Báo cáo bản dịch sai nội dung', 'Không thể khôi phục chuỗi ngày học', 'Yêu cầu hỗ trợ tài khoản VIP'].map((item, index) => <div key={item} className="flex items-center justify-between gap-4 p-4"><div><div className="text-sm font-bold">{item}</div><div className="text-xs text-slate-500 mt-1">#{2408 + index} · {index + 1} giờ trước · Ưu tiên {index === 0 ? 'cao' : 'thường'}</div></div><button onClick={() => notify(`Đã nhận xử lý yêu cầu #${2408 + index}.`)} className="rounded-full bg-pink-100 px-3 py-1.5 text-[10px] font-bold text-pink-700">Nhận xử lý</button></div>)}</div></Panel>}
-            {activeSection === 'library' && <Panel title="Kho truyện Manhua" action={<button onClick={() => notify('Đã mở biểu mẫu thêm truyện.')} className="rounded-full bg-pink-500 px-3 py-1.5 text-[10px] font-bold text-white">+ Thêm truyện</button>}><div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3 p-4">{initialQueue.filter(item => item.image).map(item => <div key={item.id} className="flex gap-3 rounded-xl border border-slate-100 p-3"><img src={item.image} alt="Bìa truyện" className="h-20 w-14 rounded-lg object-cover"/><div className="min-w-0"><div className="text-xs font-bold line-clamp-2">{item.title}</div><div className="mt-2 text-[10px] text-slate-500">{item.hsk} · {item.category}</div><button onClick={() => setSelectedItem(item)} className="mt-2 text-[10px] font-bold text-blue-700">Quản lý nội dung</button></div></div>)}</div></Panel>}
+            {activeSection === 'complaints' && <Panel title="CSKH & Báo lỗi"><AdminErrorReportsPanel notify={notify} /></Panel>}
+            {activeSection === 'library' && <AdminLibraryPanel notify={notify} />}
             {activeSection === 'imaging' && <Panel title="Xử lý ảnh (hàng đợi dịch)"><AdminImagingPanel notify={notify} /></Panel>}
             {activeSection === 'jobs' && <Panel title="Tác vụ nền định kỳ"><AdminJobsPanel notify={notify} /></Panel>}
-            {activeSection === 'settings' && <Panel title="Cài đặt hệ thống"><div className="grid sm:grid-cols-2 gap-3 p-4">{[['Chế độ kiểm duyệt AI', 'Tự động phân loại nội dung vi phạm'], ['OCR Real-time', 'Nhận diện chữ Hán và Pinyin'], ['Thông báo quản trị', 'Nhận cảnh báo khiếu nại mới'], ['Chế độ bảo trì', 'Tạm ẩn một số tính năng học viên']].map(([label, description], index) => <div key={label} className="flex items-center justify-between rounded-xl border border-slate-100 p-4"><div><div className="text-xs font-bold">{label}</div><div className="mt-1 text-[10px] text-slate-500">{description}</div></div><button role="switch" aria-checked={systemSettings[index]} onClick={() => { setSystemSettings(settings => settings.map((enabled, settingIndex) => settingIndex === index ? !enabled : enabled)); notify(`${label} đã được cập nhật.`); }} className={`relative h-5 w-9 rounded-full ${systemSettings[index] ? 'bg-blue-600' : 'bg-slate-300'}`}><span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${systemSettings[index] ? 'left-[18px]' : 'left-0.5'}`}/></button></div>)}</div></Panel>}
+            {activeSection === 'settings' && <Panel title="Cài đặt hệ thống"><AdminSettingsPanel notify={notify} /></Panel>}
+            {activeSection === 'audit' && <Panel title="Nhật ký quản trị"><AdminAuditPanel /></Panel>}
           </div>
         </main>
       </div>
@@ -228,8 +229,3 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenLearnerVie
 };
 
 const Panel: React.FC<{ title: string; action?: React.ReactNode; children: React.ReactNode }> = ({ title, action, children }) => <section className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm"><div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3"><h2 className="text-sm font-extrabold text-slate-800">{title}</h2>{action}</div>{children}</section>;
-
-const StatCard: React.FC<{ title: string; value: string; suffix: string; note: string; detail: string; color: string; icon: React.ReactNode; progress?: number }> = ({ title, value, suffix, note, detail, color, icon, progress }) => {
-  const palette: Record<string, string> = { pink: 'bg-pink-100 text-pink-700', blue: 'bg-blue-100 text-blue-700', amber: 'bg-amber-100 text-amber-700', rose: 'bg-rose-100 text-rose-700' };
-  return <article className="rounded-2xl border border-slate-100 bg-white p-3.5 shadow-sm"><div className="flex items-center justify-between gap-2"><span className="text-[10px] font-semibold text-slate-500">{title}</span><span className={`flex h-7 w-7 items-center justify-center rounded-full ${palette[color]}`}>{icon}</span></div><div className="mt-2 flex items-baseline gap-1.5"><span className="text-2xl font-extrabold tracking-tight text-slate-900">{value}</span><span className="text-[9px] text-slate-500">{suffix}</span></div>{progress !== undefined ? <div className="mt-2 h-1.5 rounded-full bg-slate-100"><div className="h-full rounded-full bg-pink-600" style={{ width: `${progress}%` }}/></div> : null}<div className="mt-2 flex flex-wrap items-center gap-1.5">{note && <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${palette[color]}`}>{note}</span>}<span className="text-[9px] text-slate-500">{detail}</span></div></article>;
-};

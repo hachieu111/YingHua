@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { errorMessage } from '../api/client';
 import { QuizDetail, QuizQuestion, quizSourceLabel, saveQuizWord } from '../api/quiz';
 import { speakChinese } from '../utils/speech';
+import { MistakeReviewPanel } from './MistakeReviewPanel';
 import { HighlightedText } from './QuizRoom';
 
 interface QuizResultProps {
@@ -131,6 +132,8 @@ export const QuizResult: React.FC<QuizResultProps> = ({ quiz, onBack, onGoReview
                       </button>
                     </div>
                   )}
+
+                  {!correct && <MistakeReviewPanel quizId={quiz.id} questionId={q.id} hasReview={q.has_mistake_review === true} />}
 
                   {isRelated && q.can_save === true && (
                     <button

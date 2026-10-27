@@ -3,11 +3,19 @@ import { synthesize, TTS_MAX_RATE, TTS_MIN_RATE } from '../api/tts';
 
 const MAX_CACHED_AUDIO = 40;
 const FALLBACK_NOTICE = 'Không phát được âm thanh máy chủ, đang dùng giọng của trình duyệt';
+const TTS_DISABLED_NOTICE = 'Tính năng nghe phát âm đang tạm tắt';
 const VOICE_FALLBACK_NOTICE = 'Giọng đã chọn không khả dụng, đã chuyển sang giọng mặc định';
 
 type NoticeListener = (message: string) => void;
 
 let noticeListener: NoticeListener | null = null;
+let ttsAvailable = true;
+
+/** Quản trị viên tắt tính năng nghe (F13.05): không gọi máy chủ và không dùng giọng dự phòng. */
+export function setTtsAvailable(enabled: boolean): void {
+  ttsAvailable = enabled;
+  if (!enabled) stopSpeaking();
+}
 const shownNotices = new Set<string>();
 
 /** Đăng ký nơi hiển thị thông báo nhẹ (toast). Trả về hàm hủy đăng ký. */
@@ -101,6 +109,10 @@ function speakWithBrowser(text: string, rate: number): Promise<boolean> {
  */
 export async function speakChinese(text: string, rate: number = 0.85): Promise<boolean> {
   if (typeof window === 'undefined' || !text.trim()) return true;
+  if (!ttsAvailable) {
+    noticeOnce(TTS_DISABLED_NOTICE);
+    return false;
+  }
   stopSpeaking();
   const token = playToken;
   const clamped = Math.min(TTS_MAX_RATE, Math.max(TTS_MIN_RATE, rate));

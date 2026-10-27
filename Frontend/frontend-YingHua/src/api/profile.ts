@@ -2,14 +2,22 @@ import { CURRENT_USER } from '../data/mockData';
 import { UserProfileData } from '../types';
 import { ApiUser } from './auth';
 import { ApiSettings } from './settings';
+import { presetAvatarUrl } from '../data/avatarPresets';
 
 const DEFAULT_WEEKLY_PAGE_GOAL = 20;
 
 /**
  * Ghép dữ liệu thật từ máy chủ thành hồ sơ hiển thị.
  * Các số liệu học tập (chuỗi ngày, từ vựng, trang đã đọc...) chưa có API nên để 0 thay vì dùng số giả;
- * avatar tải lên lấy từ máy chủ (avatarUrl), huy hiệu và avatar gợi ý giữ giá trị đang chọn (chưa có API lưu).
+ * avatar tải lên (avatarUrl) và ảnh đại diện có sẵn (avatar_preset) đều lấy từ máy chủ; huy hiệu giữ giá trị đang chọn (chưa có API lưu).
  */
+/** Phần avatar của hồ sơ sau khi tải lên/gỡ/chọn ảnh có sẵn. */
+export const avatarFields = (user: ApiUser): Pick<UserProfileData, 'avatar' | 'avatarUrl' | 'avatarPreset'> => ({
+  avatar: presetAvatarUrl(user.avatar_preset) ?? CURRENT_USER.avatar,
+  avatarUrl: user.avatar_url,
+  avatarPreset: user.avatar_preset
+});
+
 export function toUserProfile(user: ApiUser, settings: ApiSettings | null, previous?: UserProfileData): UserProfileData {
   return {
     name: user.display_name,
@@ -22,8 +30,9 @@ export function toUserProfile(user: ApiUser, settings: ApiSettings | null, previ
     email: user.email,
     showEmail: user.show_email,
     showJoinDate: user.show_join_date,
-    avatar: previous?.avatar ?? CURRENT_USER.avatar,
+    avatar: presetAvatarUrl(user.avatar_preset) ?? CURRENT_USER.avatar,
     avatarUrl: user.avatar_url,
+    avatarPreset: user.avatar_preset,
     streak: 0,
     totalVocab: 0,
     pagesRead: 0,

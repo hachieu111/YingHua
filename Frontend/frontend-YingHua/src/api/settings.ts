@@ -9,6 +9,10 @@ export interface ApiSettings {
   show_xianxia: boolean;
   /** Cỡ chữ lớp dịch trên trang, %: 80..160, bước 10 (F02.04). */
   bubble_font_scale: number;
+  /** Bật nhắc ôn hằng ngày (F14.03). */
+  reminder_enabled: boolean;
+  /** Giờ nhắc "HH:MM" theo múi giờ của người học. */
+  reminder_time: string | null;
 }
 
 export const getSettings = (): Promise<ApiSettings> => apiRequest<ApiSettings>('/settings');
