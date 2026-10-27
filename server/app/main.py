@@ -16,14 +16,21 @@ from app.core.config import Settings, get_settings
 from app.core.exception_handlers import register_exception_handlers
 from app.core.logging import REQUEST_ID_HEADER, configure_logging, request_id_middleware
 from app.health import router as health_router
+from app.modules.admin.api.maintenance import maintenance_middleware
+from app.modules.admin.api.moderation_router import audit_router, moderation_router
 from app.modules.admin.api.router import router as admin_users_router
+from app.modules.admin.api.settings_router import admin_router as system_settings_router
+from app.modules.admin.api.settings_router import status_router as system_status_router
 from app.modules.auth.api.router import account_router, auth_router
 from app.modules.dictionary.api.router import admin_router as dictionary_admin_router
 from app.modules.dictionary.api.router import router as dictionary_router
 from app.modules.imaging.api.router import admin_router as imaging_admin_router
 from app.modules.imaging.api.router import router as imaging_router
+from app.modules.imaging.api.sample_router import router as sample_page_router
 from app.modules.jobs.api.router import router as jobs_router
 from app.modules.library.api.router import routers as library_routers
+from app.modules.notifications.api.admin_router import admin_router as notifications_admin_router
+from app.modules.notifications.api.router import router as notifications_router
 from app.modules.quiz.api.admin_router import admin_router as quiz_admin_router
 from app.modules.quiz.api.router import router as quiz_router
 from app.modules.reader.api.admin_router import admin_router as reader_admin_router
@@ -33,6 +40,8 @@ from app.modules.review.api.ai_note_router import router as ai_note_router
 from app.modules.review.api.router import router as review_router
 from app.modules.settings.api.admin_router import admin_router as settings_admin_router
 from app.modules.settings.api.router import router as settings_router
+from app.modules.stats.api.admin_router import admin_router as stats_admin_router
+from app.modules.stats.api.router import router as stats_router
 from app.modules.suggestions.api.router import router as suggestions_router
 from app.modules.tts.api.router import EXPOSED_HEADERS as TTS_HEADERS
 from app.modules.tts.api.router import router as tts_router
@@ -65,13 +74,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         openapi_url=f"{API_PREFIX}/openapi.json",
     )
     app.middleware("http")(request_id_middleware)
+    app.middleware("http")(maintenance_middleware)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
-        expose_headers=[REQUEST_ID_HEADER, *TTS_HEADERS],
+        expose_headers=[REQUEST_ID_HEADER, "Content-Disposition", "X-Export-Count", *TTS_HEADERS],
     )
     register_exception_handlers(app)
     app.include_router(health_router, prefix=API_PREFIX)
@@ -80,18 +90,25 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         account_router,
         settings_router,
         admin_users_router,
+        system_settings_router,
+        moderation_router,
+        audit_router,
+        system_status_router,
         settings_admin_router,
         vocab_admin_router,
         sentences_admin_router,
         review_admin_router,
         quiz_admin_router,
         reader_admin_router,
+        stats_admin_router,
+        notifications_admin_router,
         dictionary_router,
         dictionary_admin_router,
         # Phải đứng trước truyện của M03: `/series/recommendations` không được rơi vào `/series/{series_id}`.
         suggestions_router,
         *library_routers,
         imaging_router,
+        sample_page_router,
         imaging_admin_router,
         reader_router,
         vocab_router,
@@ -100,6 +117,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         review_router,
         ai_note_router,
         quiz_router,
+        stats_router,
+        notifications_router,
         tts_router,
         jobs_router,
     ):

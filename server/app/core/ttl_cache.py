@@ -26,3 +26,7 @@ class TtlCache(Generic[T]):
     def set(self, value: T, ttl: timedelta) -> None:
         self._value = value
         self._expires_at = self._clock.now() + ttl
+
+    def clear(self) -> None:
+        self._value = None
+        self._expires_at = None

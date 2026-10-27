@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_minutes: int = 15
     refresh_token_days: int = 30
+    refresh_token_short_hours: int = Field(default=24, ge=1)  # phiên không ghi nhớ đăng nhập (F01.11)
     password_reset_minutes: int = 30
     login_max_attempts_per_email: int = 5
     login_max_attempts_per_ip: int = 30
@@ -58,7 +59,13 @@ class Settings(BaseSettings):
     quiz_question_count: int = 10
     quiz_min_words: int = 10
     quiz_daily_llm_limit: int = 5  # số đề LLM mỗi người mỗi ngày; vượt thì dùng đề dự phòng (F13.05)
-    llm_enabled: bool = False  # công tắc tạm; quản trị bật/tắt trong CSDL thuộc F13.05 (giai đoạn 6)
+    today_due_priority_threshold: int = (
+        20  # từ ngần này thẻ đến hạn trở lên thì việc ôn thẻ "ưu tiên" (F12.04)
+    )
+    today_quiz_low_words: int = 5  # cần ngần này từ có độ nhớ R thấp mới gợi ý làm bài (F12.04)
+    today_quiz_low_retrievability: float = 0.7  # R dưới ngưỡng này là "độ nhớ thấp" (F08.02)
+    today_max_items: int = 5  # tối đa số thẻ việc trên trang chủ (F12.04)
+    llm_enabled: bool = False  # mặc định; quản trị đặt lại trong system_settings (F13.05)
     llm_timeout_seconds: float = 20.0
     llm_provider: str = "gemini"
     llm_api_key: SecretStr | None = None  # chỉ ở .env; không bao giờ log hay đưa vào URL
@@ -67,8 +74,11 @@ class Settings(BaseSettings):
     llm_thinking_level: str = "low"
     ai_note_daily_limit: int = 20  # số lần gọi LLM tạo Thẻ mở rộng AI mỗi người mỗi ngày (F08.11)
     ai_note_regenerate_limit: int = 3  # số lần "Tạo lại" Thẻ mở rộng AI cho mỗi mục từ (F08.11)
+    # Mặc định hạn mức mỗi người mỗi ngày; quản trị đặt lại trong system_settings (F13.05)
+    grammar_daily_limit: int = Field(default=30, ge=0)  # phân tích ngữ pháp câu thoại (F05.09)
+    mistake_review_daily_limit: int = Field(default=20, ge=0)  # giải thích lỗi sai (F09.10)
     tts_timeout_seconds: float = 10.0
-    tts_enabled: bool = True  # công tắc tạm; quản trị bật/tắt trong CSDL thuộc F13.05 (giai đoạn 6)
+    tts_enabled: bool = True  # mặc định; quản trị đặt lại trong system_settings (F13.05)
     guest_tts_max_requests: int = 20  # lượt Khách gọi dịch vụ TTS (không tính cache) mỗi cửa sổ
     guest_tts_window_minutes: int = 10
 
@@ -81,6 +91,13 @@ class Settings(BaseSettings):
     worker_poll_seconds: float = Field(default=3.0, gt=0)
     job_max_attempts: int = 2
     job_stale_minutes: int = 15
+
+    # Học tập cá nhân hóa và nhắc ôn (GĐ6)
+    fsrs_optimize_min_reviews: int = Field(default=300, ge=50)  # ngưỡng lượt ôn để tối ưu FSRS (F08.08)
+    fsrs_optimize_interval_days: int = Field(default=7, ge=1)  # chu kỳ tối ưu FSRS (F15.03)
+    fsrs_optimize_max_users_per_run: int = Field(default=20, ge=1)  # chặn thời gian một lần chạy
+    reminder_scan_minutes: int = Field(default=15, ge=1)  # chu kỳ quét nhắc ôn (F14.04)
+    reminder_grace_hours: int = Field(default=3, ge=1, le=12)  # quá giờ nhắc chừng này thì bỏ lượt hôm nay
 
     # Log
     log_level: str = "INFO"

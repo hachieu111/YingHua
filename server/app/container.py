@@ -17,6 +17,8 @@ from app.core.security import TokenService
 from app.core.single_flight import SingleFlight
 from app.core.storage import FileStorage, LocalFileStorage
 from app.core.ttl_cache import TtlCache
+from app.modules.admin.application.system_settings import CachedSystemSettings, defaults_from_settings
+from app.modules.admin.infrastructure.public import SqlSystemSettingsSource
 
 
 @dataclass(slots=True)
@@ -31,18 +33,20 @@ class Container:
     single_flight: SingleFlight  # gộp yêu cầu trùng đang chạy (F11.05); phải dùng chung cả tiến trình
     guest_tts_limiter: FailureLimiter
     voices_cache: TtlCache[Any]  # danh sách giọng TTS khả dụng (F11.03), dùng chung cả tiến trình
+    system_settings: CachedSystemSettings  # cấu hình hệ thống do quản trị đặt (F13.05), đệm vài giây
 
 
 def build_container(settings: Settings, clock: Clock | None = None) -> Container:
     clock = clock or SystemClock()
     engine = create_engine(settings.database_url, pool_size=settings.db_pool_size, echo=settings.db_echo)
+    session_factory = create_session_factory(engine)
     tokens = TokenService(
         settings.jwt_secret.get_secret_value(), settings.jwt_algorithm, settings.access_token_minutes, clock
     )
     return Container(
         settings=settings,
         engine=engine,
-        session_factory=create_session_factory(engine),
+        session_factory=session_factory,
         clock=clock,
         tokens=tokens,
         login_limiter=FailureLimiter(timedelta(minutes=settings.login_attempt_window_minutes), clock),
@@ -50,6 +54,9 @@ def build_container(settings: Settings, clock: Clock | None = None) -> Container
         single_flight=SingleFlight(),
         guest_tts_limiter=FailureLimiter(timedelta(minutes=settings.guest_tts_window_minutes), clock),
         voices_cache=TtlCache(clock),
+        system_settings=CachedSystemSettings(
+            lambda: SqlSystemSettingsSource(session_factory), defaults_from_settings(settings), clock
+        ),
     )
 
 
