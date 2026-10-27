@@ -19,8 +19,9 @@ YingHua là ứng dụng web hỗ trợ học tiếng Trung qua truyện tranh v
 | TTS | Dịch vụ Text-to-Speech bên ngoài |
 | LLM | Dịch vụ LLM bên ngoài |
 | HG | Bộ hẹn giờ hệ thống |
+| HP | Hướng phát triển (story ghi nhận ý tưởng, không tính vào tổng, xem mục 11) |
 
-Các story NH được chia thành nhóm chức năng A–O, đặt tiêu đề nhóm bằng `####`.
+Các story NH được chia thành nhóm chức năng A–P, đặt tiêu đề nhóm bằng `####`.
 
 **Độ ưu tiên.** Must (bắt buộc cho bản phát hành đầu), Should (nên có), Could (có thể bổ sung nếu còn thời gian).
 
@@ -39,13 +40,15 @@ Các story NH được chia thành nhóm chức năng A–O, đặt tiêu đề 
 | Actor | Loại | Số story | Mã |
 |---|---|---|---|
 | Khách | Chính | 6 | US-KH-01 … 06 |
-| Người học | Chính | 77 | US-NH-01 … 77 |
+| Người học | Chính | 82 | US-NH-01 … 82 |
 | Quản trị viên | Chính (kế thừa Người học) | 16 (riêng) | US-QT-01 … 16 |
 | Pipeline xử lý ảnh | Phụ (hệ thống) | 9 | US-XL-01 … 09 |
 | Dịch vụ TTS bên ngoài | Phụ (hệ thống) | 3 | US-TTS-01 … 03 |
 | Dịch vụ LLM bên ngoài | Phụ (hệ thống) | 3 | US-LLM-01 … 03 |
 | Bộ hẹn giờ hệ thống | Phụ (hệ thống) | 4 | US-HG-01 … 04 |
-| **Tổng** | | **118** | |
+| **Tổng** | | **123** | |
+
+Ghi chú: hai story hướng phát triển US-HP-01, US-HP-02 (mục 11) chưa thuộc phạm vi triển khai nên không tính vào tổng.
 
 ---
 
@@ -893,7 +896,7 @@ Các story của nhóm này mô tả tính năng đã có trên giao diện như
 3. **Cho trước** tệp lớn hơn 10 MB, **khi** tải lên, **thì** bị từ chối với thông báo vượt dung lượng cho phép.
 4. **Cho trước** tôi đã có ảnh đại diện, **khi** tải ảnh mới, **thì** ảnh mới thay thế ảnh cũ.
 5. **Cho trước** tôi chưa tải ảnh, **khi** xem hồ sơ, **thì** hiển thị ảnh mặc định (chữ cái đầu của tên hiển thị).
-6. **Cho trước** tôi đang ở trang hồ sơ, **khi** chọn một trong các ảnh đại diện có sẵn của hệ thống thay vì tải ảnh lên, **thì** ảnh đó được dùng làm ảnh đại diện ngay và thay thế ảnh đã tải lên trước đó (nếu có); chọn lại ảnh khác hoặc tải ảnh mới thì thay thế lần chọn trước (giai đoạn 6).
+6. **Cho trước** tôi đang ở trang hồ sơ, **khi** chọn một trong sáu ảnh đại diện có sẵn của hệ thống (mã `original`, `sakura_flower`, `bach_thien`, `tieu_vu_tru`, `mac_van`, `lac_ly`) thay vì tải ảnh lên, **thì** ảnh đó được dùng làm ảnh đại diện ngay và thay thế ảnh đã tải lên trước đó (nếu có); mã không có trong danh sách bị từ chối; chọn lại ảnh khác hoặc tải ảnh mới thì thay thế lần chọn trước (giai đoạn 6).
 7. **Cho trước** tôi đang có ảnh đại diện, **khi** bấm gỡ ảnh, **thì** ảnh bị gỡ và hồ sơ quay về ảnh mặc định (chữ cái đầu tên hiển thị) (bổ sung GĐ5).
 
 #### Nhóm N — Đồng bộ với giao diện Sổ tay và Flashcard: đánh dấu sao, bộ thẻ theo truyện, âm Hán Việt (bổ sung 24/10/2026)
@@ -954,7 +957,7 @@ Các story của nhóm này mô tả tính năng đã có trên giao diện Sổ
 
 #### Nhóm O — Đồng bộ với giao diện: câu thoại đã lưu, lưu cả trang, gợi ý truyện, độ phủ từ vựng, cỡ chữ, Flashcard AI, ghi nhớ đăng nhập, trang mẫu (bổ sung 25/10/2026)
 
-Các story của nhóm này mô tả tính năng đã có trên giao diện nhưng chưa có trong tài liệu; được bổ sung theo `.claude/rules/dev-workflow.md` §3. US-NH-70 … 75 thuộc giai đoạn 5; US-NH-76 và US-NH-77 thuộc giai đoạn 6.
+Các story của nhóm này mô tả tính năng đã có trên giao diện nhưng chưa có trong tài liệu; được bổ sung theo `.claude/rules/dev-workflow.md` §3. US-NH-70 … 75 thuộc giai đoạn 5; US-NH-76, US-NH-77 và US-NH-82 (hộp thông báo, đặt cuối nhóm P để giữ nguyên số thứ tự các story đã có) thuộc giai đoạn 6.
 
 ### US-NH-70 — Lưu câu thoại
 **Là** Người học, **tôi muốn** lưu nguyên một câu thoại khi đọc truyện và xem lại, nghe lại trong Hồ sơ, **để** ôn các câu hay hoặc khó mà không chỉ lưu từng từ.
@@ -1047,7 +1050,7 @@ Các story của nhóm này mô tả tính năng đã có trên giao diện như
 
 **Tiêu chí chấp nhận (Acceptance Criteria):**
 1. **Cho trước** form đăng nhập, **khi** tôi chọn "Ghi nhớ đăng nhập" (mặc định chọn), **thì** phiên được giữ như hiện tại với mã làm mới có hạn 30 ngày (US-NH-01) và lưu bền trên trình duyệt.
-2. **Cho trước** tôi bỏ chọn "Ghi nhớ đăng nhập", **khi** đăng nhập thành công, **thì** mã phiên chỉ lưu theo phiên làm việc của trình duyệt và mã làm mới có thời hạn ngắn hơn.
+2. **Cho trước** tôi bỏ chọn "Ghi nhớ đăng nhập", **khi** đăng nhập thành công, **thì** mã phiên chỉ lưu theo phiên làm việc của trình duyệt (`sessionStorage`) và mã làm mới có thời hạn ngắn hơn (mặc định 24 giờ, đặt bằng cấu hình máy chủ).
 3. **Cho trước** tôi đăng nhập không ghi nhớ, **khi** đóng hẳn trình duyệt rồi mở lại, **thì** tôi phải đăng nhập lại.
 4. **Cho trước** phiên không ghi nhớ đang dùng, **khi** phiên được làm mới, **thì** phiên mới vẫn ở chế độ không ghi nhớ.
 5. **Cho trước** tôi đăng xuất (US-NH-02 hoặc US-NH-03), **khi** xác nhận, **thì** phiên bị thu hồi ở cả hai chế độ.
@@ -1064,11 +1067,91 @@ Các story của nhóm này mô tả tính năng đã có trên giao diện như
 4. **Cho trước** trang mẫu đang mở, **khi** bấm "Tải ảnh của bạn", **thì** quay lại màn hình tải ảnh (US-NH-12, US-NH-13).
 5. **Cho trước** hệ thống chưa có trang mẫu, **khi** mở màn hình tải ảnh, **thì** lựa chọn "Thử với trang mẫu" được ẩn, không báo lỗi.
 
+#### Nhóm P — Học với AI và trang chủ cá nhân hóa (bổ sung 25/10/2026)
+
+Các story của nhóm này dùng nguyên tắc: AI chỉ sinh dữ liệu theo lược đồ cố định, máy chủ kiểm tra, giao diện hiển thị bằng component viết sẵn. US-NH-78 … 80 thuộc giai đoạn 6; US-NH-81 thuộc giai đoạn 6.5.
+
+### US-NH-78 — Phân tích ngữ pháp câu thoại
+**Là** Người học, **tôi muốn** chọn một câu thoại và xem cấu trúc ngữ pháp của nó, **để** hiểu vì sao câu có nghĩa như vậy chứ không chỉ biết nghĩa từng từ.
+
+- **Độ ưu tiên:** Should   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** P (giai đoạn 6)
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tôi đang đọc một trang đã xử lý xong, **khi** chọn một câu thoại và bấm phân tích ngữ pháp, **thì** khối "Cấu trúc trọng điểm" hiện cây cú pháp của câu (chủ ngữ, vị ngữ, tân ngữ, bổ ngữ, trạng ngữ, định ngữ, trợ từ…) và từ 1 đến 3 điểm ngữ pháp trọng tâm, mỗi điểm có tên cấu trúc, giải thích ngắn tiếng Việt và ví dụ.
+2. **Cho trước** cây cú pháp đang hiển thị, **khi** bấm vào một nhánh, **thì** nhánh mở rộng phần giải thích của nó; bấm lại thì thu gọn.
+3. **Cho trước** kết quả phân tích, **khi** hiển thị, **thì** có nhãn "Do AI phân tích, có thể chưa chính xác".
+4. **Cho trước** kết quả từ dịch vụ LLM, **khi** hệ thống kiểm tra, **thì** chỉ hiển thị phần hợp lệ: các cụm trong cây ghép lại đúng bằng câu gốc, nhãn thuộc danh sách cho phép, ví dụ của điểm ngữ pháp chứa đúng cấu trúc đó; phần sai bị bỏ.
+5. **Cho trước** không còn phần nào hợp lệ sau khi kiểm tra, **khi** hiển thị, **thì** hiện "Chưa phân tích được câu này" và trang vẫn đọc được bình thường.
+6. **Cho trước** một câu đã từng được phân tích (bởi tôi hoặc người khác), **khi** mở lại, **thì** kết quả hiện ngay từ bộ nhớ dùng chung, không gọi lại dịch vụ LLM và không tính vào hạn mức của tôi.
+7. **Cho trước** dịch vụ LLM bị tắt, lỗi, quá thời gian hoặc tôi đã hết hạn mức phân tích trong ngày, **khi** phân tích một câu chưa có kết quả, **thì** hiện thông báo nhẹ, không hiện lỗi kỹ thuật, và Hover & Dịch cùng các chức năng khác của trang hoạt động bình thường.
+8. **Cho trước** yêu cầu gửi tới dịch vụ LLM, **khi** gửi, **thì** chỉ gồm câu chữ Hán và bản dịch tự động dùng chung (nếu có); không có email, tên, mã người dùng, bản sửa dịch cá nhân và **không có trình độ HSK của tôi**, vì kết quả được dùng chung cho mọi người; câu ví dụ của các điểm ngữ pháp bị giới hạn ở từ vựng HSK 4 trở xuống.
+9. **Cho trước** tôi hết hạn mức phân tích trong ngày (mặc định 30 lượt), **khi** phân tích một câu chưa có kết quả, **thì** hiện thông báo nhẹ; câu đã có kết quả trong bộ nhớ dùng chung vẫn xem được, và lỗi kỹ thuật của dịch vụ LLM không bị tính vào hạn mức của tôi.
+
+### US-NH-79 — Giải thích lỗi sai và câu luyện thêm trong kết quả kiểm tra
+**Là** Người học, **tôi muốn** biết vì sao mình làm sai một câu kiểm tra và làm thêm một câu cùng từ ngay tại chỗ, **để** hiểu chỗ nhầm và củng cố ngay thay vì chỉ thấy đáp án đúng.
+
+- **Độ ưu tiên:** Should   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** P (giai đoạn 6)
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tôi đang xem kết quả một bài đã nộp, **khi** ở một câu làm sai bấm "Vì sao sai?", **thì** thấy giải thích ngắn vì sao đáp án đã chọn sai, đáp án đúng khác gì (phân biệt từ dễ nhầm) và một câu luyện mới về cùng từ.
+2. **Cho trước** câu luyện đang hiển thị, **khi** chọn một trong 4 lựa chọn, **thì** thấy ngay đúng hoặc sai kèm đáp án và giải thích; kết quả này không cộng vào điểm bài kiểm tra, không ghi lượt ôn và không làm thay đổi lịch ôn của thẻ (US-NH-48).
+3. **Cho trước** câu tôi trả lời đúng hoặc bài chưa nộp, **khi** xem kết quả, **thì** không có nút "Vì sao sai?".
+4. **Cho trước** một câu đã từng được giải thích, **khi** mở lại (kể cả từ lịch sử bài kiểm tra, US-NH-49), **thì** nội dung hiện từ dữ liệu đã lưu, không gọi lại dịch vụ LLM.
+5. **Cho trước** kết quả từ dịch vụ LLM không đúng lược đồ, câu luyện không chứa từ cần học, đáp án không nằm trong 4 lựa chọn hoặc mâu thuẫn từ điển, **khi** kiểm tra, **thì** kết quả bị loại và dùng nội dung dự phòng như tiêu chí 6.
+6. **Cho trước** dịch vụ LLM bị tắt, lỗi, quá thời gian hoặc tôi đã hết hạn mức giải thích trong ngày, **khi** bấm "Vì sao sai?", **thì** hiện giải thích có sẵn của câu và một câu luyện lấy từ câu ví dụ trong từ điển; nếu không có câu ví dụ phù hợp thì chỉ hiện giải thích, không hiện lỗi kỹ thuật.
+7. **Cho trước** nội dung do AI viết, **khi** hiển thị, **thì** có nhãn "Do AI viết, có thể chưa chính xác".
+8. **Cho trước** yêu cầu gửi tới dịch vụ LLM, **khi** gửi, **thì** chỉ gồm từ, pinyin, nghĩa, cấp HSK của từ, đáp án tôi đã chọn (cắt tối đa 60 ký tự), đáp án đúng và trình độ HSK của tôi dạng một con số; không có email, tên, mã người dùng, ngữ cảnh hay ghi chú riêng.
+9. **Cho trước** tôi đã dùng hết hạn mức giải thích lỗi sai trong ngày (mặc định 20 lượt, riêng với hạn mức đề kiểm tra), **khi** bấm "Vì sao sai?", **thì** vẫn xem được nội dung dự phòng như tiêu chí 6; giải thích dự phòng không tốn lượt.
+
+### US-NH-80 — Trang chủ "Hôm nay nên học gì"
+**Là** Người học, **tôi muốn** thấy ngay trên trang chủ những việc nên làm hôm nay theo thứ tự hợp lý, **để** không phải tự nghĩ nên học gì và vào đúng màn hình chỉ bằng một lần bấm.
+
+- **Độ ưu tiên:** Should   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** P (giai đoạn 6)
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tôi đã đăng nhập, **khi** mở trang chủ, **thì** khối đầu trang liệt kê tối đa 5 việc theo thứ tự cố định: ôn thẻ đến hạn, đọc tiếp chương đang đọc dở, làm bài kiểm tra, mục tiêu tuần còn thiếu, từ gợi ý của chương gần nhất; chỉ hiện việc nào thỏa điều kiện của nó. Người học mới hoàn toàn (chưa có từ, thẻ, tiến độ đọc) thấy một gợi ý bắt đầu đọc thử thay vì các số 0.
+2. **Cho trước** tôi có từ 20 thẻ đến hạn trở lên, **khi** xem khối này, **thì** việc ôn thẻ được đánh dấu ưu tiên và nằm đầu danh sách.
+3. **Cho trước** sổ tay có từ 10 từ trở lên (đủ điều kiện làm bài) và có ít nhất 5 từ có độ nhớ R dưới 0,7, **khi** xem khối này, **thì** có việc "làm bài kiểm tra"; không đủ điều kiện thì không hiện việc này.
+4. **Cho trước** tôi đã đặt mục tiêu số trang mỗi tuần (tuần bắt đầu từ thứ Hai theo múi giờ của tôi) và chưa đạt, **khi** xem khối này, **thì** có việc ghi rõ số trang còn thiếu.
+5. **Cho trước** một việc trong danh sách, **khi** bấm vào thẻ của việc đó, **thì** được chuyển tới đúng màn hình tương ứng (ôn tập, trang đang đọc, tạo bài, truyện đang đọc, danh sách gợi ý).
+6. **Cho trước** mỗi việc có câu nhắc thân thiện, **khi** hiển thị, **thì** câu nhắc theo mẫu có sẵn và kèm đúng số liệu hiện tại; ở giai đoạn 6 chức năng không gọi dịch vụ LLM.
+7. **Cho trước** không có việc nào thỏa điều kiện, **khi** mở trang chủ, **thì** hiện lời chúc đã hoàn thành hôm nay kèm lối đi tới Thư viện.
+8. **Cho trước** tôi là Khách chưa đăng nhập, **khi** mở trang chủ, **thì** vẫn thấy khối giới thiệu như hiện tại (US-KH-01), không có khối "Hôm nay nên học gì".
+
+### US-NH-81 — Mini-game luyện bộ thủ yếu
+**Là** Người học, **tôi muốn** chơi một trò chơi ngắn luyện đúng những bộ thủ tôi hay quên, **để** củng cố việc nhận mặt chữ một cách vui và có thưởng.
+
+- **Độ ưu tiên:** Could   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** P (giai đoạn 6.5, phụ thuộc M16 Gamification)
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tôi đã có lượt ôn mức Quên hoặc Khó, **khi** mở mini-game, **thì** thấy gợi ý tối đa 3 bộ thủ xuất hiện nhiều nhất trong các thẻ tôi hay quên, mỗi bộ thủ kèm số lần xuất hiện.
+2. **Cho trước** tôi chọn một bộ thủ mục tiêu, **khi** bắt đầu ván, **thì** các chữ Hán rơi xuống màn hình trong 30 giây và tôi chạm hoặc vuốt để chọn những chữ có chứa bộ thủ đó.
+3. **Cho trước** bộ chữ của ván, **khi** tạo, **thì** chữ lấy từ sổ tay của tôi và từ HSK có cấp không vượt quá trình độ + 1; chữ cần chọn có chứa bộ thủ mục tiêu, chữ nhiễu thì không.
+4. **Cho trước** tôi chọn một chữ, **khi** chọn, **thì** thấy ngay đúng hoặc sai; ván kết thúc khi hết 30 giây và hiện điểm, số lần đúng, số lần sai.
+5. **Cho trước** ván kết thúc, **khi** nộp kết quả, **thì** máy chủ tự tính lại đúng sai và điểm, lưu ván chơi, và cộng XP hoặc xu theo quy định của M16 (khi M16 đã có cơ chế XP).
+6. **Cho trước** tôi chưa có bộ thủ nào đủ số lần xuất hiện, **khi** mở mini-game, **thì** hệ thống gợi ý bộ thủ phổ biến theo cấp HSK của tôi kèm thông báo chưa có dữ liệu để gợi ý bộ thủ yếu.
+7. **Cho trước** sổ tay và danh sách HSK không đủ chữ để dựng ván, **khi** bắt đầu, **thì** hiện thông báo cần lưu thêm từ và không bắt đầu ván.
+8. **Cho trước** ván chơi, **khi** kết thúc, **thì** lịch ôn của thẻ FSRS không bị thay đổi.
+
+### US-NH-82 — Hộp thông báo trong ứng dụng
+**Là** Người học, **tôi muốn** có biểu tượng chuông cho biết số thông báo chưa đọc và xem lại các thông báo của hệ thống, **để** không bỏ lỡ lời nhắc ôn tập hay kết quả xử lý báo lỗi của mình.
+
+- **Độ ưu tiên:** Should   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** O (giai đoạn 6, bổ sung 25/10/2026)
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tôi đã đăng nhập và có thông báo chưa đọc, **khi** nhìn thanh điều hướng, **thì** biểu tượng chuông hiện số thông báo chưa đọc; số này được đọc từ máy chủ, đúng sau khi tải lại trang và cập nhật khi tôi quay lại tab.
+2. **Cho trước** tôi mở chuông, **khi** danh sách hiện ra, **thì** thấy các thông báo của chính tôi, mới nhất trước, có phân trang, phân biệt đã đọc và chưa đọc, và lọc được chỉ thông báo chưa đọc.
+3. **Cho trước** một thông báo chưa đọc, **khi** tôi bấm vào, **thì** thông báo được đánh dấu đã đọc, số chưa đọc giảm đi và tôi được chuyển tới màn hình liên quan (ví dụ trang bị báo lỗi, màn ôn tập) nếu thông báo có đích điều hướng.
+4. **Cho trước** có nhiều thông báo chưa đọc, **khi** tôi bấm "Đánh dấu tất cả đã đọc", **thì** mọi thông báo của tôi chuyển sang đã đọc và số chưa đọc về 0.
+5. **Cho trước** thông báo của người khác hoặc không tồn tại, **khi** tôi cố đánh dấu đã đọc, **thì** bị từ chối như không tồn tại.
+6. **Cho trước** nội dung thông báo, **khi** hiển thị, **thì** là văn bản thuần, không thực thi mã.
+7. **Cho trước** máy chủ tạm không phản hồi, **khi** chuông cập nhật số, **thì** giữ số đang hiển thị và thử lại, không coi là phiên hết hạn.
+
 ---
 
 ## 5. Quản trị viên
 
-**Kế thừa.** Quản trị viên kế thừa toàn bộ hành vi của Người học (US-NH-01 … US-NH-77): có thể đăng nhập, đọc, tra cứu, lưu từ, ôn tập, làm kiểm tra như Người học và được áp dụng cùng tiêu chí chấp nhận, nên không viết lại ở đây. Các story dưới đây chỉ mô tả quyền bổ sung. Riêng quy tắc sở hữu (US-NH-15) được mở rộng: Quản trị viên được sửa/xóa bất kỳ truyện nào (US-QT-05).
+**Kế thừa.** Quản trị viên kế thừa toàn bộ hành vi của Người học (US-NH-01 … US-NH-82): có thể đăng nhập, đọc, tra cứu, lưu từ, ôn tập, làm kiểm tra như Người học và được áp dụng cùng tiêu chí chấp nhận, nên không viết lại ở đây. Các story dưới đây chỉ mô tả quyền bổ sung. Riêng quy tắc sở hữu (US-NH-15) được mở rộng: Quản trị viên được sửa/xóa bất kỳ truyện nào (US-QT-05).
 
 ### US-QT-01 — Xem và tìm người dùng
 **Là** Quản trị viên, **tôi muốn** xem và tìm danh sách người dùng, **để** quản lý tài khoản trong hệ thống.
@@ -1202,6 +1285,8 @@ Các story của nhóm này mô tả tính năng đã có trên giao diện như
 2. **Cho trước** một ảnh vi phạm, **khi** tôi gỡ ảnh kèm lý do, **thì** ảnh không còn hiển thị với bất kỳ ai và chủ ảnh nhận thông báo có lý do.
 3. **Cho trước** ảnh đã bị gỡ, **khi** Người học có từ lưu từ ảnh đó, **thì** từ và flashcard vẫn còn nhưng ngữ cảnh ảnh được ẩn.
 4. **Cho trước** thao tác gỡ, **khi** thực hiện, **thì** được ghi nhận người thực hiện, thời điểm, lý do.
+5. **Cho trước** kiểm duyệt ảnh tự động đang bật, **khi** tôi xem danh sách ảnh mới tải lên, **thì** ảnh nghi vấn được gắn cờ theo luật cố định (không dùng AI): cạnh ngắn dưới 200 px, cạnh dài trên 12000 px, trùng nội dung (SHA-256) với ảnh khác còn hiển thị, hoặc xử lý lỗi; tôi lọc được chỉ ảnh bị gắn cờ.
+6. **Cho trước** tôi gỡ một ảnh, **khi** thao tác hoàn tất, **thì** ảnh gốc, ảnh đã xóa chữ, ảnh đã dịch và các ảnh ngữ cảnh cắt từ ảnh đó đều không còn phục vụ cho ai; thiếu lý do hoặc ảnh đã gỡ rồi thì bị từ chối.
 
 ### US-QT-13 — Cấu hình dịch vụ LLM, TTS và công tắc hệ thống
 **Là** Quản trị viên, **tôi muốn** bật/tắt dịch vụ LLM và TTS, giới hạn số đề mỗi ngày và điều chỉnh các công tắc vận hành (bảo trì, kiểm duyệt ảnh tự động, OCR khi tải, thông báo quản trị), **để** kiểm soát chi phí và độ ổn định.
@@ -1213,12 +1298,15 @@ Các story của nhóm này mô tả tính năng đã có trên giao diện như
 2. **Cho trước** tôi đặt giới hạn N đề mỗi ngày cho mỗi Người học, **khi** một người yêu cầu đề thứ N+1 trong ngày, **thì** bị từ chối với thông báo đã hết lượt hôm nay và thời điểm được tạo lại.
 3. **Cho trước** tôi tắt TTS, **khi** Người học bấm nghe, **thì** hiện thông báo tính năng đang tạm tắt, các chức năng khác không bị ảnh hưởng.
 4. **Cho trước** giá trị giới hạn không hợp lệ (âm hoặc không phải số), **khi** lưu, **thì** bị từ chối với thông báo cụ thể.
-5. **Cho trước** tôi bật chế độ bảo trì (giai đoạn 6), **khi** Khách hoặc Người học truy cập, **thì** họ thấy thông báo hệ thống đang bảo trì; tôi vẫn đăng nhập và tắt lại chế độ này được.
+5. **Cho trước** tôi bật chế độ bảo trì (giai đoạn 6), **khi** Khách hoặc Người học truy cập, **thì** họ nhận mã 503 kèm thông báo hệ thống đang bảo trì (đăng nhập, làm mới phiên, kiểm tra sống và trạng thái công khai `GET /system/status` vẫn dùng được); tôi vẫn đăng nhập và tắt lại chế độ này được.
 6. **Cho trước** tôi tắt kiểm duyệt ảnh tự động, **khi** Người học tải ảnh lên, **thì** ảnh không qua bước kiểm tra sơ bộ bằng luật mà chỉ kiểm duyệt thủ công (US-QT-12); bật lại thì ảnh nghi vấn (sai kích thước, ảnh trùng) được đưa vào danh sách chờ kiểm duyệt.
-7. **Cho trước** tôi tắt xử lý OCR ngay khi tải, **khi** Người học tải ảnh lên, **thì** trang được lưu ở trạng thái "Đang chờ" và chỉ được xử lý khi Người học yêu cầu (US-NH-21) hoặc tôi chạy lại (US-QT-07).
+7. **Cho trước** tôi tắt xử lý OCR ngay khi tải, **khi** Người học tải ảnh lên, **thì** trang được lưu ở trạng thái "Đang chờ" và chỉ được xử lý khi Người học yêu cầu (US-NH-21) hoặc tôi chạy lại (US-QT-07). *(Công tắc đã lưu được nhưng chưa có tác dụng ở giai đoạn 6, chờ duyệt: cần thêm trạng thái bản dịch "chờ yêu cầu" và migration.)*
 8. **Cho trước** tôi tắt thông báo quản trị, **khi** có báo lỗi mới hoặc lỗi xử lý ảnh, **thì** hệ thống không gửi thông báo cho Quản trị viên nhưng dữ liệu vẫn xem được ở màn hình quản trị.
 9. **Cho trước** tôi đặt hạn mức Thẻ mở rộng AI mỗi ngày (US-NH-75), **khi** một Người học đã dùng hết hạn mức, **thì** các lần mở thẻ tiếp theo trong ngày dùng nội dung dự phòng thay vì bị từ chối.
 10. **Cho trước** tôi đổi bất kỳ công tắc nào ở trên, **khi** lưu, **thì** thay đổi có hiệu lực ngay và được ghi nhật ký quản trị.
+11. **Cho trước** tôi đặt hạn mức phân tích ngữ pháp mỗi ngày (US-NH-78) hoặc hạn mức giải thích lỗi sai mỗi ngày (US-NH-79), **khi** một Người học dùng hết, **thì** câu ngữ pháp mới hiện thông báo nhẹ (kết quả đã có vẫn xem được) và "Vì sao sai?" trả nội dung dự phòng, không báo lỗi kỹ thuật.
+12. **Cho trước** một khóa cấu hình tôi chưa từng đặt, **khi** hệ thống đọc, **thì** dùng giá trị mặc định lấy từ cấu hình máy chủ; hạn mức của mọi tính năng AI đều đọc từ cấu hình này.
+13. **Cho trước** tôi chọn một trang đã xử lý xong làm trang mẫu từ danh sách các trang công khai đã dịch xong (hiện tên truyện, chương, số trang, số khung thoại; không phải gõ mã trang), hoặc chọn "Không dùng trang mẫu" để bỏ, **khi** lưu, **thì** nút "Thử với trang mẫu" (US-NH-77) hiện hoặc ẩn tương ứng; hệ thống không đi kèm trang mẫu nào.
 
 ### US-QT-14 — Xem và quản lý dữ liệu học tập của người dùng
 **Là** Quản trị viên, **tôi muốn** xem và chỉnh sửa dữ liệu học tập của bất kỳ người dùng nào (sổ tay, ngữ cảnh, thẻ ôn, cài đặt, thư viện, tiến độ đọc, truyện riêng tư), **để** hỗ trợ người học khi gặp sự cố, sửa dữ liệu sai và xử lý nội dung vi phạm.
@@ -1506,4 +1594,36 @@ Các story của nhóm này mô tả tính năng đã có trên giao diện như
 | Quản lý tài khoản và thư viện (hỗ trợ) | US-KH-02, 03, 06; US-NH-01 … 05, 09 … 16, 61, 62, 65, 76; US-QT-01 … 05, 13, 14, 15, 16 |
 | Trải nghiệm đọc cá nhân (bổ sung, đề xuất) | US-NH-61 … 65 |
 | Sổ tay và Flashcard (bổ sung, đề xuất) | US-NH-66 … 69 |
-| Đồng bộ giao diện giai đoạn 5 và 6 (bổ sung 25/10/2026, đề xuất) | US-NH-70 … 77; US-QT-15, 16 |
+| Đồng bộ giao diện giai đoạn 5 và 6 (bổ sung 25/10/2026, đề xuất) | US-NH-70 … 77, 82; US-QT-15, 16 |
+| Học với AI và trang chủ cá nhân hóa (bổ sung 25/10/2026, đề xuất) | US-NH-78 … 81 |
+
+---
+
+## 11. Hướng phát triển (không tính vào tổng số story)
+
+Hai story dưới đây ghi nhận ý tưởng đã được duyệt để ghi lại (25/10/2026). Chúng chưa thuộc phạm vi triển khai, chưa có mã chức năng F; khi quyết định làm phải bổ sung đặc tả trong `docs/modules-functions.md` mục 7, xin duyệt và cập nhật tổng. Thứ tự tiêu chí vẫn theo mẫu Cho trước / khi / thì.
+
+### US-HP-01 — Trợ lý học tập dạng trò chuyện có công cụ
+**Là** Người học, **tôi muốn** gõ yêu cầu bằng lời thường (ví dụ "kiểm tra các từ tôi hay quên tuần này", "giải thích câu này"), **để** hệ thống mở đúng công cụ học tập mà không phải tự tìm trong menu.
+
+- **Độ ưu tiên:** Could   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** Hướng phát triển (sau giai đoạn 6.6)
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tôi gõ một yêu cầu thuộc phạm vi học tập, **khi** gửi, **thì** hệ thống chọn một công cụ trong danh sách cố định (tạo bài kiểm tra, mở ôn thẻ, phân tích ngữ pháp, tra từ, mở danh sách gợi ý) và giao diện mở component tương ứng với tham số phù hợp.
+2. **Cho trước** dịch vụ LLM trả về tên công cụ hoặc tham số không nằm trong danh sách và lược đồ cho phép, **khi** máy chủ kiểm tra, **thì** yêu cầu bị từ chối và tôi được gợi ý các việc có thể làm.
+3. **Cho trước** yêu cầu ngoài phạm vi học tiếng Trung trong YingHua, **khi** gửi, **thì** hệ thống từ chối lịch sự, không gọi công cụ nào.
+4. **Cho trước** công cụ có thao tác ghi dữ liệu (ví dụ tạo bài), **khi** được chọn, **thì** tôi phải xác nhận trên giao diện trước khi thao tác được thực hiện.
+5. **Cho trước** tôi đã hết hạn mức trợ lý trong ngày hoặc dịch vụ LLM bị tắt hoặc lỗi, **khi** gửi yêu cầu, **thì** hiện thông báo nhẹ và các màn hình học tập vẫn dùng bình thường qua menu.
+6. **Cho trước** yêu cầu gửi tới dịch vụ LLM, **khi** gửi, **thì** chỉ gồm nội dung yêu cầu, danh sách công cụ và trình độ HSK dạng một con số; không có email, tên, mã người dùng hay nội dung sổ tay.
+
+### US-HP-02 — Chấm phát âm bằng biểu đồ thanh điệu
+**Là** Người học, **tôi muốn** đọc to một câu thoại và xem thanh điệu của mình so với giọng chuẩn, **để** biết âm tiết nào mình phát âm sai thanh.
+
+- **Độ ưu tiên:** Could   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** Hướng phát triển
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tôi đã cấp quyền dùng micro, **khi** thu âm câu thoại đang chọn, **thì** hệ thống vẽ đường cao độ của tôi chồng lên đường cao độ của giọng chuẩn (Text-to-Speech) và tô đỏ những âm tiết sai thanh.
+2. **Cho trước** tôi chưa cấp quyền micro hoặc trình duyệt không hỗ trợ thu âm, **khi** bấm thu âm, **thì** hiện hướng dẫn cấp quyền hoặc thông báo không hỗ trợ, các chức năng nghe vẫn dùng bình thường.
+3. **Cho trước** bản thu quá ngắn, quá nhiều tiếng ồn hoặc không nhận ra giọng nói, **khi** chấm, **thì** hiện thông báo thu lại thay vì kết quả sai.
+4. **Cho trước** bản thu của tôi, **khi** chấm xong, **thì** âm thanh bị xóa khỏi máy chủ và không được gửi cho dịch vụ bên ngoài.
+5. **Cho trước** dịch vụ Text-to-Speech lỗi, **khi** cần giọng chuẩn, **thì** hiện thông báo tạm thời không so sánh được (US-TTS-03).

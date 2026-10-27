@@ -14,7 +14,7 @@ Luôn trả lời bằng tiếng Việt.
 
 - **HỎI TRƯỚC KHI SỬA**: mọi việc tạo/sửa/xóa file, thêm thư viện, đổi kiến trúc/CSDL/API đều phải đề xuất và chờ người dùng đồng ý — xem `.claude/rules/change-control.md` (ưu tiên cao nhất).
 - Trước mọi việc viết code hoặc đổi cấu hình: dùng skill `yinghua-guardrails` (`.claude/skills/yinghua-guardrails/SKILL.md`).
-- Bộ rules trong `.claude/rules/`: `tech-stack` (FastAPI + PostgreSQL, không C#), `system-design` và `project-structure` (Modular Monolith + **Clean Architecture**), `clean-code`, `code-style`, `naming-conventions`, `api-conventions`, `database`, `error-handling`, `security`, `testing`, `git-workflow`, `monitoring`, `dev-workflow` (một tài khoản QA cố định, giữ server chạy, tính năng UI thiếu → thêm vào hệ thống + cập nhật SRS, được chỉnh UI nhưng giữ màu/font/logo).
+- Bộ rules trong `.claude/rules/`: `tech-stack` (FastAPI + PostgreSQL, không C#), `system-design` và `project-structure` (Modular Monolith + **Clean Architecture**), `clean-code`, `code-style`, `naming-conventions`, `api-conventions`, `database`, `error-handling`, `security`, `testing`, `git-workflow`, `monitoring`, `frontend-react` (Rules of React, React Router, bảo mật frontend theo OWASP), `dev-workflow` (một tài khoản QA cố định, giữ server chạy, tính năng UI thiếu → thêm vào hệ thống + cập nhật SRS, được chỉnh UI nhưng giữ màu/font/logo).
 - Tài liệu nguồn của thiết kế: `docs/user-stories.md`, `docs/modules-functions.md`, `docs/danh-gia-luong-2-3.md`.
 
 ## Điều phối công việc cho subagent (tự động)

@@ -32,6 +32,8 @@ YOLO (ultralytics) phát hiện bong bóng · PaddleOCR · OpenCV inpaint · Pil
 ## Frontend
 **React 19 + TypeScript + Vite + Tailwind CSS** — giao diện của người dùng ở `frontend/frontend-YingHua/` (chốt 23/10/2026).
 Claude tích hợp (thay dữ liệu giả bằng gọi API, thêm lớp gọi API) và **được tự điều chỉnh giao diện** cho hợp lý, nhưng giữ bộ màu, font, logo (xem `dev-workflow.md`); bỏ qua phần server/Express/Gemini trong thư mục đó. Thêm thư viện frontend mới → hỏi trước.
+Điều hướng: **React Router 8** (gói `react-router`, chế độ declarative; `react-router-dom` đã bị bỏ từ v8), chọn 25/10/2026 để mỗi trang
+có URL riêng. Quy tắc code React và bảo mật frontend: `frontend-react.md`.
 
 ## Công cụ phát triển
 pytest, pytest-asyncio, httpx (test API) · ruff (lint + format) · mypy · pre-commit (tùy chọn).

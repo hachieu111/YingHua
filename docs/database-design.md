@@ -1,6 +1,6 @@
 # Thiết kế cơ sở dữ liệu YingHua (v1.0)
 
-> Căn cứ: `docs/modules-functions.md` (mục "Dữ liệu chính" của 15 module), `docs/user-stories.md`, `.claude/rules/database.md`, `naming-conventions.md`.
+> Căn cứ: `docs/modules-functions.md` (mục "Dữ liệu chính" của 16 module; M16 Gamification bổ sung 25/10/2026), `docs/user-stories.md`, `.claude/rules/database.md`, `naming-conventions.md`.
 > Kế thừa thiết kế cũ (`Backend/app/models.py`, `Backend/docs/database_design.md`, CSDL `ptud_db`), có chỉnh sửa và bổ sung.
 > Trạng thái: **đã duyệt 23/10/2026** (gồm mục 6.2; phạm vi mục 6.3 chốt ở mục 8). Các bảng được tạo **theo từng giai đoạn** bằng Alembic, đúng như thiết kế này. Muốn đổi thiết kế thì phải duyệt lại.
 
@@ -42,8 +42,12 @@ Ký hiệu trong bảng cột: **PK** khóa chính · **FK** khóa ngoại · **
 | M12 Thống kê | `daily_activities` | GĐ6 |
 | M13 Quản trị (phần còn lại) | `system_settings`, `content_removals` | GĐ6 |
 | M14 Phản hồi & Thông báo | `error_reports`, `notifications`, `reminder_logs` | GĐ6 |
+| M05 Phân tích ngữ pháp (F05.09) | `grammar_analyses`, `grammar_requests` | GĐ6 |
+| M16 Gamification (mini-game, F16.01) | `minigame_sessions` | GĐ6.5 |
 
-Tổng: **41 bảng** (37 bảng gốc, thêm `library_items`, `page_annotations` theo mục 6.2 và `series_ratings` theo mục 4.6, cập nhật 24/10/2026; bỏ `chapter_vocab` ở GĐ5, thêm `saved_sentences` (F07.11) và `vocab_ai_notes` (F08.11), cập nhật 25/10/2026). So với bản cũ: giữ 18 bảng (có đổi tên hoặc thêm cột), bỏ `vocab_suggestions` (SRS yêu cầu gợi ý tính khi gọi, không lưu sẵn), thêm 23 bảng mới. Cột mới ở GĐ5: `user_settings.bubble_font_scale` (F02.04).
+Cột mới ở GĐ6 (25/10/2026): `quiz_questions.mistake_review`, `quiz_questions.mistake_review_at` (F09.10); `users.avatar_preset` (F01.10, migration 0010); `notifications.data` JSONB (F14.05, F14.06: đích điều hướng của thông báo; tạo cùng bảng ở migration 0009). F12.04 không thêm bảng. F01.11 (ghi nhớ đăng nhập), F13.04 (cờ kiểm duyệt tự động) và F04.16 (trang mẫu) cũng không thêm bảng hay cột: chế độ ghi nhớ suy ra từ hạn của `refresh_tokens`, cờ kiểm duyệt tính khi liệt kê, trang mẫu là khóa `sample_page_id` trong `system_settings`.
+
+Tổng (cập nhật 25/10/2026, ba bảng mới: `grammar_analyses`, `grammar_requests`, `minigame_sessions`): **44 bảng**, gồm 41 bảng đã thiết kế trước đó (37 bảng gốc, thêm `library_items`, `page_annotations` theo mục 6.2 và `series_ratings` theo mục 4.6, cập nhật 24/10/2026; bỏ `chapter_vocab` ở GĐ5, thêm `saved_sentences` (F07.11) và `vocab_ai_notes` (F08.11), cập nhật 25/10/2026). So với bản cũ: giữ 18 bảng (có đổi tên hoặc thêm cột), bỏ `vocab_suggestions` (SRS yêu cầu gợi ý tính khi gọi, không lưu sẵn), thêm 23 bảng mới. Cột mới ở GĐ5: `user_settings.bubble_font_scale` (F02.04).
 
 ## 3. Sơ đồ ERD (PlantUML, chỉ ghi khóa và quan hệ chính)
 
@@ -101,6 +105,11 @@ package "M09/M10/M11" {
   entity tts_cache { *id\n--\nfile_id }
   entity external_call_logs { *id }
 }
+package "M05 ngữ pháp / M16" {
+  entity grammar_analyses { *id\n--\nsentence_hash }
+  entity grammar_requests { *id\n--\nuser_id\nanalysis_id }
+  entity minigame_sessions { *id\n--\nuser_id }
+}
 package "M12/M13/M14/M15" {
   entity daily_activities { *user_id\n*activity_date }
   entity system_settings { *key }
@@ -143,6 +152,9 @@ users ||--o{ quizzes
 quizzes ||--o{ quiz_questions
 dict_examples ||--o{ quiz_questions
 users ||--o{ dismissed_suggestions
+grammar_analyses ||--o{ grammar_requests
+users ||--o{ grammar_requests
+users ||--o{ minigame_sessions
 users ||--o{ daily_activities
 users ||--o{ error_reports
 users ||--o{ notifications
@@ -162,6 +174,8 @@ scheduled_jobs ||--o{ job_runs
 | email | VARCHAR(254) | NN | UQ trên `lower(email)` |
 | password_hash | TEXT | NN | Argon2id; hash bcrypt cũ được băm lại khi người dùng đăng nhập |
 | display_name | VARCHAR(100) | NN | |
+| avatar_file_id | BIGINT | FK stored_files SET NULL | Ảnh đại diện tải lên (F01.10); loại trừ với `avatar_preset` |
+| avatar_preset | VARCHAR(32) | | Mã ảnh đại diện có sẵn (F01.10, GĐ6): `original`, `sakura_flower`, `bach_thien`, `tieu_vu_tru`, `mac_van`, `lac_ly`; danh sách mã nằm trong mã nguồn, không có bảng riêng; đặt thì `avatar_file_id` bị bỏ |
 | role | VARCHAR(16) | NN, CHECK `user`/`admin`, mặc định `user` | |
 | status | VARCHAR(16) | NN, CHECK `active`/`locked`, mặc định `active` | |
 | locked_reason | VARCHAR(500) | | Lý do khóa (US-QT-03) |
@@ -186,6 +200,8 @@ IX: `(role)`, `(status)`, trigram trên `display_name` và `email` để tìm ng
 | expires_at | TIMESTAMPTZ | NN |
 | revoked_at | TIMESTAMPTZ | |
 | created_at | TIMESTAMPTZ | NN |
+
+Ghi nhớ đăng nhập (F01.11): **không có cột riêng**. Đăng nhập với `remember_me = true` đặt `expires_at` sau 30 ngày; `false` đặt sau `REFRESH_TOKEN_SHORT_HOURS` (mặc định 24 giờ). Khi làm mới, chế độ được suy ra bằng cách so `expires_at - created_at` của phiên cũ với hạn ngắn, rồi phiên mới kế thừa.
 
 **`password_reset_tokens`**: liên kết đặt lại mật khẩu, dùng một lần, hết hạn sau 30 phút (F01.06)
 
@@ -429,6 +445,28 @@ CHECK `chapter_id IS NOT NULL OR owner_id IS NOT NULL`.
 
 **`page_annotations`** (tạo ở GĐ3, migration 0005; F05.07, F05.08, US-NH-63, US-NH-64): dấu trang và ghi chú trên trang, lưu theo người dùng ở máy chủ (thay cho localStorage): PK `(user_id, page_id)` · is_bookmarked BOOLEAN NN mặc định false · highlights JSONB NN mặc định `[]` (bong bóng được tô màu và màu) · strokes JSONB NN mặc định `[]` (nét vẽ: màu, danh sách điểm) · updated_at TIMESTAMPTZ NN. FK `user_id` → users CASCADE, `page_id` → pages CASCADE. IX `(user_id, updated_at)` cho danh sách trang đã lưu (lọc `is_bookmarked`).
 
+**`grammar_analyses`** (tạo ở GĐ6; F05.09, US-NH-78): kết quả phân tích ngữ pháp câu thoại, **dùng chung mọi người** vì không chứa dữ liệu cá nhân, cache theo nội dung câu.
+
+| Cột | Kiểu | Ràng buộc | Ghi chú |
+|---|---|---|---|
+| id | BIGINT | PK | |
+| sentence_hash | CHAR(64) | NN, UQ | SHA-256 của câu đã chuẩn hóa (Unicode NFC, bỏ khoảng trắng thừa) |
+| sentence_zh | TEXT | NN | Câu chữ Hán đã chuẩn hóa |
+| content | JSONB | NN | Cây cú pháp (nhãn, đoạn chữ, nút con) và danh sách 1–3 điểm ngữ pháp (tên cấu trúc, giải thích, ví dụ) đã qua kiểm tra của máy chủ; không lưu kết quả rỗng |
+| model | VARCHAR(64) | | Tên mô hình đã sinh (vd. giá trị `LLM_MODEL`) |
+| created_at | TIMESTAMPTZ | NN | |
+
+**`grammar_requests`** (tạo ở GĐ6; F05.09): ghi mỗi lượt Người học **phải gọi LLM** (cache chưa có), dùng để đếm hạn mức mỗi ngày. Chọn bảng riêng thay vì thêm `user_id` vào `external_call_logs` vì nhật ký gọi dịch vụ ngoài cố ý không chứa dữ liệu cá nhân (mục 4.12), và cũng không đặt `user_id` vào `grammar_analyses` vì bảng này dùng chung.
+
+| Cột | Kiểu | Ràng buộc | Ghi chú |
+|---|---|---|---|
+| id | BIGINT | PK | |
+| user_id | BIGINT | FK users CASCADE, NN | |
+| analysis_id | BIGINT | FK grammar_analyses SET NULL | Có khi lượt gọi sinh được kết quả hợp lệ; NULL khi kết quả bị loại. Lỗi kỹ thuật của LLM (tắt, quá thời gian, dịch vụ lỗi) không tính lượt theo F05.09 |
+| requested_at | TIMESTAMPTZ | NN | IX `(user_id, requested_at)` để đếm theo ngày của người dùng |
+
+Hạn mức: khóa `grammar_daily_limit` trong `system_settings` (mục 4.16). Lượt dùng kết quả có sẵn không ghi vào bảng này nên không tốn hạn mức.
+
 ### 4.9 M15 Tác vụ nền — GĐ3
 
 **`scheduled_jobs`**: name VARCHAR(48) PK · interval_seconds INTEGER NN · enabled BOOLEAN NN · last_started_at · last_finished_at · last_status VARCHAR(12) CHECK `ok`/`failed` · locked_until TIMESTAMPTZ · locked_by VARCHAR(64). Hai cột cuối là khóa chống chạy chồng (F15.03).
@@ -593,6 +631,10 @@ Hạn mức gọi LLM mỗi người mỗi ngày: đếm các dòng `source = 'l
 | origin | VARCHAR(12) | NN, CHECK `llm`/`fallback` |
 | user_answer | TEXT | |
 | is_correct | BOOLEAN | |
+| mistake_review | JSONB | Nội dung "Vì sao sai?" (F09.10, GĐ6): giải thích, điểm khác với đáp án đúng, câu luyện 4 lựa chọn, `origin` `llm`/`fallback`. NULL khi chưa ai mở. Lưu để mở lại không gọi lại LLM |
+| mistake_review_at | TIMESTAMPTZ | Thời điểm tạo `mistake_review`; dùng đếm hạn mức |
+
+Hạn mức giải thích lỗi sai mỗi ngày (F09.10, riêng, không chung với đề LLM): đếm các `quiz_questions` có `mistake_review ->> 'origin' = 'llm'` và `mistake_review_at` trong ngày, nối `quizzes.user_id` của người dùng; khóa `mistake_review_daily_limit` trong `system_settings`. Không cần bảng riêng. Câu luyện không lưu đáp án chọn và không ghi `review_logs`.
 
 Hạn mức số đề LLM mỗi ngày: đếm `quizzes` có `source <> 'fallback'` của người dùng trong ngày; đề dự phòng không tốn phí nên không tính. Hết hạn mức thì vẫn tạo đề dự phòng với `fallback_reason = 'daily_limit'`. Không cần bảng riêng.
 
@@ -606,11 +648,15 @@ Không có bảng thống kê từ theo chương: danh sách gợi ý (F10.01) v
 
 **`daily_activities`**: PK `(user_id, activity_date DATE)` theo múi giờ người học · reviews_count INTEGER NN · pages_read INTEGER NN · words_saved INTEGER NN · quizzes_done INTEGER NN · study_seconds INTEGER NN · updated_at. Dùng để tính chuỗi ngày học (F12.02) và biểu đồ (F12.01). Các use case tăng bộ đếm trong cùng giao dịch với hành động.
 
+F12.04 (trang chủ "Hôm nay nên học gì", GĐ6) **không thêm bảng**: danh sách việc được tính khi gọi từ `cards` (thẻ đến hạn, độ nhớ R), `reading_progress`, `page_reads` và `user_settings.weekly_page_goal` (mục tiêu tuần), `vocab_entries`, `bubbles.tokens` (từ gợi ý). Ở GĐ6 chức năng không gọi LLM (câu nhắc theo mẫu). Nếu về sau bật tùy chọn Gemini viết lại câu nhắc có cache theo ngày thì sẽ cần cột hoặc bảng cache riêng; khi đó phải đề xuất và xin duyệt thêm.
+
 ### 4.16 M13 Quản trị (phần còn lại) — GĐ6
 
-**`system_settings`**: key VARCHAR(48) PK · value JSONB NN · updated_by FK users SET NULL · updated_at. Các khóa ban đầu: `llm_enabled`, `tts_enabled`, `quiz_daily_llm_limit` (F13.05). Các khóa bổ sung ngày 25/10/2026, không cần bảng mới: `ai_note_daily_limit` (F08.11), `maintenance_mode`, `auto_moderation_enabled`, `ocr_on_upload_enabled`, `admin_notifications_enabled` (F13.05, mở rộng); `legal_terms`, `legal_privacy` (F13.08; value là JSON gồm `content`, `version`, `effective_date`); `sample_page_id` (F04.16, trang mẫu do quản trị chọn). Hạn mức Thẻ mở rộng AI ở GĐ5 đọc từ `Settings`, chuyển sang khóa `ai_note_daily_limit` ở GĐ6.
+**`system_settings`**: key VARCHAR(48) PK · value JSONB NN · updated_by FK users SET NULL · updated_at. Các khóa ban đầu: `llm_enabled`, `tts_enabled`, `quiz_daily_llm_limit` (F13.05). Các khóa bổ sung ngày 25/10/2026, không cần bảng mới: `ai_note_daily_limit` (F08.11), `maintenance_mode`, `auto_moderation_enabled`, `ocr_on_upload_enabled`, `admin_notifications_enabled` (F13.05, mở rộng); `legal_terms`, `legal_privacy` (F13.08; value là JSON gồm `content`, `version`, `effective_date`); `sample_page_id` (F04.16, trang mẫu do quản trị chọn). Hạn mức Thẻ mở rộng AI ở GĐ5 đọc từ `Settings`, chuyển sang khóa `ai_note_daily_limit` ở GĐ6. Khóa bổ sung 25/10/2026, không cần bảng mới: `grammar_daily_limit` (F05.09), `mistake_review_daily_limit` (F09.10).
 
-**`content_removals`**: id PK · file_id FK stored_files SET NULL · page_id FK pages SET NULL · reason VARCHAR(500) NN · removed_by FK users SET NULL · created_at (F13.04).
+Danh sách khóa cấu hình hiện hành của F13.05 (11 khóa, kiểm kiểu và khoảng trong `admin/domain/system_settings.py`): `llm_enabled`, `tts_enabled` (BOOL); `quiz_daily_llm_limit`, `ai_note_daily_limit`, `grammar_daily_limit`, `mistake_review_daily_limit` (số nguyên 0 đến 1000); `maintenance_mode`, `auto_moderation_enabled`, `ocr_on_upload_enabled`, `admin_notifications_enabled` (BOOL); `sample_page_id` (số nguyên dương hoặc null). **Khóa chưa có dòng trong bảng dùng giá trị mặc định lấy từ cấu hình máy chủ** (`Settings`/`.env`; riêng hạn mức ngữ pháp mặc định 30 và giải thích lỗi sai mặc định 20 là hằng số có tên ở domain; bảo trì tắt, kiểm duyệt tự động bật, OCR khi tải bật, thông báo quản trị bật, không có trang mẫu); chỉ khi quản trị viên lưu mới có dòng. Bộ đệm trong tiến trình vài giây, bị xóa ngay khi lưu. `ocr_on_upload_enabled` đã lưu được nhưng **chưa có tác dụng** (chờ duyệt: cần trạng thái bản dịch mới và migration). Khóa `legal_terms`, `legal_privacy` của F13.08 không thuộc 11 khóa này (GĐ6.6).
+
+**`content_removals`**: id PK · file_id FK stored_files SET NULL · page_id FK pages SET NULL · reason VARCHAR(500) NN · removed_by FK users SET NULL · created_at (F13.04). Gỡ ảnh còn đặt `stored_files.removed_at` cho ảnh gốc, ảnh đã xóa chữ, ảnh đã dịch và ảnh ngữ cảnh (`snippet`) cắt từ ảnh đó; từ và thẻ không bị xóa. **Cờ kiểm duyệt tự động không có bảng**: tính khi liệt kê từ `stored_files` (chiều rộng, chiều cao, `sha256`) và trạng thái bản dịch `failed`, theo ngưỡng cạnh ngắn dưới 200 px, cạnh dài trên 12000 px.
 
 ### 4.17 M14 Phản hồi & Thông báo — GĐ6
 
@@ -630,9 +676,31 @@ Không có bảng thống kê từ theo chương: danh sách gợi ý (F10.01) v
 | handled_at | TIMESTAMPTZ | |
 | created_at | TIMESTAMPTZ | NN |
 
-**`notifications`**: id PK · user_id FK users CASCADE NN · kind VARCHAR(24) NN (`reminder`, `report_resolved`, ...) · title VARCHAR(200) NN · body TEXT · channel VARCHAR(8) CHECK `in_app`/`email` · status VARCHAR(8) CHECK `pending`/`sent`/`failed` · read_at · created_at · sent_at. IX `(user_id, read_at)`.
+**`notifications`**: id PK · user_id FK users CASCADE NN · kind VARCHAR(24) NN (hiện có `reminder`, `report_resolved`, `report_rejected`, `content_removed`) · title VARCHAR(200) NN · body TEXT · channel VARCHAR(8) CHECK `in_app`/`email` · status VARCHAR(8) CHECK `pending`/`sent`/`failed` · **data JSONB NN mặc định `{}`** · read_at · created_at · sent_at. IX `(user_id, read_at)`, `(user_id, created_at)`.
+
+`data` (F14.05, F14.06) là đích điều hướng và số liệu đi kèm để chuông thông báo mở đúng màn hình khi bấm: thông báo báo lỗi có `report_id`, `page_id`, `status`; thông báo nhắc ôn có `due_cards`. Hộp thông báo (F14.06) chỉ đọc các dòng `channel = in_app` của chính người dùng, tính số chưa đọc bằng `read_at IS NULL` nhờ chỉ mục `(user_id, read_at)`; không thêm bảng nào khác.
 
 **`reminder_logs`**: PK `(user_id, reminder_date DATE)` · sent_at NN. Chống gửi nhắc hai lần trong một ngày (F14.04).
+
+### 4.18 M16 Gamification — GĐ6.5
+
+Các bảng XP, nhiệm vụ ngày, bảng xếp hạng, huy hiệu (mục 6.3, 8) sẽ thiết kế khi viết đặc tả M16. Hiện chỉ có bảng của mini-game (đã duyệt 25/10/2026).
+
+**`minigame_sessions`** (F16.01, US-NH-81): mỗi ván mini-game. Bộ thủ yếu được tính khi gọi từ `review_logs` (rating 1–2) nối `cards`, `vocab_entries` và `hanzi.radical`/`components`, nên không lưu bảng thống kê riêng.
+
+| Cột | Kiểu | Ràng buộc | Ghi chú |
+|---|---|---|---|
+| id | BIGINT | PK | |
+| user_id | BIGINT | FK users CASCADE, NN | |
+| game_type | VARCHAR(24) | NN, CHECK `falling_radical` | Loại mini-game; thêm giá trị khi có game mới |
+| target_radical | VARCHAR(8) | NN | Bộ thủ hoặc thành phần mục tiêu |
+| score | SMALLINT | NN | Điểm do máy chủ tính lại |
+| correct | SMALLINT | NN | Số lần chọn đúng |
+| wrong | SMALLINT | NN | Số lần chọn sai |
+| duration_ms | INTEGER | NN | Thời gian chơi thực tế, máy chủ giới hạn hợp lý |
+| played_at | TIMESTAMPTZ | NN | IX `(user_id, played_at)` |
+
+Cộng XP/xu cho ván chơi do cơ chế XP của M16 xử lý (bảng `xp_events` chưa thiết kế); đến khi đó `minigame_sessions` chỉ lưu kết quả.
 
 ## 5. Thay đổi so với thiết kế cũ (`ptud_db`)
 
@@ -689,7 +757,7 @@ Giao diện hiện dùng toàn dữ liệu giả (mock), chưa gọi API nào. �
 | VIP, xu, phần thưởng | `subscriptions`, ví xu (đây là nghiệp vụ thanh toán) |
 | Chấm sao truyện | `series_ratings` (đã đưa vào SRS: F03.14, US-NH-62; xem mục 4.6) |
 | Tác giả / cộng đồng gửi bài chờ duyệt | Quy trình kiểm duyệt nội dung cộng đồng (lớn) |
-| Mục ngữ pháp trên trang | Dữ liệu ngữ pháp biên soạn tay hoặc LLM |
+| Mục ngữ pháp trên trang | Đã đưa vào SRS ngày 25/10/2026: F05.09 (US-NH-78), LLM sinh theo lược đồ cố định; bảng `grammar_analyses`, `grammar_requests` (mục 4.8) |
 | Đăng nhập Google / WeChat / Apple | OAuth với bên thứ ba |
 
 **Quyết định (23/10/2026):** thêm toàn bộ mục 6.2, tạo theo giai đoạn như sau:
@@ -708,7 +776,11 @@ Mọi tính năng đang có trên giao diện React đều được hiện thự
 | Thư viện cá nhân và yêu thích | M03, **đã đưa vào SRS: F03.13 (US-NH-61)** | GĐ3 |
 | Lưu (đánh dấu) trang | M05, **đã đưa vào SRS: F05.07 (US-NH-63)** | GĐ3 |
 | Ghi chú vẽ và tô màu bong bóng trên trang | M05, **đã đưa vào SRS: F05.08 (US-NH-64)** | GĐ3 |
-| Mục ngữ pháp trên trang (grammar spotlight) | M05 (thêm chức năng) | GĐ3–5 |
+| Mục ngữ pháp trên trang (grammar spotlight, khối "Cấu trúc trọng điểm") | M05, **đã đưa vào SRS: F05.09 (US-NH-78)**; bảng `grammar_analyses`, `grammar_requests` | GĐ6 (trước đây dự kiến GĐ3–5) |
+| Giải thích lỗi sai và câu luyện thêm trong kết quả kiểm tra | M09, **đã đưa vào SRS: F09.10 (US-NH-79)**; cột `quiz_questions.mistake_review`, `mistake_review_at` | GĐ6 |
+| Trang chủ "Hôm nay nên học gì" | M12, **đã đưa vào SRS: F12.04 (US-NH-80)**; không cần bảng mới | GĐ6 |
+| Mini-game luyện bộ thủ yếu | **M16**, **đã đưa vào SRS: F16.01 (US-NH-81)**; bảng `minigame_sessions` | GĐ6.5 |
+| Trợ lý học tập dạng trò chuyện có công cụ; chấm phát âm bằng biểu đồ thanh điệu | Hướng phát triển, chỉ ghi mô tả và user story (`docs/modules-functions.md` mục 7, US-HP-01, US-HP-02); không có mã F, không có bảng | Sau GĐ6.6 |
 | XP, nhiệm vụ ngày, bảng xếp hạng tuần/tháng/mùa, huy hiệu & thành tựu, mục tiêu tuần/tháng | **M16 Gamification** | GĐ6.5 |
 | VIP, xu Sakura, phần thưởng mùa, khung avatar | **M17 VIP & Phần thưởng** | GĐ6.5 |
 | Tác giả / cộng đồng gửi truyện, bản dịch, học liệu; hàng chờ duyệt; duyệt tác giả | **M18 Nội dung cộng đồng** | GĐ6.6 |
@@ -739,7 +811,7 @@ Mọi tính năng đang có trên giao diện React đều được hiện thự
 | Màn hình giám sát xử lý ảnh của quản trị (đã có API, giao diện chưa nối) | M04, F04.05 | GĐ5 (nối giao diện) |
 | Màn hình tác vụ nền của quản trị (đã có API, giao diện chưa nối) | M15, F15.03 | GĐ5 (nối giao diện) |
 
-Với mỗi mục trên: **viết bổ sung user story + chức năng (F) + đặc tả bảng và trình duyệt trước khi làm**, giống 104 chức năng gốc. Cập nhật 25/10/2026: F09.09 (câu hỏi từ mở rộng, US-NH-69) đưa tổng lên 114; sau đó mười mục F07.11, F07.12, F08.11, F10.04, F10.05, F02.04 (GĐ5) và F01.11, F04.16, F13.08, F13.09 (GĐ6 đến 6.6) đưa tổng lên 124 chức năng và 118 user story, cùng hai bảng `saved_sentences`, `vocab_ai_notes` và cột `user_settings.bubble_font_scale` (GĐ5), cột `users.avatar_preset` (GĐ6). Cập nhật 24/10/2026: năm mục đã ghi "đã đưa vào SRS" làm tổng chức năng thành 109; bổ sung cùng ngày ba mục của GĐ4 (F07.09, F07.10, F08.10) đưa tổng lên 112 (xem `docs/modules-functions.md`).
+Với mỗi mục trên: **viết bổ sung user story + chức năng (F) + đặc tả bảng và trình duyệt trước khi làm**, giống 104 chức năng gốc. Cập nhật 25/10/2026 (đợt AI): bốn mục F05.09, F09.10, F12.04 (GĐ6) và F16.01 (GĐ6.5) đưa tổng lên 128 chức năng và 122 user story, thêm ba bảng `grammar_analyses`, `grammar_requests`, `minigame_sessions` (tổng 44 bảng) và hai cột `quiz_questions.mistake_review`, `mistake_review_at`. Cập nhật 25/10/2026 (đợt trước): F09.09 (câu hỏi từ mở rộng, US-NH-69) đưa tổng lên 114; sau đó mười mục F07.11, F07.12, F08.11, F10.04, F10.05, F02.04 (GĐ5) và F01.11, F04.16, F13.08, F13.09 (GĐ6 đến 6.6) đưa tổng lên 124 chức năng và 118 user story, cùng hai bảng `saved_sentences`, `vocab_ai_notes` và cột `user_settings.bubble_font_scale` (GĐ5), cột `users.avatar_preset` (GĐ6). Cập nhật 24/10/2026: năm mục đã ghi "đã đưa vào SRS" làm tổng chức năng thành 109; bổ sung cùng ngày ba mục của GĐ4 (F07.09, F07.10, F08.10) đưa tổng lên 112 (xem `docs/modules-functions.md`).
 
 ## 9. Chép dữ liệu từ `ptud_db`
 
