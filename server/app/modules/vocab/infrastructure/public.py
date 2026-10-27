@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from app.modules.vocab.infrastructure.card_source import SqlVocabCardSource
 from app.modules.vocab.infrastructure.quiz_source import SqlVocabQuizSource
+from app.modules.vocab.infrastructure.stats_source import SqlVocabCountsSource
 from app.modules.vocab.infrastructure.suggestion_source import SqlVocabSuggestionSource
 from app.modules.vocab.infrastructure.term_dictionary import DictionaryTermAdapter
 from app.modules.vocab.infrastructure.uow import SqlVocabUnitOfWork
@@ -11,6 +12,7 @@ from app.modules.vocab.infrastructure.uow import SqlVocabUnitOfWork
 __all__ = [
     "DictionaryTermAdapter",
     "SqlVocabCardSource",
+    "SqlVocabCountsSource",
     "SqlVocabQuizSource",
     "SqlVocabSuggestionSource",
     "SqlVocabUnitOfWork",

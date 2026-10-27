@@ -29,6 +29,7 @@ from app.modules.library.domain.entities import (
     SeriesProgress,
     SeriesView,
 )
+from app.modules.stats.application.public import ActivityRecorder
 
 
 @dataclass(frozen=True, slots=True)
@@ -158,8 +159,12 @@ class ProgressRepository(Protocol):
         now: datetime,
     ) -> ReadingProgress: ...
 
-    async def mark_page_read(self, user_id: int, page_id: int, now: datetime) -> None:
-        """Ghi trang đã đọc; ghi lặp không tạo bản ghi mới (F12.01)."""
+    async def mark_page_read(self, user_id: int, page_id: int, now: datetime) -> bool:
+        """Ghi trang đã đọc; ghi lặp không tạo bản ghi mới. True nếu đây là lần đọc đầu (F12.01)."""
+        ...
+
+    async def list_read_series(self, user_id: int, limit: int) -> list[tuple[Series, SeriesProgress]]:
+        """Truyện đã đọc, mới đọc gần nhất trước, kèm số trang đã đọc/tổng (F12.02)."""
         ...
 
     async def latest_for_series(self, user_id: int, series_id: int) -> ResumePoint | None: ...
@@ -240,6 +245,9 @@ class LibraryUnitOfWork(Protocol):
 
     @property
     def audit(self) -> AuditLog: ...
+
+    @property
+    def activity(self) -> ActivityRecorder: ...
 
     async def __aenter__(self) -> LibraryUnitOfWork: ...
 

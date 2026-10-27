@@ -6,6 +6,7 @@ from __future__ import annotations
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass
+from datetime import time
 from enum import Enum
 from typing import Any
 
@@ -18,6 +19,7 @@ DEFAULT_TIMEZONE = "Asia/Ho_Chi_Minh"
 BUBBLE_FONT_SCALE_MIN, BUBBLE_FONT_SCALE_MAX = 80, 160
 BUBBLE_FONT_SCALE_STEP = 10
 DEFAULT_BUBBLE_FONT_SCALE = 100
+_REMINDER_TIME_PATTERN = re.compile(r"^([01]\d|2[0-3]):([0-5]\d)$")
 
 
 class ReadingMode(str, Enum):
@@ -42,6 +44,17 @@ class UserSettings:
     timezone: str = DEFAULT_TIMEZONE
     show_xianxia: bool = True  # F06.03: hiện nghĩa từ điển tu tiên
     bubble_font_scale: int = DEFAULT_BUBBLE_FONT_SCALE  # F02.04: cỡ chữ lớp dịch, phần trăm
+    reminder_enabled: bool = False  # F14.03: bật nhắc ôn hằng ngày
+    reminder_time: time | None = None  # F14.03: giờ nhắc theo giờ địa phương (múi giờ ở `timezone`)
+
+
+@dataclass(frozen=True, slots=True)
+class ReminderSetting:
+    """Tùy chọn nhắc ôn của một người học đã bật nhắc (F14.03), dùng cho tác vụ F14.04."""
+
+    user_id: int
+    timezone: str
+    reminder_time: time
 
 
 EDITABLE_FIELDS = frozenset(
@@ -53,6 +66,8 @@ EDITABLE_FIELDS = frozenset(
         "weekly_page_goal",
         "show_xianxia",
         "bubble_font_scale",
+        "reminder_enabled",
+        "reminder_time",
     }
 )
 
@@ -117,3 +132,26 @@ def apply_changes(settings: UserSettings, changes: Mapping[str, Any]) -> None:
                 details={"field": "bubble_font_scale"},
             )
         settings.bubble_font_scale = scale
+    _apply_reminder(settings, changes)
+
+
+def _apply_reminder(settings: UserSettings, changes: Mapping[str, Any]) -> None:
+    """F14.03 — Giờ nhắc dạng "HH:MM" (00:00–23:59); bật nhắc thì bắt buộc đã có giờ nhắc."""
+    if "reminder_time" in changes:
+        raw = changes["reminder_time"]
+        if raw is None:
+            settings.reminder_time = None
+        else:
+            match = _REMINDER_TIME_PATTERN.match(str(raw))
+            if match is None:
+                raise InvalidInputError(
+                    "Giờ nhắc không hợp lệ, hãy nhập từ 00:00 đến 23:59", details={"field": "reminder_time"}
+                )
+            settings.reminder_time = time(int(match.group(1)), int(match.group(2)))
+    if "reminder_enabled" in changes:
+        flag = changes["reminder_enabled"]
+        if not isinstance(flag, bool):
+            raise _invalid("reminder_enabled")
+        settings.reminder_enabled = flag
+    if settings.reminder_enabled and settings.reminder_time is None:
+        raise InvalidInputError("Hãy chọn giờ nhắc để bật nhắc ôn", details={"field": "reminder_time"})

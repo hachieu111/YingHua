@@ -13,6 +13,7 @@ from app.modules.auth.application.public import Identity
 from app.modules.imaging.application.public import Bubble
 from app.modules.library.application.public import PageAccess, PageAccessPort
 from app.modules.review.application.public import Card, CreateCardsForEntryUseCase
+from app.modules.stats.application.public import ActivityDelta
 from app.modules.vocab.application.dto import SaveWordCommand, SaveWordResult
 from app.modules.vocab.application.ports import SnippetCropper, TermDictionary, VocabUnitOfWork
 from app.modules.vocab.application.views import build_detail
@@ -57,6 +58,7 @@ class SaveWordUseCase:
     có (không tạo thẻ, không đổi lịch ôn); đã có đúng ngữ cảnh đó → `VocabContextAlreadySavedError`. Hai yêu
     cầu đồng thời chỉ tạo một mục nhờ ràng buộc duy nhất (INSERT ... ON CONFLICT DO NOTHING).
     Không cắt được ảnh: vẫn lưu từ kèm câu văn và báo `snippet_missing`.
+    Từ mới được tạo thì cộng `words_saved` của ngày trong cùng giao dịch (F12.01).
     Từ điển không có nghĩa (kể cả khi từ nằm trong bong bóng): KHÔNG đoán nghĩa từ câu dịch của bong bóng,
     vì câu dịch là nghĩa cả câu chứ không phải nghĩa của từ; `meaning_vi` để null, người học sửa qua PATCH
     (F07.04) và thẻ recall dùng gợi ý dự phòng (F08.03).
@@ -89,6 +91,8 @@ class SaveWordUseCase:
             async with self._uow_factory() as uow:
                 source = await self._load_source(uow, identity, command, term)
                 saved = await self._save(uow, staged, identity.user_id, term, command, source, now)
+                if saved.created:
+                    await uow.activity.record(identity.user_id, now, ActivityDelta(words_saved=1))
                 await uow.commit()
                 detail = await build_detail(uow, self._pages, self._dictionary, identity, saved.entry, now)
         except BaseException:

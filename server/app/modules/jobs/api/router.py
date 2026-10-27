@@ -21,6 +21,6 @@ async def list_jobs(
     def uow_factory() -> JobsUnitOfWork:
         return SqlJobsUnitOfWork(container.session_factory)
 
-    definitions = default_job_definitions(container.settings.cleanup_interval_minutes)
+    definitions = default_job_definitions(container.settings)
     views = await ListJobsUseCase(uow_factory, definitions).execute(admin)
     return JobListResponse(items=[JobResponse.from_view(v) for v in views])

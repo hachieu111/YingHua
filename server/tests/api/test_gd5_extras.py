@@ -322,3 +322,32 @@ async def test_series_recommendations_and_chapter_coverage(app: FastAPI, client:
     assert after["hsk_level"] == 9 and after["needs_level"] is False
     if after["status"] != "empty":
         assert 0 < after["known_terms"] <= after["total_terms"] and 0 < after["percent"] <= 100
+
+
+async def test_saved_status_reports_only_own_saved_terms_and_sentences(
+    app: FastAPI, client: httpx.AsyncClient
+) -> None:
+    """US-NH-31, US-NH-70: dấu "đã lưu" lấy từ máy chủ, đúng sau khi tải lại; không lộ dữ liệu người khác."""
+    owner, other = await register(client), await register(client)
+    await _drain(_worker(app))
+    page, bubbles = await _ready_page(client, app, owner)
+    await client.post(f"{API}/pages/{page['id']}/save-all-words", headers=owner.headers)
+    await client.post(SENTENCES, json={"bubble_id": bubbles[0]["id"]}, headers=owner.headers)
+    url = f"{API}/vocab-entries/saved-status"
+    params = [
+        ("terms", "你好"),
+        ("terms", "朋友"),
+        ("bubble_ids", str(bubbles[0]["id"])),
+        ("page_id", str(page["id"])),
+    ]
+    assert (await client.get(url, params=params)).status_code == 401
+
+    mine = (await client.get(url, params=params, headers=owner.headers)).json()
+    assert mine == {"terms": ["你好"], "page_terms": ["你好"], "bubble_ids": [bubbles[0]["id"]]}
+    theirs = (await client.get(url, params=params, headers=other.headers)).json()
+    assert theirs == {"terms": [], "page_terms": [], "bubble_ids": []}
+    other_page = [("terms", "你好"), ("page_id", str(page["id"] + 999))]
+    elsewhere = (await client.get(url, params=other_page, headers=owner.headers)).json()
+    assert (
+        elsewhere["terms"] == ["你好"] and elsewhere["page_terms"] == []
+    )  # có trong sổ tay nhưng chưa lưu từ trang đó

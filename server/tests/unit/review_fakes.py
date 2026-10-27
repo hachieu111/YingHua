@@ -20,6 +20,7 @@ from app.modules.review.domain.entities import (
     ReviewLog,
 )
 from app.modules.review.domain.errors import PresentationIdTakenError
+from tests.unit.activity_fakes import FakeActivity, FakeFsrsProfiles
 
 
 def identity(user_id: int = 1) -> Identity:
@@ -138,6 +139,23 @@ class FakeCards:
             c for c in self.items.values() if c.user_id == user_id and c.vocab_entry_id in vocab_entry_ids
         ]
 
+    async def bury_siblings(
+        self, user_id: int, vocab_entry_id: int, graded_card_id: int, now: datetime, until: datetime
+    ) -> int:
+        moved = 0
+        for card in self.items.values():
+            same_entry = card.user_id == user_id and card.vocab_entry_id == vocab_entry_id
+            if (
+                same_entry
+                and card.id != graded_card_id
+                and not card.is_suspended
+                and card.schedule.due_at <= now
+            ):
+                card.schedule = replace(card.schedule, due_at=until)
+                card.updated_at = now
+                moved += 1
+        return moved
+
     async def reschedule_now(self, user_id: int, vocab_entry_ids: Sequence[int], now: datetime) -> int:
         cards = await self.list_for_entries(user_id, vocab_entry_ids)
         for card in cards:
@@ -244,6 +262,8 @@ class FakeReviewUow:
         self.logs = logs or FakeLogs()
         self.vocab = FakeVocabSource()
         self.audit = FakeAudit()
+        self.activity = FakeActivity()
+        self.fsrs_profiles = FakeFsrsProfiles()
         self.commits = 0
 
     async def __aenter__(self) -> FakeReviewUow:

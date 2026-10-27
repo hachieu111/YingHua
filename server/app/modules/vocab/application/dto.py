@@ -146,3 +146,12 @@ class SaveAllWordsResult:
     failed: list[FailedWord]
     remaining: int  # số từ còn lại chưa lưu vì quá giới hạn mỗi lần
     skipped: list[str] = field(default_factory=list)  # từ một chữ rất phổ biến (是, 吗…): không tự lưu
+
+
+@dataclass(frozen=True, slots=True)
+class SavedStatus:
+    """Từ đã có trong sổ tay và câu thoại đã lưu — để giao diện hiện đúng dấu "đã lưu" sau khi tải lại."""
+
+    terms: list[str]  # đã có trong sổ tay (ở bất kỳ ngữ cảnh nào)
+    page_terms: list[str]  # đã có ngữ cảnh lấy từ trang đang xem
+    bubble_ids: list[int]

@@ -4,11 +4,17 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, Query, Response, status
 
 from app.modules.admin.api.public import get_target_user_id
 from app.modules.auth.api.public import Identity, require_admin
-from app.modules.vocab.api.dependencies import VocabServices, get_list_vocab_query, get_vocab_services
+from app.modules.vocab.api.dependencies import (
+    VocabServices,
+    get_export_query,
+    get_list_vocab_query,
+    get_vocab_services,
+)
+from app.modules.vocab.api.export_response import export_response
 from app.modules.vocab.api.schemas import UpdateVocabRequest, VocabEntryDetailResponse, VocabPageResponse
 from app.modules.vocab.application.dto import ListVocabQuery
 
@@ -28,6 +34,20 @@ async def admin_list_vocab(
 ) -> VocabPageResponse:
     result = await services.list_vocab.execute(admin, query, user_id)
     return VocabPageResponse.from_page(result, query.page, query.size)
+
+
+@admin_router.get(
+    "/export",
+    summary="Quản trị: xuất sổ tay của người dùng ra CSV hoặc Anki (F07.08, F13.07)",
+)
+async def admin_export_vocab(
+    format: str = Query(description="csv | anki"),
+    user_id: int = Depends(get_target_user_id),
+    query: ListVocabQuery = Depends(get_export_query),
+    admin: Identity = Depends(require_admin),
+    services: VocabServices = Depends(get_vocab_services),
+) -> Response:
+    return export_response(await services.export_vocab.execute(admin, format, query, user_id))
 
 
 @admin_router.get(

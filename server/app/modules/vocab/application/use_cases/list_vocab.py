@@ -7,10 +7,9 @@ from app.modules.admin.application.public import resolve_owner
 from app.modules.auth.application.public import Identity
 from app.modules.library.application.public import PageAccessPort
 from app.modules.vocab.application.dto import ListVocabQuery, VocabListPage
+from app.modules.vocab.application.filters import build_vocab_filter
 from app.modules.vocab.application.ports import TermDictionary, VocabUnitOfWork
 from app.modules.vocab.application.views import build_list_items
-from app.modules.vocab.domain.entities import VocabFilter
-from app.modules.vocab.domain.rules import parse_hsk_filter, parse_status
 
 
 class ListVocabUseCase:
@@ -38,19 +37,7 @@ class ListVocabUseCase:
     ) -> VocabListPage:
         owner = resolve_owner(identity, owner_id)
         now = self._clock.now()
-        hsk_level, hsk_none = parse_hsk_filter(query.hsk)
-        page_ids = await self._pages.page_ids_of_series(query.series_id) if query.series_id else None
-        flt = VocabFilter(
-            user_id=owner,
-            status=parse_status(query.status) if query.status else None,
-            hsk_level=hsk_level,
-            hsk_none=hsk_none,
-            query=(query.query or "").strip() or None,
-            starred=query.starred,
-            page_ids=page_ids,
-            due=query.due,
-            now=now,
-        )
+        flt = await build_vocab_filter(self._pages, query, owner, now)
         async with self._uow_factory() as uow:
             entries, total = await uow.entries.search(flt, (query.page - 1) * query.size, query.size)
             items = await build_list_items(uow, self._dictionary, owner, entries, now)

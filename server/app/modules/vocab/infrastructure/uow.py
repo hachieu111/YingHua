@@ -6,6 +6,7 @@ from app.modules.admin.infrastructure.public import SqlAuditLogRepository
 from app.modules.imaging.infrastructure.public import SqlBubbleRepository
 from app.modules.reader.infrastructure.public import SqlBubbleEditRepository
 from app.modules.review.infrastructure.public import SqlCardRepository
+from app.modules.stats.infrastructure.public import SqlActivityRecorder
 from app.modules.vocab.infrastructure.repositories import SqlVocabContextRepository, SqlVocabRepository
 from app.modules.vocab.infrastructure.sentence_repository import SqlSavedSentenceRepository
 
@@ -25,6 +26,7 @@ class SqlVocabUnitOfWork(SqlAlchemyUnitOfWork):
     audit: SqlAuditLogRepository
     sentences: SqlSavedSentenceRepository
     edits: SqlBubbleEditRepository
+    activity: SqlActivityRecorder
 
     def _init_repositories(self) -> None:
         self.entries = SqlVocabRepository(self.session)
@@ -35,3 +37,4 @@ class SqlVocabUnitOfWork(SqlAlchemyUnitOfWork):
         self.audit = SqlAuditLogRepository(self.session)
         self.sentences = SqlSavedSentenceRepository(self.session)
         self.edits = SqlBubbleEditRepository(self.session)
+        self.activity = SqlActivityRecorder(self.session)

@@ -33,6 +33,7 @@ from app.modules.review.domain.entities import (
     SchedulingState,
 )
 from app.modules.review.domain.errors import PresentationIdTakenError
+from app.modules.review.domain.fsrs_profile import OptimizerLog
 from app.modules.review.infrastructure.orm_models import CardModel, ReviewLogModel
 
 # Tham chiếu chỉ-đọc tới bảng của M07 (hợp đồng lược đồ): thẻ chỉ đến hạn khi từ còn ở trạng thái "Đang học".
@@ -230,6 +231,22 @@ class SqlCardRepository:
         )
         return [_card(m) for m in rows.scalars()]
 
+    async def bury_siblings(
+        self, user_id: int, vocab_entry_id: int, graded_card_id: int, now: datetime, until: datetime
+    ) -> int:
+        result = await self._session.execute(
+            update(CardModel)
+            .where(
+                CardModel.user_id == user_id,
+                CardModel.vocab_entry_id == vocab_entry_id,
+                CardModel.id != graded_card_id,
+                CardModel.is_suspended.is_(False),
+                CardModel.due_at <= now,
+            )
+            .values(due_at=until, updated_at=now)
+        )
+        return int(getattr(result, "rowcount", 0) or 0)
+
     async def reschedule_now(self, user_id: int, vocab_entry_ids: Sequence[int], now: datetime) -> int:
         if not vocab_entry_ids:
             return 0
@@ -343,3 +360,25 @@ class SqlReviewLogRepository:
     async def count_for_user(self, user_id: int) -> int:
         stmt = select(func.count(ReviewLogModel.id)).where(ReviewLogModel.user_id == user_id)
         return int((await self._session.execute(stmt)).scalar_one())
+
+    async def count_recalled_for_user(self, user_id: int) -> int:
+        stmt = select(func.count(ReviewLogModel.id)).where(
+            ReviewLogModel.user_id == user_id, ReviewLogModel.rating > int(Rating.AGAIN)
+        )
+        return int((await self._session.execute(stmt)).scalar_one())
+
+    async def list_for_optimizer(self, user_id: int, limit: int) -> list[OptimizerLog]:
+        rows = await self._session.execute(
+            select(
+                ReviewLogModel.card_id,
+                ReviewLogModel.rating,
+                ReviewLogModel.reviewed_at,
+                ReviewLogModel.duration_ms,
+            )
+            .where(ReviewLogModel.user_id == user_id)
+            .order_by(ReviewLogModel.reviewed_at.desc(), ReviewLogModel.id.desc())
+            .limit(limit)
+        )
+        logs = [OptimizerLog(card_id, Rating(rating), at, ms) for card_id, rating, at, ms in rows.all()]
+        logs.reverse()
+        return logs

@@ -46,6 +46,7 @@ from app.modules.vocab.domain.errors import (
     VocabNotFoundError,
 )
 from tests.conftest import FixedClock
+from tests.unit.activity_fakes import FakeActivity
 from tests.unit.review_fakes import FakeAudit, FakeCards, identity
 
 NOW = datetime(2026, 10, 24, 8, 0, tzinfo=timezone.utc)
@@ -210,6 +211,7 @@ class FakeVocabUow:
         self.files = FakeFiles()
         self.bubbles = FakeBubbles(bubbles)
         self.audit = FakeAudit()
+        self.activity = FakeActivity()
         self.commits = 0
 
     async def __aenter__(self) -> FakeVocabUow:

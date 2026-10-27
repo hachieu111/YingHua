@@ -22,6 +22,9 @@ async def test_new_user_gets_defaults(client: httpx.AsyncClient) -> None:
         "weekly_page_goal": None,
         "show_xianxia": True,
         "bubble_font_scale": 100,
+        "reminder_enabled": False,
+        "reminder_time": None,
+        "timezone": "Asia/Ho_Chi_Minh",
     }
 
 

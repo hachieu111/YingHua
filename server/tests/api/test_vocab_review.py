@@ -291,7 +291,8 @@ async def test_review_session_grading_scheduling_and_card_actions(
     )
     assert again.status_code == 200, again.text
     forgot = again.json()
-    assert forgot["interval_seconds"] == 60 and forgot["remaining_due"] == 5 and not forgot["duplicate"]
+    # Hai thẻ còn lại của cùng từ được dời sang ngày mai (mỗi từ một thẻ mỗi ngày): còn 3 thẻ của từ kia.
+    assert forgot["interval_seconds"] == 60 and forgot["remaining_due"] == 3 and not forgot["duplicate"]
     assert forgot["next_card"] is not None and forgot["session_complete"] is False
     assert forgot["card"]["reps"] == 1 and forgot["card"]["state"] == "learning"
 
@@ -322,9 +323,9 @@ async def test_review_session_grading_scheduling_and_card_actions(
 
     # Thẻ "Quên" quay lại sau 1 phút (giờ giả), thẻ "Dễ" thì không.
     mid = (await client.get(f"{API}/review/summary", headers=owner.headers)).json()
-    assert (mid["due_now"], mid["reviewed_today"], mid["status"]) == (4, 2, "due")
+    assert (mid["due_now"], mid["reviewed_today"], mid["status"]) == (3, 2, "due")
     clock.at += timedelta(minutes=2)
-    assert (await client.get(f"{API}/cards/due?size=100", headers=owner.headers)).json()["total"] == 5
+    assert (await client.get(f"{API}/cards/due?size=100", headers=owner.headers)).json()["total"] == 4
 
     # F08.05: tạm ngưng loại khỏi đến hạn, chấm thẻ tạm ngưng bị từ chối; tiếp tục; đặt lại giữ lịch sử.
     suspended = await client.post(f"{API}/cards/{ids[2]}/suspend", headers=owner.headers)
@@ -352,12 +353,13 @@ async def test_review_session_grading_scheduling_and_card_actions(
 
     # F07.03 + F08.01: từ "Đã thuộc"/"Bỏ qua" không có thẻ đến hạn; về "Đang học" thì thẻ trở lại.
     word_id = entry["id"]
-    assert (await client.get(f"{API}/cards/due?size=100", headers=owner.headers)).json()["total"] == 6
+    # Thẻ thứ ba của từ này vẫn đang dời sang ngày mai (không đến hạn hôm nay) nên còn 5 thẻ.
+    assert (await client.get(f"{API}/cards/due?size=100", headers=owner.headers)).json()["total"] == 5
     for status in ("known", "ignored"):
         await client.patch(f"{VOCAB}/{word_id}", json={"status": status}, headers=owner.headers)
         assert (await client.get(f"{API}/cards/due?size=100", headers=owner.headers)).json()["total"] == 3
     await client.patch(f"{VOCAB}/{word_id}", json={"status": "learning"}, headers=owner.headers)
-    assert (await client.get(f"{API}/cards/due?size=100", headers=owner.headers)).json()["total"] == 6
+    assert (await client.get(f"{API}/cards/due?size=100", headers=owner.headers)).json()["total"] == 5
 
     # Bộ lọc "Cần ôn lại" (due) và số liệu đầu trang theo cùng quy tắc với /cards/due.
     async def due_words(flag: str) -> list[str]:
@@ -406,7 +408,8 @@ async def test_review_session_grading_scheduling_and_card_actions(
         assert res.status_code == 200
     done = (await client.get(f"{API}/review/summary", headers=owner.headers)).json()
     assert (done["status"], done["due_now"], done["total_cards"]) == ("completed", 0, 6)
-    assert done["reviewed_today"] >= 6 and done["next_due_at"] is not None
+    # Mỗi từ một thẻ mỗi ngày: các thẻ cùng từ đã dời sang mai nên số lượt ôn hôm nay ít hơn tổng số thẻ.
+    assert done["reviewed_today"] >= 4 and done["next_due_at"] is not None
     assert done["timezone"] == "Asia/Ho_Chi_Minh"
     decks_after = (await client.get(f"{VOCAB}/decks", headers=owner.headers)).json()["items"][1]
     assert decks_after["reviewed_count"] == 2 and decks_after["due_count"] == 0

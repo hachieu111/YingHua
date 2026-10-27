@@ -2,12 +2,19 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, Query, Response, status
 
 from app.modules.auth.api.public import Identity, get_identity
-from app.modules.vocab.api.dependencies import VocabServices, get_list_vocab_query, get_vocab_services
+from app.modules.vocab.api.dependencies import (
+    VocabServices,
+    get_export_query,
+    get_list_vocab_query,
+    get_vocab_services,
+)
+from app.modules.vocab.api.export_response import export_response
 from app.modules.vocab.api.schemas import (
     DeckListResponse,
+    SavedStatusResponse,
     SaveWordRequest,
     SaveWordResponse,
     UpdateVocabRequest,
@@ -15,8 +22,10 @@ from app.modules.vocab.api.schemas import (
     VocabPageResponse,
 )
 from app.modules.vocab.application.dto import ListVocabQuery, SaveWordCommand
+from app.modules.vocab.domain.rules import MAX_TERM_CHARS
 
 router = APIRouter(prefix="/vocab-entries", tags=["M07 Sổ tay"])
+MAX_STATUS_ITEMS = 200  # đủ cho mọi từ/bong bóng của một trang truyện
 
 
 @router.post(
@@ -61,6 +70,26 @@ async def list_vocab(
 
 
 @router.get(
+    "/export",
+    summary="Xuất sổ tay ra CSV hoặc tệp nhập vào Anki, theo bộ lọc đang áp dụng (F07.08)",
+    description=(
+        "`format=csv`: UTF-8 có BOM, cột Chữ Hán, Pinyin, Nghĩa, Cấp HSK, Trạng thái, Ghi chú. "
+        "`format=anki`: "
+        "tệp văn bản ngăn bằng tab (Front, Back, Tags) nhập qua Anki > Tệp > Nhập. Sổ tay trống hoặc không "
+        "khớp bộ lọc → 404 `VOCAB_EXPORT_EMPTY`; quá 5000 từ → 400 `VOCAB_EXPORT_TOO_LARGE`."
+    ),
+    responses={200: {"content": {"text/csv": {}, "text/plain": {}}}},
+)
+async def export_vocab(
+    format: str = Query(description="csv | anki"),
+    query: ListVocabQuery = Depends(get_export_query),
+    identity: Identity = Depends(get_identity),
+    services: VocabServices = Depends(get_vocab_services),
+) -> Response:
+    return export_response(await services.export_vocab.execute(identity, format, query))
+
+
+@router.get(
     "/decks",
     response_model=DeckListResponse,
     summary='Bộ thẻ theo truyện và bộ "Từ đánh dấu sao" cho màn Flashcard (F07.07, F08.01)',
@@ -70,6 +99,27 @@ async def list_decks(
     services: VocabServices = Depends(get_vocab_services),
 ) -> DeckListResponse:
     return DeckListResponse.from_list(await services.list_decks.execute(identity))
+
+
+@router.get(
+    "/saved-status",
+    response_model=SavedStatusResponse,
+    summary='Từ và câu thoại nào đang hiển thị đã được lưu (dấu "đã lưu" trong trình đọc, F07.01, F07.11)',
+)
+async def get_saved_status(
+    terms: list[str] = Query(
+        default=[], max_length=MAX_STATUS_ITEMS, description="Lặp tham số: ?terms=学习&terms=朋友"
+    ),
+    bubble_ids: list[int] = Query(default=[], max_length=MAX_STATUS_ITEMS),
+    page_id: int | None = Query(default=None, ge=1, description="Trang đang xem: trả thêm `page_terms`"),
+    identity: Identity = Depends(get_identity),
+    services: VocabServices = Depends(get_vocab_services),
+) -> SavedStatusResponse:
+    clean_terms = [term for term in terms if 0 < len(term) <= MAX_TERM_CHARS]
+    result = await services.saved_status.execute(
+        identity, clean_terms, [b for b in bubble_ids if b > 0], page_id
+    )
+    return SavedStatusResponse(terms=result.terms, page_terms=result.page_terms, bubble_ids=result.bubble_ids)
 
 
 @router.get(

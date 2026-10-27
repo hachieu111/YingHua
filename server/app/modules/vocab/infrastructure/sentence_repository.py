@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import datetime
 
 from sqlalchemy import delete, func, select, update
@@ -30,6 +31,16 @@ def _sentence(m: SavedSentenceModel) -> SavedSentence:
 class SqlSavedSentenceRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
+
+    async def saved_bubble_ids(self, user_id: int, bubble_ids: Sequence[int]) -> set[int]:
+        if not bubble_ids:
+            return set()
+        rows = await self._session.execute(
+            select(SavedSentenceModel.bubble_id).where(
+                SavedSentenceModel.user_id == user_id, SavedSentenceModel.bubble_id.in_(list(set(bubble_ids)))
+            )
+        )
+        return {bubble_id for bubble_id in rows.scalars() if bubble_id is not None}
 
     async def add_if_absent(self, new: NewSavedSentence) -> SavedSentence | None:
         stmt = (

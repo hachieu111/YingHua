@@ -17,6 +17,8 @@ def _entity(m: UserSettingsModel) -> UserSettings:
         timezone=m.timezone,
         show_xianxia=m.show_xianxia,
         bubble_font_scale=m.bubble_font_scale,
+        reminder_enabled=m.reminder_enabled,
+        reminder_time=m.reminder_time,
     )
 
 
@@ -33,6 +35,7 @@ class SqlSettingsRepository:
                 timezone="Asia/Ho_Chi_Minh",
                 show_xianxia=True,
                 bubble_font_scale=100,
+                reminder_enabled=False,
             )
             self._session.add(model)
             await self._session.flush()
@@ -50,4 +53,6 @@ class SqlSettingsRepository:
         model.timezone = settings.timezone
         model.show_xianxia = settings.show_xianxia
         model.bubble_font_scale = settings.bubble_font_scale
+        model.reminder_enabled = settings.reminder_enabled
+        model.reminder_time = settings.reminder_time
         await self._session.flush()

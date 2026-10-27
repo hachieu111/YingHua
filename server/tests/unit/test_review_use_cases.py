@@ -123,6 +123,21 @@ async def test_grade_each_rating_updates_card_and_writes_review_log(rating: int)
     assert result.due_at > NOW and not result.duplicate
 
 
+async def test_grade_buries_due_sibling_cards_of_the_same_word_until_next_day() -> None:
+    """F08.02: chấm một thẻ thì các thẻ khác của cùng từ đang đến hạn dời sang đầu ngày mai, giữ S và D."""
+    uow = await _uow_with_cards()
+    graded = next(iter(uow.cards.items.values()))
+    siblings = [
+        c for c in uow.cards.items.values() if c.vocab_entry_id == graded.vocab_entry_id and c.id != graded.id
+    ]
+    before = {c.id: (c.schedule.stability, c.schedule.difficulty) for c in siblings}
+    await _grade_uc(uow, FixedClock(NOW)).execute(identity(), _command(graded.id, 3))
+    tomorrow = local_day_bounds(NOW, None)[1]
+    assert siblings and all(c.schedule.due_at == tomorrow for c in siblings)
+    assert all((c.schedule.stability, c.schedule.difficulty) == before[c.id] for c in siblings)
+    assert len(uow.logs.items) == 1  # dời thẻ không phải lượt ôn
+
+
 async def test_grade_easy_schedules_further_than_again() -> None:
     """F08.02 quy tắc: khoảng cách khi chọn "Dễ" dài hơn khi chọn "Quên" (cùng một thẻ)."""
     again_uow, easy_uow = await _uow_with_cards(), await _uow_with_cards()
@@ -172,7 +187,8 @@ async def test_grade_returns_next_card_or_session_complete() -> None:
     clock = FixedClock(NOW)
     ids = sorted(uow.cards.items)
     first = await _grade_uc(uow, clock).execute(identity(), _command(ids[0], 4))
-    assert first.next_batch.total == 2 and first.next_batch.cards[0].card.id == ids[1]
+    # Ba thẻ cùng một từ: chấm một thẻ thì hai thẻ kia dời sang ngày mai nên phiên ôn hết thẻ.
+    assert first.next_batch.total == 0 and first.next_batch.cards == []
     await _grade_uc(uow, clock).execute(identity(), _command(ids[1], 4))
     last = await _grade_uc(uow, clock).execute(identity(), _command(ids[2], 4))
     assert last.next_batch.total == 0 and last.next_batch.cards == []

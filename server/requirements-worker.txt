@@ -15,6 +15,9 @@ paddlepaddle==2.6.2
 torch==2.1.0          # bản CPU: pip install torch==2.1.0 --index-url https://download.pytorch.org/whl/cpu
 torchvision==0.16.0
 ultralytics==8.4.138
+# Bộ tối ưu tham số FSRS (job optimize_fsrs, F08.08) cần thêm torch (ở trên), pandas, tqdm
+pandas==2.3.3
+tqdm==4.67.1
 # Phụ thuộc của paddleocr và pipeline ảnh (module xử lí ảnh/)
 shapely==2.1.2
 pyclipper==1.4.0

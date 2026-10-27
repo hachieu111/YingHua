@@ -1,15 +1,17 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import datetime
 
 from app.core.clock import Clock
 from app.modules.auth.application.public import Identity
 from app.modules.review.application.dto import DueBatch, GradeCommand, GradeResult
 from app.modules.review.application.due import build_due_batch
-from app.modules.review.application.ports import CardScheduler, ReviewUnitOfWork
+from app.modules.review.application.ports import CardScheduler, ReviewUnitOfWork, UserTimezoneSource
 from app.modules.review.domain.entities import Card, NewReviewLog, ReviewLog
 from app.modules.review.domain.errors import CardNotFoundError, CardSuspendedError, PresentationIdTakenError
-from app.modules.review.domain.rules import apply_review, parse_deck, parse_rating
+from app.modules.review.domain.rules import apply_review, local_day_bounds, parse_deck, parse_rating
+from app.modules.stats.application.public import ActivityDelta, study_seconds_from_ms
 
 NEXT_BATCH_SIZE = 1
 
@@ -20,14 +22,24 @@ class GradeCardUseCase:
     Thẻ của người khác → 404. Một `presentation_id` chỉ tính một lượt ôn: gửi lại (bấm đúp) trả kết quả của
     lượt đã ghi, không lập lịch lần hai. Cập nhật thẻ và ghi lượt ôn nằm trong một giao dịch; dòng thẻ được
     khóa để hai yêu cầu đồng thời không cùng tính lượt.
+    Mỗi từ chỉ hỏi một thẻ mỗi ngày ("bury siblings" như Anki): chấm xong, các thẻ khác của cùng từ đang
+    đến hạn được dời sang đầu ngày hôm sau theo múi giờ người học, giữ nguyên S, D và không ghi lượt ôn — nên
+    phiên ôn không hỏi lại cùng một từ và Sổ tay hết báo "Cần ôn lại" cho từ vừa ôn (chốt 25/10/2026).
+    Lập lịch dùng tham số FSRS riêng của người học nếu đã có (F08.08), cộng bộ đếm hoạt động ngày trong cùng
+    giao dịch (F12.01, F12.02).
     """
 
     def __init__(
-        self, uow_factory: Callable[[], ReviewUnitOfWork], scheduler: CardScheduler, clock: Clock
+        self,
+        uow_factory: Callable[[], ReviewUnitOfWork],
+        scheduler: CardScheduler,
+        clock: Clock,
+        timezones: UserTimezoneSource | None = None,
     ) -> None:
         self._uow_factory = uow_factory
         self._scheduler = scheduler
         self._clock = clock
+        self._timezones = timezones
 
     async def execute(self, identity: Identity, command: GradeCommand) -> GradeResult:
         rating = parse_rating(command.rating)
@@ -47,9 +59,13 @@ class GradeCardUseCase:
             if card.is_suspended:
                 raise CardSuspendedError()
             before = card.schedule
-            after = self._scheduler.review(before, rating, now)
+            profile = await uow.fsrs_profiles.get(user_id)
+            after = self._scheduler.review(before, rating, now, profile)
             apply_review(card, after, rating, now)
             await uow.cards.save(card)
+            await uow.cards.bury_siblings(
+                user_id, card.vocab_entry_id, card.id, now, await self._next_day(identity, now)
+            )
             log = await uow.logs.add(
                 NewReviewLog(
                     card_id=card.id,
@@ -66,9 +82,18 @@ class GradeCardUseCase:
                     reviewed_at=now,
                 )
             )
+            await uow.activity.record(
+                user_id,
+                now,
+                ActivityDelta(reviews_count=1, study_seconds=study_seconds_from_ms(command.duration_ms)),
+            )
             await uow.commit()
             batch = await build_due_batch(uow, user_id, now, NEXT_BATCH_SIZE, deck, card.id)
         return _result(card, log, False, batch)
+
+    async def _next_day(self, identity: Identity, now: datetime) -> datetime:
+        tz_name = await self._timezones.timezone_of(identity, identity.user_id) if self._timezones else None
+        return local_day_bounds(now, tz_name)[1]
 
 
 def _result(card: Card, log: ReviewLog, duplicate: bool, batch: DueBatch) -> GradeResult:

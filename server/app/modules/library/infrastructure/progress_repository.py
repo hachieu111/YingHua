@@ -13,6 +13,7 @@ from app.modules.library.domain.entities import (
     ReadingMode,
     ReadingProgress,
     ResumePoint,
+    Series,
     SeriesProgress,
     Visibility,
 )
@@ -85,13 +86,14 @@ class SqlProgressRepository:
         await self._session.execute(stmt)
         return ReadingProgress(user_id, chapter_id, page_no, mode, completed, now)
 
-    async def mark_page_read(self, user_id: int, page_id: int, now: datetime) -> None:
+    async def mark_page_read(self, user_id: int, page_id: int, now: datetime) -> bool:
         stmt = (
             insert(PageReadModel)
             .values(user_id=user_id, page_id=page_id, first_read_at=now)
             .on_conflict_do_nothing(index_elements=["user_id", "page_id"])
+            .returning(PageReadModel.page_id)
         )
-        await self._session.execute(stmt)
+        return (await self._session.execute(stmt)).first() is not None
 
     def _latest_per_series(self, user_id: int, series_ids: Sequence[int] | None = None) -> Any:
         stmt = (
@@ -181,6 +183,20 @@ class SqlProgressRepository:
         )
         rows = (await self._session.execute(stmt)).all()
         return [ContinueItem(_resume(r), series_entity(r.SeriesModel), r.title) for r in rows]
+
+    async def list_read_series(self, user_id: int, limit: int) -> list[tuple[Series, SeriesProgress]]:
+        """Truyện người học đã đọc (mới đọc gần nhất trước) kèm số trang đã đọc/tổng (F12.02)."""
+        latest = self._latest_per_series(user_id)
+        rows = await self._session.scalars(
+            select(SeriesModel)
+            .join(latest, latest.c.series_id == SeriesModel.id)
+            .where(or_(SeriesModel.visibility == Visibility.PUBLIC.value, SeriesModel.owner_id == user_id))
+            .order_by(latest.c.updated_at.desc())
+            .limit(limit)
+        )
+        series = [series_entity(m) for m in rows]
+        progress = await self.summaries_for_series(user_id, [s.id for s in series])
+        return [(s, progress[s.id]) for s in series if s.id in progress]
 
     async def move_after_page_deleted(
         self, chapter_id: int, deleted_page_no: int, new_page_no: int | None

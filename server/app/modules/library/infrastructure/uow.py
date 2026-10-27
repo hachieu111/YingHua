@@ -9,6 +9,7 @@ from app.modules.library.infrastructure.page_repository import SqlPageRepository
 from app.modules.library.infrastructure.progress_repository import SqlProgressRepository
 from app.modules.library.infrastructure.repositories import SqlLibraryRepository, SqlRatingRepository
 from app.modules.library.infrastructure.series_repository import SqlSeriesRepository
+from app.modules.stats.infrastructure.public import SqlActivityRecorder
 
 
 class SqlLibraryUnitOfWork(SqlAlchemyUnitOfWork):
@@ -21,6 +22,7 @@ class SqlLibraryUnitOfWork(SqlAlchemyUnitOfWork):
     files: SqlStoredFileRepository
     translations: SqlTranslationRepository
     audit: SqlAuditLogRepository
+    activity: SqlActivityRecorder
 
     def _init_repositories(self) -> None:
         self.series = SqlSeriesRepository(self.session)
@@ -32,3 +34,4 @@ class SqlLibraryUnitOfWork(SqlAlchemyUnitOfWork):
         self.files = SqlStoredFileRepository(self.session)
         self.translations = SqlTranslationRepository(self.session)
         self.audit = SqlAuditLogRepository(self.session)
+        self.activity = SqlActivityRecorder(self.session)

@@ -277,3 +277,9 @@ class DeckListResponse(BaseModel):
     @classmethod
     def from_list(cls, d: DeckList) -> DeckListResponse:
         return cls(items=[DeckResponse.from_deck(i) for i in d.items], generated_at=d.generated_at)
+
+
+class SavedStatusResponse(BaseModel):
+    terms: list[str] = Field(description="Các từ trong yêu cầu đã có trong sổ tay")
+    page_terms: list[str] = Field(description="Các từ đã có ngữ cảnh từ trang `page_id` (đã lưu ở trang này)")
+    bubble_ids: list[int] = Field(description="Các bong bóng trong yêu cầu đã lưu câu thoại")

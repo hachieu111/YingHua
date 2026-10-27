@@ -3,6 +3,6 @@
 from __future__ import annotations
 
 from app.modules.settings.application.use_cases.get_settings import GetSettingsUseCase
-from app.modules.settings.domain.entities import UserSettings
+from app.modules.settings.domain.entities import ReminderSetting, UserSettings
 
-__all__ = ["GetSettingsUseCase", "UserSettings"]
+__all__ = ["GetSettingsUseCase", "ReminderSetting", "UserSettings"]

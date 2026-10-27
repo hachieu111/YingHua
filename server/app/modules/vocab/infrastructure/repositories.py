@@ -214,6 +214,21 @@ class SqlVocabRepository:
         counts.update({status: int(n) for status, n in rows.all()})
         return counts
 
+    async def terms_with_context_on_page(self, user_id: int, page_id: int, terms: Sequence[str]) -> set[str]:
+        if not terms:
+            return set()
+        rows = await self._session.execute(
+            select(VocabEntryModel.term)
+            .join(VocabContextModel, VocabContextModel.vocab_entry_id == VocabEntryModel.id)
+            .where(
+                VocabEntryModel.user_id == user_id,
+                VocabContextModel.page_id == page_id,
+                VocabEntryModel.term.in_(list(set(terms))),
+            )
+            .distinct()
+        )
+        return set(rows.scalars())
+
     async def existing_terms(self, user_id: int, terms: Sequence[str]) -> set[str]:
         if not terms:
             return set()

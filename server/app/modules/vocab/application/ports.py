@@ -13,6 +13,7 @@ from app.modules.admin.application.public import AuditLogRepository
 from app.modules.imaging.application.public import BubbleRepository
 from app.modules.reader.application.public import BubbleEditRepository
 from app.modules.review.application.public import CardRepository
+from app.modules.stats.application.public import ActivityRecorder
 from app.modules.vocab.domain.entities import (
     ContextSummary,
     CropBox,
@@ -76,6 +77,10 @@ class VocabRepository(Protocol):
 
     async def starred_ids(self, user_id: int) -> list[int]: ...
 
+    async def terms_with_context_on_page(self, user_id: int, page_id: int, terms: Sequence[str]) -> set[str]:
+        """Trong `terms`, những từ đã có ngữ cảnh lấy từ trang `page_id`."""
+        ...
+
     async def existing_terms(self, user_id: int, terms: Sequence[str]) -> set[str]:
         """Tập con của `terms` đã có trong sổ tay, mọi trạng thái."""
         ...
@@ -118,6 +123,10 @@ class SavedSentenceRepository(Protocol):
 
     async def get_by_bubble(self, user_id: int, bubble_id: int) -> SavedSentence | None: ...
 
+    async def saved_bubble_ids(self, user_id: int, bubble_ids: Sequence[int]) -> set[int]:
+        """Trong `bubble_ids`, những bong bóng người dùng đã lưu câu thoại."""
+        ...
+
     async def page(self, user_id: int, offset: int, limit: int) -> tuple[list[SavedSentence], int]:
         """Mới nhất trước."""
         ...
@@ -153,6 +162,9 @@ class VocabUnitOfWork(Protocol):
 
     @property
     def edits(self) -> BubbleEditRepository: ...
+
+    @property
+    def activity(self) -> ActivityRecorder: ...
 
     async def __aenter__(self) -> VocabUnitOfWork: ...
 

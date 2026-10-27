@@ -22,6 +22,8 @@ from app.modules.review.domain.entities import (
     ReviewLog,
     SchedulingState,
 )
+from app.modules.review.domain.fsrs_profile import FsrsProfile, OptimizerLog
+from app.modules.stats.application.public import ActivityRecorder
 
 
 class CardScheduler(Protocol):
@@ -31,8 +33,13 @@ class CardScheduler(Protocol):
         """Trạng thái của thẻ mới: đến hạn ngay tại `now`."""
         ...
 
-    def review(self, state: SchedulingState, rating: Rating, now: datetime) -> SchedulingState:
-        """Trạng thái mới (S, D, hạn ôn) sau khi chấm `rating` tại `now`."""
+    def review(
+        self, state: SchedulingState, rating: Rating, now: datetime, profile: FsrsProfile | None = None
+    ) -> SchedulingState:
+        """Trạng thái mới (S, D, hạn ôn) sau khi chấm `rating` tại `now`.
+
+        `profile` là tham số riêng của người học (F08.08); None thì dùng tham số mặc định chung.
+        """
         ...
 
 
@@ -92,6 +99,15 @@ class CardRepository(Protocol):
         """Thẻ (kể cả đang tạm ngưng) của các mục từ, theo lô."""
         ...
 
+    async def bury_siblings(
+        self, user_id: int, vocab_entry_id: int, graded_card_id: int, now: datetime, until: datetime
+    ) -> int:
+        """Dời các thẻ khác (không tạm ngưng) của cùng mục từ đang đến hạn sang `until`; giữ S, D.
+
+        Trả số thẻ đã dời.
+        """
+        ...
+
     async def reschedule_now(self, user_id: int, vocab_entry_ids: Sequence[int], now: datetime) -> int:
         """Đặt `due_at = now`, bỏ tạm ngưng cho mọi thẻ của các mục từ; giữ S, D. Trả số thẻ đã đổi."""
         ...
@@ -125,6 +141,39 @@ class ReviewLogRepository(Protocol):
     async def count_for_user(self, user_id: int) -> int:
         """Tổng số lượt ôn của người học."""
         ...
+
+    async def count_recalled_for_user(self, user_id: int) -> int:
+        """Số lượt ôn không chọn "Quên" (F12.01)."""
+        ...
+
+    async def list_for_optimizer(self, user_id: int, limit: int) -> list[OptimizerLog]:
+        """`limit` lượt ôn gần nhất, cũ nhất trước, dùng để tối ưu tham số FSRS (F08.08)."""
+        ...
+
+
+class FsrsProfileRepository(Protocol):
+    """Tham số FSRS riêng từng người (F08.08)."""
+
+    async def get(self, user_id: int) -> FsrsProfile | None: ...
+
+    async def save(self, user_id: int, profile: FsrsProfile, review_count: int, now: datetime) -> None:
+        """Thêm mới hoặc thay thế; `review_count` là số lượt ôn lúc tối ưu."""
+        ...
+
+    async def users_to_optimize(
+        self, min_reviews: int, min_new_reviews: int, stale_before: datetime, limit: int
+    ) -> list[int]:
+        """Người học đủ `min_reviews` lượt ôn và chưa có tham số, hoặc lần tối ưu cuối trước `stale_before`
+        và đã có thêm ít nhất `min_new_reviews` lượt ôn mới; tối đa `limit` người,
+        ít được tối ưu nhất trước."""
+        ...
+
+
+class FsrsParameterOptimizer(Protocol):
+    """Bộ tối ưu tham số FSRS (thư viện `fsrs`). Raise `FsrsOptimizerUnavailableError` khi môi trường thiếu
+    phụ thuộc, `InvalidFsrsParametersError` khi kết quả không hợp lệ hoặc làm lịch ôn bất thường."""
+
+    async def optimize(self, logs: Sequence[OptimizerLog]) -> tuple[float, ...]: ...
 
 
 class VocabCardSource(Protocol):
@@ -164,6 +213,12 @@ class ReviewUnitOfWork(Protocol):
 
     @property
     def ai_notes(self) -> AiNoteRepository: ...
+
+    @property
+    def fsrs_profiles(self) -> FsrsProfileRepository: ...
+
+    @property
+    def activity(self) -> ActivityRecorder: ...
 
     async def __aenter__(self) -> ReviewUnitOfWork: ...
 

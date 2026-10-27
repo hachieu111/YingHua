@@ -70,7 +70,7 @@ def build_worker(
     engine = create_engine(settings.database_url, pool_size=settings.db_pool_size, echo=settings.db_echo)
     session_factory = create_session_factory(engine)
     storage = LocalFileStorage(settings.storage_dir / "files")  # cùng gốc với `build_container`
-    runner = build_job_runner(session_factory, storage, clock, settings.cleanup_interval_minutes)
+    runner = build_job_runner(session_factory, storage, clock, settings)
     processor: JobProcessor | None = None
     cpu: CpuRunner | None = None
     if settings.pipeline_enabled:

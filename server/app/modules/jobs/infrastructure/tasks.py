@@ -8,6 +8,7 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.core.clock import Clock
+from app.core.config import Settings
 from app.core.storage import FileStorage
 from app.modules.auth.application.ports import AuthUnitOfWork
 from app.modules.auth.application.public import PurgeExpiredSessionsUseCase
@@ -22,17 +23,30 @@ from app.modules.jobs.domain.entities import (
     CLEANUP_ORPHAN_FILES,
     CLEANUP_QUICK_UPLOADS,
     CLEANUP_SESSIONS,
+    OPTIMIZE_FSRS,
     ORPHAN_FILES_INTERVAL_SECONDS,
+    SEND_REMINDERS,
     SESSIONS_INTERVAL_SECONDS,
     JobDefinition,
 )
 from app.modules.jobs.infrastructure.uow import SqlJobsUnitOfWork
 from app.modules.library.application.ports import LibraryUnitOfWork
-from app.modules.library.application.public import PurgeExpiredQuickUploadsUseCase
+from app.modules.library.application.public import LibraryPageAccess, PurgeExpiredQuickUploadsUseCase
 from app.modules.library.infrastructure.public import SqlLibraryUnitOfWork
+from app.modules.notifications.application.ports import NotificationsUnitOfWork
+from app.modules.notifications.application.public import ReminderConfig, SendDueRemindersUseCase
+from app.modules.notifications.infrastructure.public import FileOutboxEmailSender, SqlNotificationsUnitOfWork
 from app.modules.reader.application.ports import ReaderUnitOfWork
 from app.modules.reader.application.public import PurgeExpiredGuestSessionsUseCase
 from app.modules.reader.infrastructure.public import SqlReaderUnitOfWork
+from app.modules.review.application.ports import ReviewUnitOfWork, VocabCardSource
+from app.modules.review.application.use_cases.optimize_fsrs_parameters import (
+    OptimizeConfig,
+    OptimizeFsrsParametersUseCase,
+)
+from app.modules.review.infrastructure.public import FsrsLibraryOptimizer, SqlDueCardCounter
+from app.modules.review.infrastructure.uow import SqlReviewUnitOfWork
+from app.modules.vocab.infrastructure.public import DictionaryTermAdapter, SqlVocabCardSource
 
 
 class CleanupQuickUploadsTask:
@@ -74,17 +88,39 @@ class CleanupOrphanFilesTask:
         return {"files": await self._purge.execute(now)}
 
 
-def default_job_definitions(cleanup_interval_minutes: int) -> list[JobDefinition]:
-    """Danh sách tác vụ mặc định; chu kỳ dọn ảnh tải nhanh lấy từ Settings (mặc định 60 phút)."""
+class OptimizeFsrsTask:
+    """F08.08 — Tối ưu tham số FSRS riêng cho từng người học."""
+
+    def __init__(self, optimize: OptimizeFsrsParametersUseCase) -> None:
+        self._optimize = optimize
+
+    async def run(self, now: datetime) -> dict[str, Any]:
+        return dict((await self._optimize.execute(now)).as_summary())
+
+
+class SendRemindersTask:
+    """F14.04 — Quét và gửi nhắc ôn hằng ngày."""
+
+    def __init__(self, reminders: SendDueRemindersUseCase) -> None:
+        self._reminders = reminders
+
+    async def run(self, now: datetime) -> dict[str, Any]:
+        return dict((await self._reminders.execute(now)).as_summary())
+
+
+def default_job_definitions(settings: Settings) -> list[JobDefinition]:
+    """Danh sách tác vụ mặc định; chu kỳ lấy từ Settings (dọn ảnh 60 phút, FSRS 7 ngày, nhắc ôn 15 phút)."""
     return [
-        JobDefinition(CLEANUP_QUICK_UPLOADS, cleanup_interval_minutes * 60),
+        JobDefinition(CLEANUP_QUICK_UPLOADS, settings.cleanup_interval_minutes * 60),
         JobDefinition(CLEANUP_SESSIONS, SESSIONS_INTERVAL_SECONDS),
         JobDefinition(CLEANUP_ORPHAN_FILES, ORPHAN_FILES_INTERVAL_SECONDS),
+        JobDefinition(OPTIMIZE_FSRS, settings.fsrs_optimize_interval_days * 86400),
+        JobDefinition(SEND_REMINDERS, settings.reminder_scan_minutes * 60),
     ]
 
 
 def build_job_tasks(
-    session_factory: async_sessionmaker[AsyncSession], storage: FileStorage
+    session_factory: async_sessionmaker[AsyncSession], storage: FileStorage, clock: Clock, settings: Settings
 ) -> dict[str, JobTask]:
     def library_uow() -> LibraryUnitOfWork:
         return SqlLibraryUnitOfWork(session_factory)
@@ -98,12 +134,43 @@ def build_job_tasks(
     def imaging_uow() -> ImagingUnitOfWork:
         return SqlImagingUnitOfWork(session_factory)
 
+    def notifications_uow() -> NotificationsUnitOfWork:
+        return SqlNotificationsUnitOfWork(session_factory)
+
+    dictionary = DictionaryTermAdapter(session_factory)
+    pages = LibraryPageAccess(library_uow, clock)
+
+    def vocab_source(session: AsyncSession) -> VocabCardSource:
+        return SqlVocabCardSource(session, dictionary, pages)
+
+    def review_uow() -> ReviewUnitOfWork:
+        return SqlReviewUnitOfWork(session_factory, vocab_source)
+
     return {
         CLEANUP_QUICK_UPLOADS: CleanupQuickUploadsTask(PurgeExpiredQuickUploadsUseCase(library_uow, storage)),
         CLEANUP_SESSIONS: CleanupSessionsTask(
             PurgeExpiredSessionsUseCase(auth_uow), PurgeExpiredGuestSessionsUseCase(reader_uow)
         ),
         CLEANUP_ORPHAN_FILES: CleanupOrphanFilesTask(PurgeOrphanResultFilesUseCase(imaging_uow, storage)),
+        OPTIMIZE_FSRS: OptimizeFsrsTask(
+            OptimizeFsrsParametersUseCase(
+                review_uow,
+                FsrsLibraryOptimizer(),
+                OptimizeConfig(
+                    settings.fsrs_optimize_min_reviews,
+                    settings.fsrs_optimize_interval_days,
+                    settings.fsrs_optimize_max_users_per_run,
+                ),
+            )
+        ),
+        SEND_REMINDERS: SendRemindersTask(
+            SendDueRemindersUseCase(
+                notifications_uow,
+                SqlDueCardCounter(session_factory),
+                FileOutboxEmailSender(settings.storage_dir / "outbox"),
+                ReminderConfig(settings.reminder_grace_hours),
+            )
+        ),
     }
 
 
@@ -111,7 +178,7 @@ def build_job_runner(
     session_factory: async_sessionmaker[AsyncSession],
     storage: FileStorage,
     clock: Clock,
-    cleanup_interval_minutes: int,
+    settings: Settings,
 ) -> JobRunner:
     """Lắp `JobRunner` cho worker: `await runner.run_due_jobs(clock.now(), worker_id)`."""
 
@@ -122,7 +189,7 @@ def build_job_runner(
         RunDueJobsUseCase(
             jobs_uow,
             clock,
-            default_job_definitions(cleanup_interval_minutes),
-            build_job_tasks(session_factory, storage),
+            default_job_definitions(settings),
+            build_job_tasks(session_factory, storage, clock, settings),
         )
     )

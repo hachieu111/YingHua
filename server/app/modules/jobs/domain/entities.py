@@ -10,6 +10,8 @@ from typing import Any
 CLEANUP_QUICK_UPLOADS = "cleanup_quick_uploads"
 CLEANUP_SESSIONS = "cleanup_sessions"
 CLEANUP_ORPHAN_FILES = "cleanup_orphan_files"
+OPTIMIZE_FSRS = "optimize_fsrs"
+SEND_REMINDERS = "send_reminders"
 
 # Khóa chống chạy chồng tự hết hạn: nếu worker chết giữa chừng, tác vụ chạy lại được sau chừng này.
 JOB_LOCK_TTL = timedelta(minutes=10)

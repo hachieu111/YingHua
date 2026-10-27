@@ -20,7 +20,13 @@ from tests.helpers import make_admin, png_bytes, register
 pytestmark = pytest.mark.integration
 
 API = "/api/v1"
-JOB_NAMES = ["cleanup_orphan_files", "cleanup_quick_uploads", "cleanup_sessions"]
+JOB_NAMES = [
+    "cleanup_orphan_files",
+    "cleanup_quick_uploads",
+    "cleanup_sessions",
+    "optimize_fsrs",
+    "send_reminders",
+]
 
 
 def _png() -> bytes:
@@ -82,7 +88,9 @@ async def test_run_due_jobs_cleans_expired_data_keeps_series_pages_and_records_r
 
     # 8 ngày sau: ảnh tải nhanh (hạn 7 ngày) và tệp mồ côi đều quá hạn.
     later = datetime.now(timezone.utc) + timedelta(days=8)
-    runner = build_job_runner(container.session_factory, container.storage, FixedClock(later), 60)
+    runner = build_job_runner(
+        container.session_factory, container.storage, FixedClock(later), container.settings
+    )
     reports = await runner.run_due_jobs(later, "w1")
     assert [r.name for r in reports] == JOB_NAMES
     assert all(r.status.value == "ok" and r.error_message is None for r in reports), reports
@@ -101,13 +109,17 @@ async def test_run_due_jobs_cleans_expired_data_keeps_series_pages_and_records_r
     assert await _scalar(app, "SELECT count(*) FROM guest_sessions WHERE id = :id", id=guest_id) == 0
     assert await _scalar(app, "SELECT count(*) FROM stored_files WHERE id = :id", id=orphan_id) == 0
 
-    # F15.03: chạy lại ngay thì chưa đến hạn; sau 2 giờ chỉ tác vụ chu kỳ 60 phút chạy lại; khóa đã nhả.
+    # F15.03: chạy lại ngay thì chưa đến hạn; sau 2 giờ chỉ tác vụ chu kỳ 60 phút
+    # và nhắc ôn (15 phút) chạy lại; khóa đã nhả.
     assert await runner.run_due_jobs(later, "w1") == []
     runner_2h = build_job_runner(
-        container.session_factory, container.storage, FixedClock(later + timedelta(hours=2)), 60
+        container.session_factory,
+        container.storage,
+        FixedClock(later + timedelta(hours=2)),
+        container.settings,
     )
     again = await runner_2h.run_due_jobs(later + timedelta(hours=2), "w2")
-    assert [r.name for r in again] == ["cleanup_quick_uploads"]
+    assert [r.name for r in again] == ["cleanup_quick_uploads", "send_reminders"]
     assert await _scalar(app, "SELECT count(*) FROM scheduled_jobs WHERE locked_by IS NOT NULL") == 0
     assert await _scalar(app, "SELECT count(*) FROM job_runs WHERE status = 'running'") == 0
 
