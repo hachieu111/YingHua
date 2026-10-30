@@ -16,6 +16,8 @@ class TranslationSummary:
     rendered_file_id: int | None = None
     error_step: str | None = None
     error_message: str | None = None
+    # Chữ đã đọc xong (giai đoạn 1): bản dịch `done` hoặc đã có bong bóng dù đang `running`/`failed`.
+    text_ready: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -41,7 +43,11 @@ class ClaimedJob:
 
 @dataclass(frozen=True, slots=True)
 class JobResult:
-    """Kết quả pipeline cho `complete_job`. Ảnh dẫn xuất đã lưu trước bằng `store_result_image`."""
+    """Kết quả pipeline cho `complete_job`. Ảnh dẫn xuất đã lưu trước bằng `store_result_image`.
+
+    Nếu bản dịch đã có bong bóng (do `save_text_result` ở giai đoạn 1) thì `complete_job` chỉ cập nhật
+    `style` theo `idx`, giữ nguyên id bong bóng; chưa có thì chèn `bubbles` như trước.
+    """
 
     bubbles: Sequence[NewBubble]
     inpainted_file_id: int | None = None
@@ -60,6 +66,7 @@ class PageStatus:
     error_step: str | None
     error_message: str | None
     can_retranslate: bool
+    text_ready: bool = False
 
 
 @dataclass(frozen=True, slots=True)

@@ -61,6 +61,10 @@ class TranslationQueue(Protocol):
         """Việc `running` bị bỏ quên đã hết lượt thử → `failed`. Trả số việc đã đóng."""
         ...
 
+    async def save_partial_stats(self, translation_id: int, stats: dict[str, Any]) -> None:
+        """Ghi thống kê giai đoạn 1 khi việc vẫn `running`."""
+        ...
+
     async def mark_done(
         self,
         translation_id: int,
@@ -97,6 +101,12 @@ class BubbleRepository(Protocol):
     async def get_many(self, bubble_ids: Sequence[int]) -> dict[int, Bubble]: ...
 
     async def delete_by_translation(self, translation_id: int) -> int: ...
+
+    async def count_by_translation(self, translation_id: int) -> int: ...
+
+    async def update_styles(self, translation_id: int, styles: dict[int, Any]) -> None:
+        """Cập nhật `style` theo `idx`; id và nội dung chữ của bong bóng giữ nguyên."""
+        ...
 
     async def add_many(self, translation_id: int, bubbles: Sequence[NewBubble]) -> None: ...
 

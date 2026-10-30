@@ -22,7 +22,7 @@ from app.modules.library.domain.errors import (
 TITLE_MAX_LENGTH = 255
 GENRE_MAX_LENGTH = 32
 MAX_GENRES = 8
-MAX_FILES_PER_UPLOAD = 50
+MAX_FILES_PER_UPLOAD = 20
 MIN_STARS = 1
 MAX_STARS = 5
 # Loại tệp chỉ chủ sở hữu và quản trị viên xem được, kể cả khi truyện công khai.

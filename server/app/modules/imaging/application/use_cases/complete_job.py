@@ -12,10 +12,11 @@ from app.modules.imaging.domain.rules import validate_bubbles
 
 
 class CompleteJobUseCase:
-    """F04.13, F04.01 — Worker ghi kết quả: bong bóng, ảnh dẫn xuất, thống kê; đặt `done` (US-XL-07).
+    """F04.13, F04.01, F04.02 — Worker hoàn tất giai đoạn 2: ảnh dẫn xuất, style, thống kê; `done` (US-XL-07).
 
-    Một giao dịch: thay toàn bộ bong bóng cũ, gắn ảnh mới, đóng việc. Ảnh dẫn xuất cũ (khi xử lý lại) bị
-    xóa sau khi commit. Chỉ việc đang `running` mới được hoàn tất.
+    Một giao dịch. Bong bóng đã ghi ở giai đoạn 1 (`SaveTextResultUseCase`) chỉ được cập nhật `style` theo
+    `idx` (id giữ nguyên); chưa có bong bóng (caller cũ) thì chèn như trước. Ảnh dẫn xuất cũ (khi xử lý
+    lại) bị xóa sau khi commit. Chỉ việc đang `running` mới được hoàn tất.
     """
 
     def __init__(
@@ -37,8 +38,13 @@ class CompleteJobUseCase:
                     raise JobNotRunningError()
                 new_ids = {result.inpainted_file_id, result.rendered_file_id}
                 old_ids = {translation.inpainted_file_id, translation.rendered_file_id} - new_ids - {None}
-                await uow.bubbles.delete_by_translation(translation_id)
-                await uow.bubbles.add_many(translation_id, result.bubbles)
+                if await uow.bubbles.count_by_translation(translation_id) > 0:
+                    # Giai đoạn 1 đã ghi chữ: giữ id bong bóng vì người học có thể đã lưu từ/câu/ghi chú.
+                    await uow.bubbles.update_styles(
+                        translation_id, {b.idx: b.style for b in result.bubbles if b.style is not None}
+                    )
+                else:
+                    await uow.bubbles.add_many(translation_id, result.bubbles)
                 await uow.translations.mark_done(
                     translation_id,
                     result.inpainted_file_id,

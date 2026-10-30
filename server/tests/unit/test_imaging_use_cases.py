@@ -18,6 +18,7 @@ from app.modules.imaging.application.use_cases.fail_job import FailJobUseCase
 from app.modules.imaging.application.use_cases.list_translations import ListTranslationsUseCase
 from app.modules.imaging.application.use_cases.retranslate_page import RetranslatePageUseCase
 from app.modules.imaging.application.use_cases.retry_translation import RetryTranslationUseCase
+from app.modules.imaging.application.use_cases.save_text_result import SaveTextResultUseCase
 from app.modules.imaging.domain.entities import NewBubble, QueueStats, Translation, TranslationStatus
 from app.modules.imaging.domain.errors import (
     InvalidBubbleError,
@@ -81,6 +82,9 @@ class FakeQueue:
     async def fail_exhausted_stale(self, stale_before: datetime, now: datetime, max_attempts: int) -> int:
         return self.stale_closed
 
+    async def save_partial_stats(self, tid: int, stats: dict[str, Any]) -> None:
+        self.items[tid].stats = stats
+
     async def mark_done(
         self,
         tid: int,
@@ -113,9 +117,17 @@ class FakeQueue:
 
 
 class FakeBubbles:
-    def __init__(self) -> None:
+    def __init__(self, existing: int = 0) -> None:
         self.deleted: list[int] = []
         self.added: list[tuple[int, int]] = []
+        self.existing = existing
+        self.styles: dict[int, Any] = {}
+
+    async def count_by_translation(self, tid: int) -> int:
+        return self.existing
+
+    async def update_styles(self, tid: int, styles: dict[int, Any]) -> None:
+        self.styles.update(styles)
 
     async def delete_by_translation(self, tid: int) -> int:
         self.deleted.append(tid)
@@ -296,7 +308,7 @@ async def test_fail_job_requeues_until_max_attempts_then_fails() -> None:
         await use_case.execute(1, "ocr", "again")  # đã về queued, không còn running
 
 
-async def test_complete_job_replaces_bubbles_and_removes_superseded_files() -> None:
+async def test_complete_job_inserts_bubbles_when_none_exist_and_removes_superseded_files() -> None:
     """US-XL-07: ghi kết quả trong một giao dịch, xóa ảnh dẫn xuất cũ."""
     queue = FakeQueue(_translation(1, STATUS.RUNNING, inpainted_file_id=7, rendered_file_id=8))
     uow = FakeUow(queue)
@@ -304,13 +316,43 @@ async def test_complete_job_replaces_bubbles_and_removes_superseded_files() -> N
     await use_case.execute(
         1, JobResult(bubbles=[_bubble(0), _bubble(1)], inpainted_file_id=7, rendered_file_id=9)
     )
-    assert uow.bubbles.deleted == [1] and uow.bubbles.added == [(1, 2)]
+    assert uow.bubbles.added == [(1, 2)]  # chưa có bong bóng (caller cũ) -> chèn như trước
     assert queue.done_calls == [(1, 7, 9)]
     assert uow.files.deleted == [8]  # chỉ ảnh bị thay mới bị xóa
     with pytest.raises(JobNotRunningError):
         await use_case.execute(1, JobResult(bubbles=[]))  # đã done
     with pytest.raises(InvalidBubbleError):
         await use_case.execute(1, JobResult(bubbles=[_bubble(0, "bad")]))
+
+
+async def test_complete_job_keeps_existing_bubbles_and_only_updates_style() -> None:
+    """F04.02: bong bóng đã ghi ở giai đoạn 1 giữ nguyên (id không đổi), chỉ bổ sung style theo idx."""
+    queue = FakeQueue(_translation(1, STATUS.RUNNING))
+    uow = FakeUow(queue)
+    uow.bubbles.existing = 2
+    use_case = CompleteJobUseCase(lambda: uow, FixedClock(NOW), storage=None)  # type: ignore[arg-type,return-value]
+    await use_case.execute(
+        1,
+        JobResult(bubbles=[_bubble(0, style={"c": 1}), _bubble(1)], inpainted_file_id=7, rendered_file_id=9),
+    )
+    assert uow.bubbles.deleted == [] and uow.bubbles.added == []
+    assert uow.bubbles.styles == {0: {"c": 1}} and queue.items[1].status is STATUS.DONE
+
+
+async def test_save_text_result_replaces_old_bubbles_and_keeps_running() -> None:
+    """F04.02: ghi chữ giai đoạn 1 thay bong bóng cũ, vẫn running; việc không running bị từ chối."""
+    queue = FakeQueue(_translation(1, STATUS.RUNNING), _translation(2, STATUS.QUEUED))
+    uow = FakeUow(queue)
+    use_case = SaveTextResultUseCase(lambda: uow)  # type: ignore[arg-type,return-value]
+    await use_case.execute(1, [_bubble(0), _bubble(1)], {"mode": "yolo"})
+    assert uow.bubbles.deleted == [1] and uow.bubbles.added == [(1, 2)]
+    assert (
+        queue.items[1].status is STATUS.RUNNING and queue.items[1].stats == {"mode": "yolo"} and uow.committed
+    )
+    with pytest.raises(JobNotRunningError):
+        await use_case.execute(2, [_bubble(0)], {})
+    with pytest.raises(InvalidBubbleError):
+        await use_case.execute(1, [_bubble(0, "bad")], {})
 
 
 async def test_claim_next_job_returns_oldest_and_skips_jobs_without_source_file() -> None:

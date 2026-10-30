@@ -151,6 +151,9 @@ class ReadingPageInfo(BaseModel):
     width: int | None
     height: int | None
     status: str | None
+    text_ready: bool = Field(
+        description="Chữ và bản dịch đã sẵn sàng (đã `done` hoặc đã có bong bóng dù còn running/failed)"
+    )
     error_step: str | None
     error_message: str | None
     can_edit: bool
@@ -182,6 +185,7 @@ class ReadingResponse(BaseModel):
                 width=a.width,
                 height=a.height,
                 status=t.status.value if t else None,
+                text_ready=t.text_ready if t else False,
                 error_step=t.error_step if t else None,
                 error_message=t.error_message if t else None,
                 can_edit=a.can_edit,

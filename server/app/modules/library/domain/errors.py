@@ -78,7 +78,7 @@ class InvalidPageNumberError(InvalidInputError):
 
 class TooManyFilesError(InvalidInputError):
     code = "TOO_MANY_FILES"
-    default_message = "Mỗi lần tải lên tối đa 50 ảnh"
+    default_message = "Mỗi lần tải lên tối đa 20 ảnh, mỗi ảnh không quá 10 MB"
 
 
 class InvalidRatingError(InvalidInputError):

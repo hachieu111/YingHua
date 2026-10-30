@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import random
+from dataclasses import replace
 from datetime import datetime, timezone
 from typing import Any
 
@@ -400,3 +401,57 @@ async def test_guest_trial_reading_lookup_limit_admin_queue_and_claim_contention
     await _new_page(client, admin, series, trial_ch)
     claims = await asyncio.gather(jobs.claim_next_job("w-a", _now()), jobs.claim_next_job("w-b", _now()))
     assert sorted(c is not None for c in claims) == [False, True]
+
+
+async def test_text_ready_and_reading_return_bubbles_while_images_still_running(
+    app: FastAPI, client: httpx.AsyncClient
+) -> None:
+    """F04.02, F05.01: sau giai đoạn chữ (còn running) trang đọc được, id bong bóng giữ nguyên."""
+    owner = await register(client)
+    jobs = _worker(app)
+    await _drain(jobs)
+    page = await _new_page(client, owner)
+    pid = page["id"]
+    tid = await _translation_id(client, owner, pid)
+
+    queued = (await client.get(f"{API}/pages/{pid}/reading", headers=owner.headers)).json()
+    assert (queued["page"]["status"], queued["page"]["text_ready"], queued["bubbles"]) == (
+        "queued",
+        False,
+        [],
+    )
+    assert (await client.get(f"{API}/pages/{pid}", headers=owner.headers)).json()["text_ready"] is False
+
+    await _claim_mine(jobs, tid)
+    await jobs.save_text_result(tid, [replace(b, style=None) for b in _bubbles()], {"mode": "yolo"})
+    running = (await client.get(f"{API}/pages/{pid}/reading", headers=owner.headers)).json()
+    assert (running["page"]["status"], running["page"]["text_ready"]) == ("running", True)
+    assert running["variants"]["inpainted"] is None and running["variants"]["rendered"] is None
+    ids = [b["id"] for b in running["bubbles"]]
+    assert len(ids) == 2 and running["bubbles"][0]["style"] is None
+    status = (await client.get(f"{API}/pages/{pid}/status", headers=owner.headers)).json()
+    assert (status["status"], status["text_ready"]) == ("running", True)
+    assert (await client.get(f"{API}/pages/{pid}", headers=owner.headers)).json()["text_ready"] is True
+    download = await client.get(f"{API}/pages/{pid}/download?variant=rendered", headers=owner.headers)
+    assert download.status_code == 409  # ảnh chưa xong vẫn bị chặn
+
+    inpainted = await jobs.store_result_image(png_bytes((1, 2, 3)), FileKind.INPAINTED)
+    rendered = await jobs.store_result_image(png_bytes((4, 5, 6)), FileKind.RENDERED)
+    await jobs.complete_job(tid, JobResult(_bubbles(), inpainted, rendered, {"bubbles": 2}, 900))
+    done = (await client.get(f"{API}/pages/{pid}/reading", headers=owner.headers)).json()
+    assert done["page"]["text_ready"] is True and [b["id"] for b in done["bubbles"]] == ids
+    assert done["bubbles"][0]["style"] == {"color": "#000000"}
+    assert done["variants"]["rendered"] is not None
+
+
+async def test_upload_more_than_twenty_files_is_rejected(app: FastAPI, client: httpx.AsyncClient) -> None:
+    """F03.07: tối đa 20 ảnh mỗi lần."""
+    owner = await register(client)
+    series = (await client.post(f"{API}/series", json={"title_vi": "Nhiều"}, headers=owner.headers)).json()
+    chapter = (
+        await client.post(f"{API}/series/{series['id']}/chapters", json={"number": 1}, headers=owner.headers)
+    ).json()
+    files = [("files", (f"p{i}.png", png_bytes(_color()), "image/png")) for i in range(21)]
+    res = await client.post(f"{API}/chapters/{chapter['id']}/pages", files=files, headers=owner.headers)
+    assert (res.status_code, error_code(res)) == (400, "TOO_MANY_FILES")
+    assert "tối đa 20 ảnh" in res.json()["error"]["message"]

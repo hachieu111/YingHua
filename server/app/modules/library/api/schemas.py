@@ -241,6 +241,9 @@ class PageResponse(BaseModel):
     width: int | None
     height: int | None
     status: str | None
+    text_ready: bool = Field(
+        description="Chữ và bản dịch đã sẵn sàng (đã `done` hoặc đã có bong bóng dù còn running/failed)"
+    )
     error_step: str | None
     error_message: str | None
     original_url: str | None
@@ -261,6 +264,7 @@ class PageResponse(BaseModel):
             width=p.width,
             height=p.height,
             status=t.status.value if t else None,
+            text_ready=t.text_ready if t else False,
             error_step=t.error_step if t else None,
             error_message=t.error_message if t else None,
             original_url=file_url(p.original_file_id),

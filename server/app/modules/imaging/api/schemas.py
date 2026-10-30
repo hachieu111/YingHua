@@ -27,6 +27,7 @@ class PageStatusResponse(BaseModel):
     error_step: str | None
     error_message: str | None
     can_retranslate: bool
+    text_ready: bool
 
     @classmethod
     def from_status(cls, s: PageStatus) -> PageStatusResponse:
@@ -38,6 +39,7 @@ class PageStatusResponse(BaseModel):
             error_step=s.error_step,
             error_message=s.error_message,
             can_retranslate=s.can_retranslate,
+            text_ready=s.text_ready,
         )
 
 

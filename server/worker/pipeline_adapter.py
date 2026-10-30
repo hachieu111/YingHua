@@ -3,6 +3,9 @@
 Chuyển từ `Backend/app/services/pipeline_runner.py` (bản cũ), giữ nguyên thuật toán và tham số;
 không phụ thuộc CSDL/Settings — worker lắp `PipelineConfig` và tự lưu kết quả.
 Model nạp lười một lần cho mỗi adapter; worker chỉ tạo **một** adapter (singleton model AI cho phép).
+
+Hai giai đoạn công khai (F04.02): `process_text` (detect, OCR, dịch, tách từ) cho người học đọc ngay,
+`process_images` (xóa chữ, đắp chữ, style) chạy sau; `process` gọi tuần tự cả hai.
 """
 
 from __future__ import annotations
@@ -12,7 +15,7 @@ import threading
 import uuid
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from time import perf_counter
 from typing import Any
@@ -24,14 +27,24 @@ from worker.module_loader import PipelineModules, load_pipeline_modules
 from worker.pipeline_types import (
     BubbleResult,
     ImageArray,
+    ImagePhaseResult,
     PipelineConfig,
     PipelineResult,
     PipelineStep,
     PipelineStepError,
+    TextPhaseResult,
 )
 from worker.text_segmenter import tokenize_chinese
 
-__all__ = ["BubbleResult", "PipelineAdapter", "PipelineConfig", "PipelineResult", "PipelineStepError"]
+__all__ = [
+    "BubbleResult",
+    "ImagePhaseResult",
+    "PipelineAdapter",
+    "PipelineConfig",
+    "PipelineResult",
+    "PipelineStepError",
+    "TextPhaseResult",
+]
 
 log = logging.getLogger("yinghua.worker.pipeline")
 
@@ -203,12 +216,19 @@ def _remove_scratch_file(saved_path: str | None) -> None:
         log.warning("Không xóa được file tạm của inpainter: %s", saved_path, exc_info=True)
 
 
+@dataclass(slots=True)
+class _TextState:
+    """Dữ liệu trung gian giữa hai giai đoạn của một trang."""
+
+    run: _PageRun
+    ocr: dict[str, Any]
+    texts: list[dict[str, Any]]
+    translated: list[_Translated]
+    text_ms: int
+
+
 def _build_bubble(
-    run: _PageRun,
-    t: _Translated,
-    bubbles: list[dict[str, Any]],
-    inpainted: ImageArray,
-    tokens: list[dict[str, Any]],
+    t: _Translated, bubbles: list[dict[str, Any]], tokens: list[dict[str, Any]]
 ) -> BubbleResult:
     b = asm.find_bubble(bubbles, t.bubble_id)
     x, y, w, h = asm.bubble_box(b, t.regions)
@@ -227,7 +247,7 @@ def _build_bubble(
         translate_method=t.payload["method"],
         lines=asm.build_lines(t.regions),
         tokens=tokens,
-        style=run.style_of(inpainted, t, b),
+        style=None,
     )
 
 
@@ -265,32 +285,62 @@ class PipelineAdapter:
         return self._mods
 
     def process(self, image_bgr: ImageArray) -> PipelineResult:
-        """Xử lý một ảnh BGR; lỗi ở bước nào ném `PipelineStepError` của bước đó."""
+        """Xử lý một ảnh BGR qua cả hai giai đoạn; lỗi ở bước nào ném `PipelineStepError` của bước đó."""
+        text = self.process_text(image_bgr)
+        images = self.process_images(text)
+        bubbles = [replace(b, style=images.styles.get(b.idx)) for b in text.bubbles]
+        return PipelineResult(
+            bubbles=bubbles,
+            inpainted=images.inpainted,
+            rendered=images.rendered,
+            mode=text.mode,
+            stats=images.stats,
+        )
+
+    def process_text(self, image_bgr: ImageArray) -> TextPhaseResult:
+        """Giai đoạn 1: detect + OCR, dịch, tách từ. Bong bóng chưa có `style`."""
         _validate_image(image_bgr)
         with self._lock:
-            return self._run(_PageRun(self._ensure_loaded(), image_bgr))
+            started = perf_counter()
+            run = _PageRun(self._ensure_loaded(), image_bgr)
+            ocr = run.detect_and_ocr()
+            texts = asm.select_bubble_texts(ocr["texts"])
+            translated = run.translate(texts)
+            tokens = run.tokenize(translated)
+            bubbles = [_build_bubble(t, ocr["bubbles"], tokens[t.bubble_id]) for t in translated]
+            text_ms = _ms(started)
+            stats = asm.jsonable(
+                {
+                    **ocr.get("stats", {}),
+                    "n_translated": len(translated),
+                    "timings_ms": dict(run.timings),
+                }
+            )
+            log.info("Giai đoạn chữ xong: %d bubble, mode=%s, %d ms", len(bubbles), ocr.get("mode"), text_ms)
+            state = _TextState(run, ocr, texts, translated, text_ms)
+            return TextPhaseResult(bubbles=bubbles, mode=ocr.get("mode"), stats=stats, state=state)
 
-    def _run(self, run: _PageRun) -> PipelineResult:
-        started = perf_counter()
-        ocr = run.detect_and_ocr()
-        bubbles: list[dict[str, Any]] = ocr["bubbles"]
-        texts = asm.select_bubble_texts(ocr["texts"])
-        translated = run.translate(texts)
-        inp = run.inpaint(texts, bubbles)
-        inpainted: ImageArray = inp["inpainted_img"]
-        rendered = run.render(inpainted, ocr, texts, translated)
-        tokens = run.tokenize(translated)
-        results = [_build_bubble(run, t, bubbles, inpainted, tokens[t.bubble_id]) for t in translated]
-        run.timings["total"] = _ms(started)
-        stats = asm.jsonable(
-            {
-                **ocr.get("stats", {}),
-                "n_inpainted": inp.get("n_regions", 0),
-                "n_translated": len(translated),
-                "timings_ms": run.timings,
+    def process_images(self, text: TextPhaseResult) -> ImagePhaseResult:
+        """Giai đoạn 2: xóa chữ gốc, đắp chữ tiếng Việt, tính `style` từng bong bóng (theo `idx`)."""
+        state: _TextState = text.state
+        run = state.run
+        with self._lock:
+            started = perf_counter()
+            inp = run.inpaint(state.texts, state.ocr["bubbles"])
+            inpainted: ImageArray = inp["inpainted_img"]
+            rendered = run.render(inpainted, state.ocr, state.texts, state.translated)
+            styles = {
+                t.bubble_id: run.style_of(inpainted, t, asm.find_bubble(state.ocr["bubbles"], t.bubble_id))
+                for t in state.translated
             }
-        )
-        log.info("Trang xong: %d bubble, mode=%s, %d ms", len(results), ocr.get("mode"), run.timings["total"])
-        return PipelineResult(
-            bubbles=results, inpainted=inpainted, rendered=rendered, mode=ocr.get("mode"), stats=stats
-        )
+            run.timings["total"] = state.text_ms + _ms(started)
+            stats = asm.jsonable(
+                {
+                    **state.ocr.get("stats", {}),
+                    "n_inpainted": inp.get("n_regions", 0),
+                    "n_translated": len(state.translated),
+                    "timings_ms": run.timings,
+                }
+            )
+            log.info("Trang xong: %d bubble, mode=%s, %d ms", len(styles), text.mode, run.timings["total"])
+            return ImagePhaseResult(inpainted=inpainted, rendered=rendered, styles=styles, stats=stats)

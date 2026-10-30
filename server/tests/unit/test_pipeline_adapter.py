@@ -212,6 +212,27 @@ def test_process_reports_stats_timings_and_mode(tmp_path: Path) -> None:
     }
 
 
+def test_two_phases_text_first_without_style_then_images_with_style(tmp_path: Path) -> None:
+    """F04.02: giai đoạn chữ không chạm inpaint/render; giai đoạn ảnh trả style theo idx."""
+    fake = FakeModules(tmp_path)
+    adapter = _adapter(fake)
+    text = adapter.process_text(IMG)
+    assert {b.idx for b in text.bubbles} == {0, 1, 5} and all(b.style is None for b in text.bubbles)
+    assert fake.saved is None and not fake.render_kwargs  # chưa xóa chữ/đắp chữ
+    assert set(text.stats["timings_ms"]) == {"detect", "ocr", "translate", "segment"}
+    images = adapter.process_images(text)
+    assert images.styles[0] == {"color": [1, 2, 3], "size": 12.0, "pos": [1, 2]}
+    assert set(images.stats["timings_ms"]) == {
+        "detect",
+        "ocr",
+        "translate",
+        "segment",
+        "inpaint",
+        "render",
+        "total",
+    }
+
+
 def test_process_passes_original_params_and_removes_scratch_file(tmp_path: Path) -> None:
     fake = FakeModules(tmp_path)
     _adapter(fake).process(IMG)

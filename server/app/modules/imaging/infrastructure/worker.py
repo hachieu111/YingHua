@@ -14,6 +14,7 @@ from app.modules.imaging.application.ports import ImagingUnitOfWork
 from app.modules.imaging.application.use_cases.claim_next_job import ClaimNextJobUseCase
 from app.modules.imaging.application.use_cases.complete_job import CompleteJobUseCase
 from app.modules.imaging.application.use_cases.fail_job import FailJobUseCase
+from app.modules.imaging.application.use_cases.save_text_result import SaveTextResultUseCase
 from app.modules.imaging.application.use_cases.store_result_image import StoreResultImageUseCase
 from app.modules.imaging.application.worker import WorkerJobs
 from app.modules.imaging.infrastructure.uow import SqlImagingUnitOfWork
@@ -37,4 +38,5 @@ def build_worker_jobs(
         complete=CompleteJobUseCase(uow_factory, clock, storage),
         fail=FailJobUseCase(uow_factory, clock, config),
         store_image=StoreResultImageUseCase(uow_factory, clock, storage),
+        save_text=SaveTextResultUseCase(uow_factory),
     )

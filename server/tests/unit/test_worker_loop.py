@@ -17,13 +17,20 @@ from app.core.config import Settings
 from app.core.errors import NotFoundError
 from app.core.stored_files import FileKind
 from app.modules.imaging.application.dto import ClaimedJob, JobResult
-from app.modules.imaging.domain.entities import TranslationStatus
+from app.modules.imaging.domain.entities import NewBubble, TranslationStatus
 from worker.config import LoopTiming, loop_timing_from_settings, pipeline_config_from_settings
 from worker.image_codec import phash
 from worker.job_processor import UNKNOWN_MESSAGE, CpuRunner, JobProcessor
 from worker.loop import WorkerLoop
 from worker.main import build_worker
-from worker.pipeline_types import BubbleResult, ImageArray, PipelineConfig, PipelineResult, PipelineStepError
+from worker.pipeline_types import (
+    BubbleResult,
+    ImageArray,
+    ImagePhaseResult,
+    PipelineConfig,
+    PipelineStepError,
+    TextPhaseResult,
+)
 
 T0 = datetime(2026, 10, 24, 8, 0, tzinfo=timezone.utc)
 SOURCE_KEY = "page/ab/abc.png"
@@ -54,6 +61,7 @@ class FakeJobs:
         self.calls: list[str] = []
         self.stored: list[tuple[bytes, FileKind]] = []
         self.completed: list[tuple[int, JobResult]] = []
+        self.text_saved: list[tuple[int, list[NewBubble], dict[str, Any]]] = []
         self.failed: list[tuple[int, str, str]] = []
         self._store_error = store_error
 
@@ -67,6 +75,12 @@ class FakeJobs:
             raise self._store_error
         self.stored.append((data, kind))
         return 100 + len(self.stored)
+
+    async def save_text_result(
+        self, translation_id: int, bubbles: Any, partial_stats: dict[str, Any]
+    ) -> None:
+        self.calls.append("save_text")
+        self.text_saved.append((translation_id, list(bubbles), partial_stats))
 
     async def complete_job(self, translation_id: int, result: JobResult) -> None:
         self.calls.append("complete")
@@ -113,24 +127,39 @@ def _bubble(idx: int = 0) -> BubbleResult:
             {"w": "你好", "start": 0, "end": 2, "pinyin": "nǐ hǎo"},
             {"w": "吗", "start": 2, "end": 3, "pinyin": "ma"},
         ],
-        style={"color": "#000000"},
+        style=None,
     )
 
 
 class FakeAdapter:
-    def __init__(self, error: Exception | None = None) -> None:
-        self.calls = 0
-        self._error = error
+    """Giả hai giai đoạn: `error` ném ở giai đoạn chữ, `image_error` ở giai đoạn ảnh."""
 
-    def process(self, image_bgr: ImageArray) -> PipelineResult:
+    def __init__(self, error: Exception | None = None, image_error: Exception | None = None) -> None:
+        self.calls = 0
+        self.image_calls = 0
+        self._error = error
+        self._image_error = image_error
+
+    def process_text(self, image_bgr: ImageArray) -> TextPhaseResult:
         self.calls += 1
         if self._error is not None:
             raise self._error
-        return PipelineResult(
+        return TextPhaseResult(
             bubbles=[_bubble()],
-            inpainted=np.zeros_like(image_bgr),
-            rendered=np.full_like(image_bgr, 255),
             mode="yolo",
+            stats={"timings_ms": {"detect": 5, "ocr": 9}, "n_translated": 1},
+            state=image_bgr,
+        )
+
+    def process_images(self, text: TextPhaseResult) -> ImagePhaseResult:
+        self.image_calls += 1
+        if self._image_error is not None:
+            raise self._image_error
+        img: ImageArray = text.state
+        return ImagePhaseResult(
+            inpainted=np.zeros_like(img),
+            rendered=np.full_like(img, 255),
+            styles={0: {"color": "#000000"}},
             stats={"timings_ms": {"detect": 5, "ocr": 9, "total": 20}, "n_translated": 1},
         )
 
@@ -186,7 +215,7 @@ async def test_successful_job_stores_images_before_completing_and_maps_bubbles(c
     outcome = await _processor(cpu, jobs, entries=entries).process_next("w1")
 
     assert outcome is not None and outcome.ok
-    assert jobs.calls == ["claim", "store:inpainted", "store:rendered", "complete"]
+    assert jobs.calls == ["claim", "save_text", "store:inpainted", "store:rendered", "complete"]
     assert entries.calls == [["你好", "吗"]]
     tid, result = jobs.completed[0]
     assert tid == 7
@@ -211,6 +240,30 @@ async def test_successful_job_stores_images_before_completing_and_maps_bubbles(c
     assert result.stats["mode"] == "yolo"
     assert result.processing_ms >= 0
     assert result.phash == phash(IMG)
+
+
+async def test_text_is_saved_before_images_and_bubble_ids_are_not_recreated(cpu: CpuRunner) -> None:
+    """F04.02: giai đoạn 1 ghi chữ (chưa style) trước; giai đoạn 2 chỉ bổ sung style cho cùng idx."""
+    jobs = FakeJobs([_job(14)])
+    await _processor(cpu, jobs).process_next("w1")
+
+    tid, saved, partial = jobs.text_saved[0]
+    assert tid == 14 and saved[0].style is None and saved[0].text_zh == "你好吗"
+    assert partial["mode"] == "yolo" and partial["n_bubbles"] == 1
+    final = jobs.completed[0][1].bubbles[0]
+    assert (final.idx, final.text_zh, final.style) == (saved[0].idx, saved[0].text_zh, {"color": "#000000"})
+    assert len(jobs.text_saved) == 1  # không ghi lại bong bóng ở giai đoạn 2
+
+
+async def test_image_phase_error_fails_job_after_text_was_saved(cpu: CpuRunner) -> None:
+    """F04.02: lỗi xóa chữ -> fail_job đúng bước; bong bóng đã lưu không bị xóa (không có thao tác xóa)."""
+    jobs = FakeJobs([_job(15)])
+    adapter = FakeAdapter(image_error=PipelineStepError("inpaint", "Lỗi khi xóa chữ gốc (RuntimeError)"))
+    outcome = await _processor(cpu, jobs, adapter).process_next("w1")
+
+    assert outcome is not None and not outcome.ok and outcome.error_step == "inpaint"
+    assert jobs.calls == ["claim", "save_text", "fail"]
+    assert len(jobs.text_saved) == 1 and not jobs.completed
 
 
 async def test_pipeline_step_error_fails_job_with_that_step(cpu: CpuRunner) -> None:

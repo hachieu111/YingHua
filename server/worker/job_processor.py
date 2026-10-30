@@ -1,5 +1,8 @@
-"""Xử lý một việc của hàng đợi `translations`: đọc ảnh → pipeline → lưu ảnh kết quả → ghi bong bóng.
+"""Xử lý một việc của hàng đợi `translations`: đọc ảnh → giai đoạn chữ → giai đoạn ảnh (F04.02).
 
+Giai đoạn 1 (detect, OCR, dịch, tách từ) xong thì `save_text_result` ghi bong bóng ngay để người học đọc
+trong khi giai đoạn 2 (xóa chữ, đắp chữ) còn chạy. Giai đoạn 2 chỉ cập nhật `style` của bong bóng đã có
+(id không đổi) cùng ảnh và đặt `done`; lỗi giai đoạn 2 giữ nguyên bong bóng.
 Thứ tự bắt buộc của M04: `store_result_image` (ảnh xóa chữ, ảnh đã dịch) **trước** `complete_job`.
 Lỗi: `PipelineStepError` → `fail_job` đúng bước; lỗi đọc/lưu tệp → bước `load`/`store`;
 lỗi khác → bước `unknown` với thông điệp chung (chi tiết chỉ nằm trong log, không ghi stack trace vào CSDL).
@@ -12,7 +15,7 @@ import contextvars
 import logging
 from collections.abc import Callable, Sequence
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 from time import perf_counter
 from typing import Any, Protocol, TypeVar
@@ -26,7 +29,13 @@ from app.modules.imaging.application.dto import ClaimedJob, JobResult
 from app.modules.imaging.domain.entities import NewBubble, TranslationStatus
 from worker.entry_lookup import EntryIdLookup
 from worker.image_codec import decode_image, encode_jpeg, phash
-from worker.pipeline_types import BubbleResult, ImageArray, PipelineResult, PipelineStepError
+from worker.pipeline_types import (
+    BubbleResult,
+    ImageArray,
+    ImagePhaseResult,
+    PipelineStepError,
+    TextPhaseResult,
+)
 
 log = logging.getLogger("yinghua.worker")
 
@@ -45,6 +54,10 @@ class JobQueue(Protocol):
 
     async def store_result_image(self, data: bytes, kind: FileKind) -> int: ...
 
+    async def save_text_result(
+        self, translation_id: int, bubbles: Sequence[NewBubble], partial_stats: dict[str, Any]
+    ) -> None: ...
+
     async def complete_job(self, translation_id: int, result: JobResult) -> None: ...
 
     async def fail_job(
@@ -55,7 +68,9 @@ class JobQueue(Protocol):
 class PageProcessor(Protocol):
     """`PipelineAdapter` hoặc bản giả trong test."""
 
-    def process(self, image_bgr: ImageArray) -> PipelineResult: ...
+    def process_text(self, image_bgr: ImageArray) -> TextPhaseResult: ...
+
+    def process_images(self, text: TextPhaseResult) -> ImagePhaseResult: ...
 
 
 class CpuRunner:
@@ -98,7 +113,7 @@ class _JobStepError(Exception):
         self.message = message
 
 
-def _encode_all(source: ImageArray, result: PipelineResult) -> _Encoded:
+def _encode_all(source: ImageArray, result: ImagePhaseResult) -> _Encoded:
     return _Encoded(encode_jpeg(result.inpainted), encode_jpeg(result.rendered), phash(source))
 
 
@@ -183,17 +198,22 @@ class JobProcessor:
 
     async def _run(self, job: ClaimedJob, started: float) -> tuple[int, dict[str, Any]]:
         image = await self._load(job)
-        result = await self._cpu.run(lambda: self._pipeline.process(image))
-        encoded = await self._cpu.run(lambda: _encode_all(image, result))
+        text = await self._cpu.run(lambda: self._pipeline.process_text(image))
+        entry_ids = await self._lookup_entries(text.bubbles)
+        bubbles = [to_new_bubble(b, entry_ids) for b in text.bubbles]
+        partial = {**text.stats, "mode": text.mode, "n_bubbles": len(bubbles)}
+        await self._jobs.save_text_result(job.translation_id, bubbles, partial)
+        log.info("Job %d: chữ đã sẵn sàng (%d bubble, %d ms)", job.translation_id, len(bubbles), _ms(started))
+        images = await self._cpu.run(lambda: self._pipeline.process_images(text))
+        encoded = await self._cpu.run(lambda: _encode_all(image, images))
         inpainted_id = await self._store(encoded.inpainted, FileKind.INPAINTED)
         rendered_id = await self._store(encoded.rendered, FileKind.RENDERED)
-        entry_ids = await self._lookup_entries(result.bubbles)
-        bubbles = [to_new_bubble(b, entry_ids) for b in result.bubbles]
-        stats = {**result.stats, "mode": result.mode, "n_bubbles": len(bubbles)}
+        styled = [replace(b, style=images.styles.get(b.idx)) for b in bubbles]
+        stats = {**images.stats, "mode": text.mode, "n_bubbles": len(bubbles)}
         await self._jobs.complete_job(
             job.translation_id,
             JobResult(
-                bubbles=bubbles,
+                bubbles=styled,
                 inpainted_file_id=inpainted_id,
                 rendered_file_id=rendered_id,
                 stats=stats,

@@ -101,8 +101,13 @@ class SqlTranslationRepository:
     async def get_summaries(self, translation_ids: Sequence[int]) -> dict[int, TranslationSummary]:
         if not translation_ids:
             return {}
+        has_bubbles = (
+            exists().where(BubbleModel.translation_id == TranslationModel.id).correlate(TranslationModel)
+        )
         rows = await self._session.execute(
-            select(TranslationModel).where(TranslationModel.id.in_(list(translation_ids)))
+            select(TranslationModel, has_bubbles.label("has_bubbles")).where(
+                TranslationModel.id.in_(list(translation_ids))
+            )
         )
         return {
             m.id: TranslationSummary(
@@ -112,8 +117,9 @@ class SqlTranslationRepository:
                 rendered_file_id=m.rendered_file_id,
                 error_step=m.error_step,
                 error_message=m.error_message,
+                text_ready=m.status == _DONE or bool(bubbles_exist),
             )
-            for m in rows.scalars()
+            for m, bubbles_exist in rows.all()
         }
 
     async def translation_ids_of_file(self, file_id: int) -> list[int]:
@@ -207,6 +213,11 @@ class SqlTranslationRepository:
             .returning(TranslationModel.id)
         )
         return len(rows.all())
+
+    async def save_partial_stats(self, translation_id: int, stats: dict[str, Any]) -> None:
+        await self._session.execute(
+            update(TranslationModel).where(TranslationModel.id == translation_id).values(stats=stats)
+        )
 
     async def mark_done(
         self,
@@ -324,6 +335,20 @@ class SqlBubbleRepository:
             delete(BubbleModel).where(BubbleModel.translation_id == translation_id).returning(BubbleModel.id)
         )
         return len(rows.all())
+
+    async def count_by_translation(self, translation_id: int) -> int:
+        total = await self._session.scalar(
+            select(func.count()).select_from(BubbleModel).where(BubbleModel.translation_id == translation_id)
+        )
+        return int(total or 0)
+
+    async def update_styles(self, translation_id: int, styles: dict[int, Any]) -> None:
+        for idx, style in styles.items():
+            await self._session.execute(
+                update(BubbleModel)
+                .where(BubbleModel.translation_id == translation_id, BubbleModel.idx == idx)
+                .values(style=style)
+            )
 
     async def add_many(self, translation_id: int, bubbles: Sequence[NewBubble]) -> None:
         self._session.add_all(

@@ -52,8 +52,31 @@ class BubbleResult:
 
 
 @dataclass(slots=True)
+class TextPhaseResult:
+    """Giai đoạn 1 (detect + OCR + dịch + tách từ): bong bóng chưa có `style`, ghi được ngay để người học đọc.
+
+    `state` là dữ liệu trung gian riêng của adapter, chỉ để đưa lại cho `process_images`.
+    """
+
+    bubbles: list[BubbleResult]
+    mode: str | None
+    stats: dict[str, Any]
+    state: Any = field(default=None, repr=False)
+
+
+@dataclass(slots=True)
+class ImagePhaseResult:
+    """Giai đoạn 2 (xóa chữ + đắp chữ + style): ảnh dẫn xuất, `styles` theo `idx` bong bóng, thống kê đủ."""
+
+    inpainted: ImageArray
+    rendered: ImageArray
+    styles: dict[int, dict[str, Any] | None]
+    stats: dict[str, Any]
+
+
+@dataclass(slots=True)
 class PipelineResult:
-    """Kết quả xử lý một trang."""
+    """Kết quả xử lý một trang (cả hai giai đoạn gộp lại)."""
 
     bubbles: list[BubbleResult]
     inpainted: ImageArray

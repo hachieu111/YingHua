@@ -11,8 +11,10 @@ from __future__ import annotations
 
 import logging
 import os
+from collections.abc import Sequence
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 import cv2
 import httpx
@@ -23,7 +25,7 @@ from fastapi import FastAPI
 from app.core.stored_files import FileKind
 from app.modules.imaging.application.dto import ClaimedJob, JobResult
 from app.modules.imaging.application.worker import WorkerJobs
-from app.modules.imaging.domain.entities import TranslationStatus
+from app.modules.imaging.domain.entities import NewBubble, TranslationStatus
 from app.modules.imaging.infrastructure.worker import build_worker_jobs
 from tests.helpers import register
 from worker.config import DEFAULT_PIPELINE_DIR, pipeline_config_from_settings
@@ -56,6 +58,11 @@ class RecordingJobs:
 
     async def store_result_image(self, data: bytes, kind: FileKind) -> int:
         return await self._inner.store_result_image(data, kind)
+
+    async def save_text_result(
+        self, translation_id: int, bubbles: Sequence[NewBubble], partial_stats: dict[str, Any]
+    ) -> None:
+        await self._inner.save_text_result(translation_id, bubbles, partial_stats)
 
     async def complete_job(self, translation_id: int, result: JobResult) -> None:
         self.result = result
