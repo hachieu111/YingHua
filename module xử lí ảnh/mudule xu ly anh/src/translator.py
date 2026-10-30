@@ -127,9 +127,10 @@ class TranslationEngine:
         self._luat_nhan  = _read_luat_nhan(LUATNHAN_FILE)
         self._phienam    = _read_dict(PHIENAM_FILE)
 
-        # Sắp xếp theo độ dài KEY giảm dần → greedy match
-        self._names_sorted = sorted(self._names.keys(), key=len, reverse=True)
-        self._vp_sorted    = sorted(self._vietphrase.keys(), key=len, reverse=True)
+        # Độ dài khóa dài nhất của mỗi từ điển: greedy match thử từ độ dài này giảm dần về 1 bằng tra dict
+        # (O(độ dài câu × độ dài khóa)) thay vì duyệt cả triệu khóa ở mỗi vị trí như trước (chậm 0.5–1.5 s/câu).
+        self._names_max_len = max(map(len, self._names), default=0)
+        self._vp_max_len    = max(map(len, self._vietphrase), default=0)
 
         # Khởi tạo pypinyin
         self._pypinyin_ok = False
@@ -172,6 +173,15 @@ class TranslationEngine:
     # -----------------------------------------------------------------
     #  LỚP 1+2+4: Greedy match qua từng vị trí
     # -----------------------------------------------------------------
+    @staticmethod
+    def _longest_match(table: dict, max_len: int, text: str, i: int):
+        """(nghĩa, độ dài) của khóa dài nhất trong `table` bắt đầu tại vị trí i; không có → None."""
+        for length in range(min(max_len, len(text) - i), 0, -1):
+            value = table.get(text[i:i + length])
+            if value is not None:
+                return value, length
+        return None
+
     def _greedy_translate(self, text: str) -> str:
         """
         Duyệt chuỗi từ trái sang phải:
@@ -185,28 +195,12 @@ class TranslationEngine:
         n = len(text)
 
         while i < n:
-            matched = False
-
-            # Lớp 1: Names
-            for key in self._names_sorted:
-                klen = len(key)
-                if text[i:i+klen] == key:
-                    result.append(self._names[key])
-                    i += klen
-                    matched = True
-                    break
-            if matched:
-                continue
-
-            # Lớp 2: VietPhrase
-            for key in self._vp_sorted:
-                klen = len(key)
-                if text[i:i+klen] == key:
-                    result.append(self._vietphrase[key])
-                    i += klen
-                    matched = True
-                    break
-            if matched:
+            # Lớp 1: Names (ưu tiên tuyệt đối), rồi Lớp 2: VietPhrase — mỗi lớp lấy khóa dài nhất khớp tại i
+            hit = (self._longest_match(self._names, self._names_max_len, text, i)
+                   or self._longest_match(self._vietphrase, self._vp_max_len, text, i))
+            if hit:
+                result.append(hit[0])
+                i += hit[1]
                 continue
 
             # Cụm Latin/số (chữ Việt do LuatNhan chèn, tên "JXHFN", số "1033") giữ nguyên cả cụm;
