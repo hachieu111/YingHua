@@ -9,7 +9,8 @@ import {
   listSeries,
   quickUpload,
   uploadChapterPages,
-  validateImageFile
+  validateImageFile,
+  MAX_CHAPTER_UPLOAD_FILES
 } from '../api/library';
 import { ReaderTarget } from '../types';
 import { formatChapterNumber } from '../utils/format';
@@ -117,9 +118,16 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onUpl
       if (problem) messages.push(problem);
       else valid.push(file);
     });
-    setProblems(messages);
-    setFiles(destination === 'quick' ? valid.slice(0, 5) : valid);
-    if (destination === 'quick' && valid.length > 5) setProblems([...messages, 'Tải nhanh tối đa 5 ảnh mỗi lần, đã lấy 5 ảnh đầu.']);
+    const limit = destination === 'quick' ? 5 : MAX_CHAPTER_UPLOAD_FILES;
+    setFiles(valid.slice(0, limit));
+    if (valid.length > limit) {
+      const notice = destination === 'quick'
+        ? 'Tải nhanh tối đa 5 ảnh mỗi lần, đã lấy 5 ảnh đầu.'
+        : `Mỗi lần tải tối đa ${MAX_CHAPTER_UPLOAD_FILES} ảnh, đã lấy ${MAX_CHAPTER_UPLOAD_FILES} ảnh đầu`;
+      setProblems([...messages, notice]);
+    } else {
+      setProblems(messages);
+    }
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -227,7 +235,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onUpl
                     <AuthImage src={page.original_url} alt={filename} className="w-14 h-14 object-cover rounded-xl shrink-0" />
                     <div className="min-w-0 flex-1 flex flex-col gap-1">
                       <span className="text-xs font-bold text-slate-800 truncate">{filename}</span>
-                      <StatusPill status={status} />
+                      <StatusPill status={status} textReady={(live ? live.text_ready : page.text_ready) === true} />
                       {status === 'queued' && (
                         <span className="text-[10px] text-slate-400">Đang chờ đến lượt xử lý, có thể mất vài phút.</span>
                       )}
@@ -368,7 +376,9 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onUpl
                     )}
                   </span>
                   <span className="text-[11px] text-slate-400">
-                    Hỗ trợ định dạng PNG, JPG, WEBP dung lượng tối đa 10MB
+                    {destination === 'chapter'
+                      ? `Hỗ trợ PNG, JPG, WEBP: tối đa ${MAX_CHAPTER_UPLOAD_FILES} ảnh mỗi lần, mỗi ảnh ≤ 10MB`
+                      : 'Hỗ trợ định dạng PNG, JPG, WEBP dung lượng tối đa 10MB'}
                   </span>
                 </label>
               </div>

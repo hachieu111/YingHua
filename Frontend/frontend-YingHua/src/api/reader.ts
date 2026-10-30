@@ -46,6 +46,8 @@ export interface ReadingData {
     width: number | null;
     height: number | null;
     status: TranslationStatus | null;
+    /** Đã có bong bóng (giai đoạn 1); thiếu trường thì coi như `status === 'done'`. */
+    text_ready?: boolean;
     error_step: string | null;
     error_message: string | null;
     can_edit: boolean;

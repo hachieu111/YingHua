@@ -42,7 +42,6 @@ import { ChapterSuggestions } from './ChapterSuggestions';
 import { GrammarPanel } from './GrammarPanel';
 import { ReportErrorDialog, ReportTarget } from './ReportErrorDialog';
 import { StatusPill } from './StatusPill';
-import { usePageStatuses } from './usePageStatuses';
 
 interface ComicReaderProps {
   /** Chương/trang cần mở; null khi vào trình đọc mà chưa chọn truyện. */
@@ -87,6 +86,10 @@ const MAX_VOCAB_PER_PAGE = 40;
 const HAS_CJK = /[一-鿿]/;
 // Khớp giới hạn của máy chủ cho một lần hỏi trạng thái đã lưu.
 const MAX_STATUS_ITEMS = 200;
+/** Chu kỳ hỏi lại dữ liệu đọc khi trang chưa xử lý xong, và thời gian chờ tối đa trước khi báo người học. */
+const READING_POLL_INTERVAL_MS = 2000;
+const READING_POLL_TIMEOUT_MS = 10 * 60 * 1000;
+
 const VARIANT_OF_MODE: Record<ViewMode, 'original' | 'inpainted' | 'rendered'> = {
   bubble: 'original',
   inpainted: 'inpainted',
@@ -163,9 +166,62 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
   const activePageId = activePage?.id ?? null;
   const pageStatus = reading?.page.status ?? null;
   const awaitingTranslation = pageStatus === 'queued' || pageStatus === 'running';
-  const { statuses, timedOut, restart } = usePageStatuses(activePageId !== null ? [activePageId] : [], awaitingTranslation);
-  const liveStatus = activePageId !== null ? statuses[activePageId] : undefined;
-  const effectiveStatus = liveStatus ? liveStatus.status : pageStatus;
+  const effectiveStatus = pageStatus;
+  // Máy chủ cũ chưa gửi `text_ready`: coi như chỉ có chữ khi đã `done`.
+  const textReady = reading ? (reading.page.text_ready ?? reading.page.status === 'done') : false;
+  const [timedOut, setTimedOut] = useState<boolean>(false);
+
+  // ---- Trang chưa xong: hỏi lại dữ liệu đọc mỗi ~3 s để hiện dần chữ rồi ảnh ----
+  useEffect(() => {
+    if (activePageId === null || !awaitingTranslation) return;
+    const pageId = activePageId;
+    const controller = new AbortController();
+    const startedAt = Date.now();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let inFlight = false;
+    setTimedOut(false);
+
+    const schedule = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(tick, READING_POLL_INTERVAL_MS);
+    };
+    const tick = async () => {
+      if (controller.signal.aborted || inFlight) return;
+      if (document.hidden) return; // Tab ẩn: dừng, hỏi lại ngay khi quay lại tab.
+      if (Date.now() - startedAt > READING_POLL_TIMEOUT_MS) {
+        setTimedOut(true);
+        return;
+      }
+      inFlight = true;
+      let finished = false;
+      try {
+        const data = await getReading(pageId, controller.signal);
+        if (controller.signal.aborted) return;
+        setReading(data);
+        // Chỉ nạp bong bóng khi vừa có chữ hoặc đã xong, để không ghi đè thao tác đang làm.
+        setBubbles(current => (current.length === 0 || data.page.status === 'done' ? data.bubbles : current));
+        finished = data.page.status === 'done' || data.page.status === 'failed';
+      } catch {
+        // Lỗi mạng tạm thời hoặc đã hủy: giữ dữ liệu cũ, lượt sau thử lại.
+      } finally {
+        inFlight = false;
+      }
+      if (!finished && !controller.signal.aborted) schedule();
+    };
+    const onVisibility = () => {
+      if (document.hidden || inFlight) return;
+      if (timer) clearTimeout(timer);
+      void tick();
+    };
+
+    document.addEventListener('visibilitychange', onVisibility);
+    schedule();
+    return () => {
+      controller.abort();
+      if (timer) clearTimeout(timer);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [activePageId, awaitingTranslation]);
 
   const showMessage = useCallback((message: string) => {
     setSavedSuccessMsg(message);
@@ -306,11 +362,6 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
       });
     return () => controller.abort();
   }, [activePageId, readingTick]);
-
-  // Trang vừa xử lý xong: nạp lại để có bong bóng và ảnh đã dịch.
-  useEffect(() => {
-    if (liveStatus && liveStatus.status === 'done' && pageStatus !== 'done') setReadingTick(value => value + 1);
-  }, [liveStatus, pageStatus]);
 
   // ---- Lưu tiến độ đọc (chỉ chương, chỉ khi đã đăng nhập) ----
   useEffect(() => {
@@ -593,7 +644,6 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
     try {
       await retranslatePage(activePage.id);
       setReading(current => (current ? { ...current, page: { ...current.page, status: 'queued', error_message: null } } : current));
-      restart(activePage.id);
       showMessage('Đã gửi yêu cầu dịch lại, trang đang xếp hàng.');
     } catch (err) {
       showMessage(errorMessage(err));
@@ -779,8 +829,11 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
         ? reading.variants.inpainted
         : reading.variants.rendered
     : null;
+  const imageFallback = reading?.variants.original ?? null;
+  const showingOriginalAsFallback = viewMode !== 'bubble' && !variantUrl && !!imageFallback;
+  const stageHint = textReady ? 'Đang xóa chữ và đắp bản dịch…' : 'Đang nhận diện chữ…';
   const canEditPage = reading?.page.can_edit ?? false;
-  const failureMessage = liveStatus?.error_message ?? reading?.page.error_message ?? null;
+  const failureMessage = reading?.page.error_message ?? null;
   const pageLabel = meta?.chapterNumber !== null && meta?.chapterNumber !== undefined ? `Chương ${formatChapterNumber(meta.chapterNumber)} · ` : '';
 
   const studyToolsMenu = isStudyMenuOpen ? (
@@ -905,8 +958,8 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
           {/* Ba dạng hiển thị của trang */}
           <div className="flex items-center bg-slate-100 p-1 rounded-2xl border border-slate-200/60 text-xs font-medium">
             {modeButton('bubble', 'chat_bubble', 'Bóng Thoại (Overlay)', true, '')}
-            {modeButton('inpainted', 'ink_eraser', 'Đã xóa chữ', !!reading?.variants.inpainted, 'Trang chưa được xử lý xong')}
-            {modeButton('rendered', 'translate', 'Đã đắp chữ', !!reading?.variants.rendered, 'Trang chưa được xử lý xong')}
+            {modeButton('inpainted', 'ink_eraser', 'Đã xóa chữ', !!reading?.variants.inpainted, awaitingTranslation ? stageHint : 'Trang chưa được xử lý xong')}
+            {modeButton('rendered', 'translate', 'Đã đắp chữ', !!reading?.variants.rendered, awaitingTranslation ? stageHint : 'Trang chưa được xử lý xong')}
           </div>
 
           <button
@@ -1033,7 +1086,7 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
                   <span>Dịch trực tiếp: Tiếng Việt</span>
                 </>
               ) : (
-                <StatusPill status={effectiveStatus} />
+                <StatusPill status={effectiveStatus} textReady={textReady} />
               )}
             </div>
 
@@ -1043,12 +1096,15 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
                 <span>
                   {effectiveStatus === 'failed'
                     ? (failureMessage ?? 'Xử lý ảnh không thành công.')
-                    : effectiveStatus === 'running'
-                      ? 'Trang đang được nhận diện và dịch, kết quả sẽ tự hiện khi xong.'
+                    : effectiveStatus === 'running' || textReady
+                      ? (textReady
+                        ? 'Đã có chữ và bản dịch, bạn có thể bắt đầu học. Đang xóa chữ và đắp bản dịch lên ảnh…'
+                        : 'Đang nhận diện chữ…')
                       : 'Trang đang xếp hàng chờ xử lý. Đang hiển thị ảnh gốc, bản dịch sẽ tự hiện khi xong.'}
+                  {showingOriginalAsFallback && ' Đang hiển thị ảnh gốc, ảnh đã xử lý sẽ tự hiện khi xong.'}
                   {timedOut && ' Đã chờ lâu, bộ xử lý ảnh có thể đang bận; bạn có thể quay lại sau.'}
                 </span>
-                {effectiveStatus === 'failed' && (canEditPage || liveStatus?.can_retranslate) && (
+                {effectiveStatus === 'failed' && canEditPage && (
                   <button onClick={handleRetranslate} disabled={retranslating} className="shrink-0 px-4 py-1.5 rounded-full bg-white border border-red-200 text-red-700 font-bold hover:bg-red-100 disabled:opacity-60">
                     {retranslating ? 'Đang gửi...' : 'Dịch lại'}
                   </button>
@@ -1073,7 +1129,7 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
                 </div>
               ) : (
                 <AuthImage
-                  src={variantUrl}
+                  src={variantUrl ?? (showingOriginalAsFallback ? imageFallback : null)}
                   alt={`Trang ${activePage.page_no}`}
                   className={`w-full h-auto block select-none rounded-2xl ${readingLoading ? 'opacity-60' : ''}`}
                 />

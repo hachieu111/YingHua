@@ -86,6 +86,8 @@ export interface ApiPage {
   width: number | null;
   height: number | null;
   status: TranslationStatus | null;
+  /** Đã có bong bóng chữ (giai đoạn 1) dù ảnh dịch chưa xong; máy chủ cũ không gửi thì suy ra từ `status`. */
+  text_ready?: boolean;
   error_step: string | null;
   error_message: string | null;
   original_url: string | null;
@@ -164,6 +166,8 @@ export interface SeriesInput {
 
 /** Giới hạn ảnh tải lên khớp máy chủ (F03.07): jpg/png/webp, tối đa 10 MB. */
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+/** Số ảnh tối đa mỗi lần tải vào chương (khớp máy chủ). */
+export const MAX_CHAPTER_UPLOAD_FILES = 20;
 export const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 /** Kiểm tra ảnh phía trình duyệt trước khi gửi; trả thông báo lỗi tiếng Việt hoặc null nếu hợp lệ. */

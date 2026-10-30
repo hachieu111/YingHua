@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { PageStatus, getPageStatus } from '../api/imaging';
 
-const POLL_INTERVAL_MS = 5000;
+/** Một trang dịch mất ~5–8 s; hỏi thưa hơn thì giao diện trễ so với worker và bỏ lỡ bước "đã có chữ" (F04.02). */
+const POLL_INTERVAL_MS = 2000;
 /** Quá thời gian này mà trang vẫn chưa xong thì ngừng hỏi và báo người học (worker có thể chưa chạy). */
 const POLL_TIMEOUT_MS = 10 * 60 * 1000;
 

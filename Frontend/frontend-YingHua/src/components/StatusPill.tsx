@@ -10,12 +10,16 @@ const STYLES: Record<TranslationStatus, { box: string; icon: string; spin?: bool
 };
 
 /** Nhãn trạng thái xử lý ảnh (đang xếp hàng / đang xử lý / xong / lỗi). */
-export const StatusPill: React.FC<{ status: TranslationStatus | null }> = ({ status }) => {
-  const style = status ? STYLES[status] : { box: 'bg-slate-50 text-slate-600 border-slate-200', icon: 'hourglass_empty', spin: false };
+export const StatusPill: React.FC<{ status: TranslationStatus | null; textReady?: boolean }> = ({ status, textReady = false }) => {
+  const partial = textReady && (status === 'queued' || status === 'running');
+  const style = partial
+    ? { box: 'bg-sky-50 text-sky-800 border-sky-200', icon: 'text_fields', spin: false }
+    : status
+      ? STYLES[status] : { box: 'bg-slate-50 text-slate-600 border-slate-200', icon: 'hourglass_empty', spin: false };
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-bold ${style.box}`}>
       <span className={`material-symbols-outlined text-[13px] ${style.spin ? 'animate-spin' : ''}`}>{style.icon}</span>
-      {statusLabel(status)}
+      {partial ? 'Đã có chữ' : statusLabel(status)}
     </span>
   );
 };

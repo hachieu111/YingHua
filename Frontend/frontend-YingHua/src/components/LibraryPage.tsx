@@ -255,7 +255,7 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({
         </div>
         <div className="flex flex-col mt-2 gap-1">
           <span className="font-bold text-xs text-slate-800 truncate">Ảnh tải lên · {timeAgo(page.created_at)}</span>
-          <StatusPill status={status} />
+          <StatusPill status={status} textReady={(live ? live.text_ready : page.text_ready) === true} />
           {status === 'failed' && (
             <>
               <span className="text-[10px] text-red-600 line-clamp-2">{failure ?? 'Xử lý ảnh không thành công.'}</span>

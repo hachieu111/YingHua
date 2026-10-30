@@ -7,6 +7,8 @@ export interface PageStatus {
   page_id: number;
   translation_id: number | null;
   status: TranslationStatus | null;
+  /** Có thể thiếu nếu máy chủ chưa gửi. */
+  text_ready?: boolean;
   attempts: number;
   error_step: string | null;
   error_message: string | null;

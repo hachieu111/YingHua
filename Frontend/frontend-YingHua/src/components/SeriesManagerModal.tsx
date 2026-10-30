@@ -8,7 +8,8 @@ import {
   getSeries,
   setSeriesCover,
   uploadChapterPages,
-  validateImageFile
+  validateImageFile,
+  MAX_CHAPTER_UPLOAD_FILES
 } from '../api/library';
 import { ChapterManageRow } from './ChapterManageRow';
 import { SeriesEditPanel } from './SeriesEditPanel';
@@ -158,9 +159,11 @@ export const SeriesManagerModal: React.FC<SeriesManagerModalProps> = ({
   };
 
   const handlePagesChosen = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const picked = Array.from(event.target.files ?? []);
+    const chosen = Array.from(event.target.files ?? []);
     event.target.value = '';
-    if (uploadChapterId === null || picked.length === 0) return;
+    if (uploadChapterId === null || chosen.length === 0) return;
+    const picked = chosen.slice(0, MAX_CHAPTER_UPLOAD_FILES);
+    const truncated = chosen.length > MAX_CHAPTER_UPLOAD_FILES;
     const invalid = picked.map(validateImageFile).filter((message): message is string => message !== null);
     if (invalid.length > 0) {
       setError(invalid.join(' '));
@@ -175,7 +178,9 @@ export const SeriesManagerModal: React.FC<SeriesManagerModalProps> = ({
       );
       const failures = result.results.filter(item => item.error).map(item => `“${item.filename ?? 'ảnh'}”: ${item.error?.message}`);
       setUploaded(current => [...current, ...rows]);
-      if (failures.length > 0) setError(failures.join(' '));
+      const notices = [...failures];
+      if (truncated) notices.push(`Mỗi lần tải tối đa ${MAX_CHAPTER_UPLOAD_FILES} ảnh, đã lấy ${MAX_CHAPTER_UPLOAD_FILES} ảnh đầu`);
+      if (notices.length > 0) setError(notices.join(' '));
       if (result.created > 0) {
         showToast(`Đã tải ${result.created} trang vào chương, đang xếp hàng xử lý.`);
         onChanged();
@@ -359,6 +364,7 @@ export const SeriesManagerModal: React.FC<SeriesManagerModalProps> = ({
                         ))}
                       </div>
                     )}
+                    <p className="mt-2 text-[10px] text-slate-400">Tải trang: tối đa {MAX_CHAPTER_UPLOAD_FILES} ảnh mỗi lần, mỗi ảnh ≤ 10MB.</p>
                     <input ref={pageInputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple className="hidden" onChange={handlePagesChosen} />
                   </div>
 
@@ -398,7 +404,7 @@ export const SeriesManagerModal: React.FC<SeriesManagerModalProps> = ({
                           return (
                             <div key={page.id} className="flex items-center justify-between gap-3 px-3 py-2 rounded-xl bg-slate-50 border border-slate-100">
                               <span className="text-[11px] text-slate-700 truncate">{filename}</span>
-                              <StatusPill status={live ? live.status : page.status} />
+                              <StatusPill status={live ? live.status : page.status} textReady={(live ? live.text_ready : page.text_ready) === true} />
                             </div>
                           );
                         })}
