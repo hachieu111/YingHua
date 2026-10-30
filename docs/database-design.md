@@ -398,7 +398,7 @@ CHECK `chapter_id IS NOT NULL OR owner_id IS NOT NULL`.
 
 ### 4.7 M04 Xử lý ảnh — GĐ3
 
-**`translations`**: kết quả xử lý một **ảnh**, đồng thời là **hàng đợi job**. Worker lấy việc bằng `FOR UPDATE SKIP LOCKED`. Ảnh trùng (sha256 hoặc pHash) dùng lại bản ghi này (F04.07, F04.13, F04.14).
+**`translations`**: kết quả xử lý một **ảnh**, đồng thời là **hàng đợi job**. Worker lấy việc bằng `FOR UPDATE SKIP LOCKED`. Ảnh trùng (sha256 hoặc pHash) dùng lại bản ghi này (F04.07, F04.13, F04.14). Pipeline chạy hai giai đoạn (F04.01, 30/10/2026): giai đoạn chữ ghi `bubbles` ngay khi xong (status vẫn `running`), giai đoạn ảnh chỉ cập nhật `style` của bong bóng đã có cùng `inpainted_file_id`, `rendered_file_id` rồi đặt `done`. Cờ "đã có chữ" (`text_ready` trong API) **không lưu thành cột**: suy ra từ việc bản dịch đã có bong bóng, nên không cần migration.
 
 | Cột | Kiểu | Ràng buộc | Ghi chú |
 |---|---|---|---|

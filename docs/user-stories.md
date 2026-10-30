@@ -264,6 +264,7 @@ Ghi chú: hai story hướng phát triển US-HP-01, US-HP-02 (mục 11) chưa t
 3. **Cho trước** ảnh trùng nội dung với trang đã có trong cùng chương, **khi** tải lên, **thì** hệ thống phát hiện trùng, không tạo trang mới và thông báo "Ảnh đã tồn tại".
 4. **Cho trước** chọn nhiều ảnh cùng lúc, **khi** có một ảnh lỗi, **thì** các ảnh hợp lệ vẫn được tải và ảnh lỗi được liệt kê riêng kèm lý do.
 5. **Cho trước** mất kết nối giữa chừng, **khi** tải chưa xong, **thì** trang không được tạo ở trạng thái dở dang và tôi có thể tải lại.
+6. **Cho trước** tôi chọn hơn 20 ảnh một lần, **khi** tải lên chương, **thì** giao diện chỉ lấy 20 ảnh đầu và báo "Mỗi lần tải tối đa 20 ảnh"; máy chủ từ chối lượt tải quá 20 tệp (mỗi tệp vẫn tối đa 10 MB).
 
 ### US-NH-13 — Tải nhanh một ảnh lẻ để đọc ngay
 **Là** Người học, **tôi muốn** tải nhanh một ảnh lẻ mà không cần tạo truyện, **để** đọc và tra từ ngay trên ảnh đó.
@@ -322,6 +323,8 @@ Ghi chú: hai story hướng phát triển US-HP-01, US-HP-02 (mục 11) chưa t
 2. **Cho trước** ảnh không có chữ tiếng Trung, **khi** xử lý xong, **thì** trang ở trạng thái "Xong" kèm thông báo "Không tìm thấy văn bản tiếng Trung".
 3. **Cho trước** ảnh quá mờ khiến không nhận diện được, **khi** xử lý, **thì** trang chuyển sang trạng thái "Lỗi" kèm lý do và không hiện vùng chữ sai lệch.
 4. **Cho trước** nhận diện xong, **khi** tôi tải lại trang, **thì** kết quả nhận diện không phải chạy lại và hiển thị ngay.
+5. **Cho trước** trang đang xử lý đã nhận diện và dịch xong chữ nhưng chưa xóa/đắp chữ xong, **khi** tôi mở trang, **thì** khung bong bóng và Hover & Dịch hiện ngay trên ảnh gốc mà không phải chờ ảnh dịch; ảnh dịch tự hiện khi xong.
+6. **Cho trước** tôi đã lưu từ từ một bong bóng trong lúc trang còn đang xử lý, **khi** trang xử lý xong, **thì** từ đó vẫn gắn đúng ngữ cảnh bong bóng.
 
 ### US-NH-18 — Xem trạng thái xử lý
 **Là** Người học, **tôi muốn** thấy trạng thái xử lý của từng trang (đang chờ, đang xử lý, xong, lỗi), **để** biết khi nào có thể đọc.
@@ -332,7 +335,8 @@ Ghi chú: hai story hướng phát triển US-HP-01, US-HP-02 (mục 11) chưa t
 1. **Cho trước** tôi vừa tải ảnh lên, **khi** xem danh sách trang, **thì** mỗi trang hiện đúng một trong bốn trạng thái: Đang chờ, Đang xử lý, Xong, Lỗi.
 2. **Cho trước** một trang đang xử lý, **khi** hoàn tất, **thì** trạng thái tự cập nhật sang "Xong" mà không cần tải lại trang.
 3. **Cho trước** một trang ở trạng thái "Lỗi", **khi** tôi xem chi tiết, **thì** thấy lý do lỗi bằng tiếng Việt dễ hiểu và nút "Dịch lại".
-4. **Cho trước** trang chưa "Xong", **khi** tôi mở nó, **thì** hiện thông báo đang xử lý và không hiển thị Hover & Dịch.
+4. **Cho trước** trang chưa có chữ, **khi** tôi mở nó, **thì** hiện thông báo "Đang nhận diện chữ…" và chưa hiển thị Hover & Dịch.
+5. **Cho trước** trang đã có chữ nhưng chưa "Xong", **khi** xem danh sách trang hoặc mở trang, **thì** thấy nhãn "Đã có chữ", dùng được Hover & Dịch, còn hai dạng ảnh dịch báo "Đang xóa chữ và đắp bản dịch…" rồi tự mở khi xong.
 
 ### US-NH-19 — Xem trang ở ba dạng hiển thị
 **Là** Người học, **tôi muốn** xem trang ở ba dạng: ảnh gốc, ảnh đã xóa chữ, ảnh đã đắp bản dịch tiếng Việt, **để** đọc hiểu và đối chiếu với bản gốc.

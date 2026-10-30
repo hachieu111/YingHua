@@ -679,7 +679,7 @@ wbsDiagram { node { FontSize 11 } }
 - **Mô tả:** Tải một hoặc nhiều ảnh trang vào chương; mỗi ảnh hợp lệ tạo một trang ở trạng thái "Đang chờ" và được đưa vào hàng đợi xử lý của M04.
 - **Đầu vào:** chương đích, một hoặc nhiều tệp ảnh.
 - **Xử lý chính:**
-  1. Kiểm tra quyền sửa chương (F03.10).
+  1. Kiểm tra quyền sửa chương (F03.10) và số tệp trong lượt (tối đa 20).
   2. Với từng tệp: kiểm tra định dạng (jpg, png, webp) và dung lượng (không quá 10 MB).
   3. Tính dấu vân tay nội dung (băm nội dung ảnh); nếu trùng một trang đã có trong cùng chương thì bỏ qua tệp đó.
   4. Chỉ khi tệp đã tải trọn vẹn mới lưu ảnh và tạo trang ở trạng thái "Đang chờ" (lưu tạm rồi xác nhận).
@@ -687,11 +687,12 @@ wbsDiagram { node { FontSize 11 } }
   6. Trả kết quả riêng cho từng tệp: thành công hoặc lý do lỗi.
 - **Đầu ra:** các trang mới trong danh sách trang; danh sách tệp lỗi kèm lý do.
 - **Quy tắc nghiệp vụ:**
-  - Định dạng cho phép jpg/png/webp; tối đa 10 MB mỗi tệp.
+  - Định dạng cho phép jpg/png/webp; tối đa 10 MB mỗi tệp; **tối đa 20 tệp mỗi lượt tải** (người dùng chốt 30/10/2026, khoảng một chương; mỗi trang dịch ~5,5 giây nên một lượt xong trong khoảng 2 phút và không chiếm hàng đợi quá lâu). Giao diện chặn trước: chọn quá 20 ảnh thì chỉ lấy 20 ảnh đầu và báo cho người dùng.
   - Một tệp lỗi không làm hỏng các tệp hợp lệ khác trong cùng lượt tải.
   - Ảnh trùng nội dung ở chương khác vẫn được tạo trang, nhưng pipeline có thể dùng lại kết quả (F04.14).
 - **Ngoại lệ:**
   - Sai định dạng hoặc quá dung lượng: từ chối, nêu rõ lý do (định dạng hoặc dung lượng).
+  - Quá 20 tệp trong một lượt: từ chối cả lượt ("Mỗi lần tải tối đa 20 ảnh").
   - Trùng ảnh trong cùng chương: "Ảnh đã tồn tại", không tạo trang.
   - Mất kết nối giữa chừng: không tạo trang dở dang; người dùng tải lại được.
 
@@ -859,12 +860,18 @@ wbsDiagram { node { FontSize 11 } }
 - **Đầu vào:** trang ở trạng thái "Đang chờ" (do F03.07, F03.08, F04.03, F04.06 tạo).
 - **Xử lý chính:**
   1. Ghi một Công việc xử lý vào hàng đợi.
-  2. Worker lấy việc (F04.07) và chạy lần lượt F04.08 → F04.09 → F04.10 → F04.11 → F04.12, cập nhật trạng thái qua F04.13.
-  3. Lưu bong bóng, tọa độ, văn bản, từ đã tách, bản dịch và ảnh dẫn xuất.
-  4. Đặt trang sang "Xong" hoặc "Lỗi".
+  2. Worker lấy việc (F04.07) và chạy pipeline theo **hai giai đoạn**, cập nhật trạng thái qua F04.13:
+     - **Giai đoạn 1 — chữ:** phát hiện bong bóng (F04.08) → OCR (F04.09) → dịch (F04.10) → tách từ. Xong là **lưu ngay** bong bóng, tọa độ, văn bản, từ đã tách và bản dịch; trang được đánh dấu "đã có chữ" (`text_ready`) dù vẫn đang xử lý, nên chế độ Học (ảnh gốc + Hover & Dịch, lưu từ, phân tích ngữ pháp) dùng được ngay.
+     - **Giai đoạn 2 — ảnh:** xóa chữ (F04.11) → đắp bản dịch (F04.12) → lưu hai ảnh dẫn xuất và kiểu chữ của từng bong bóng. Giai đoạn này chỉ cập nhật bong bóng đã có, **không tạo lại**, nên mã bong bóng giữ nguyên (từ, câu thoại, ghi chú người học lưu trong lúc chờ vẫn gắn đúng ngữ cảnh).
+  3. Đặt trang sang "Xong" khi đủ hai giai đoạn, hoặc "Lỗi" kèm bước lỗi.
 - **Đầu ra:** trang "Xong" với các vùng chữ có thể Hover để tra; hoặc trang "Lỗi" kèm lý do.
 - **Quy tắc nghiệp vụ:**
   - Kết quả nhận diện chỉ chạy một lần; tải lại trang không chạy lại pipeline.
+  - **Xong phần nào hiển thị phần đó** (người dùng chốt 30/10/2026): tổng thời gian xử lý không đổi (chỉ thêm một lần ghi CSDL sau giai đoạn 1), nhưng chế độ Học có sớm hơn đúng bằng thời gian xóa chữ + đắp chữ. Không thêm trạng thái mới trong CSDL: "đã có chữ" suy ra từ việc bản dịch đã có bong bóng.
+  - Giai đoạn 2 lỗi: trang "Lỗi" nhưng bong bóng của giai đoạn 1 được giữ, chế độ Học vẫn dùng được; "Dịch lại" (F04.03) chạy lại cả hai giai đoạn.
+  - Lần thử lại sau khi worker treo (F04.07) ghi đè bong bóng của lần thử trước trong một giao dịch.
+  - **Thời gian đo thực tế** (30/10/2026, máy CPU 8 lõi, không GPU, 7 trang rộng 1280 px, cao 1.900–4.300 px): nạp mô hình 15 s và ~800 MB RAM, chỉ một lần khi worker khởi động; mỗi trang: phát hiện bong bóng ~2,8 s (bước lâu và nặng nhất, RAM đỉnh ~1,4 GB), OCR ~1,6 s, xóa chữ ~0,9 s (tới 3 s với trang lớn), đắp chữ ~0,15 s, dịch và tách từ không đáng kể. Tổng ~5,5 s/trang; chế độ Học có sau ~4,4 s. Mỗi worker dùng 1 lõi CPU; triển khai nhiều worker song song (hàng đợi dùng `FOR UPDATE SKIP LOCKED`), mỗi worker cần ~1,5 GB RAM.
+  - Bước dịch tra từ điển VietPhrase/Names (~1 triệu mục) theo độ dài khóa giảm dần bằng bảng băm; cách cũ duyệt cả từ điển ở mỗi chữ làm bước dịch mất 0,5–1,5 s/câu (~31% thời gian trang), đã sửa ngày 30/10/2026, kết quả dịch giữ nguyên.
   - Ảnh không có chữ tiếng Trung: trang "Xong" kèm thông báo "Không tìm thấy văn bản tiếng Trung".
   - Phát hiện được vùng chữ nhưng không vùng nào đọc được do ảnh quá mờ (độ tin cậy OCR dưới ngưỡng [Đề xuất]): trang "Lỗi" kèm lý do, không hiển thị vùng chữ sai lệch. Nếu chỉ một số bong bóng không đọc được thì bỏ qua các bong bóng đó (F04.09).
 - **Ngoại lệ:**
@@ -876,12 +883,13 @@ wbsDiagram { node { FontSize 11 } }
 - **Mô tả:** Hiển thị trạng thái của từng trang (Đang chờ, Đang xử lý, Xong, Lỗi) và tự cập nhật để người dùng biết khi nào đọc được.
 - **Đầu vào:** chương hoặc ảnh tải nhanh đang xem.
 - **Xử lý chính:**
-  1. Trả danh sách trang kèm đúng một trong bốn trạng thái.
+  1. Trả danh sách trang kèm đúng một trong bốn trạng thái, cùng cờ `text_ready` (đã có chữ) cho trang đang xử lý đã xong giai đoạn 1 (F04.01); giao diện hiện nhãn trung gian "Đã có chữ".
   2. Giao diện tự hỏi lại định kỳ các trang chưa kết thúc (hoặc nhận sự kiện đẩy [Đề xuất]) để cập nhật mà không cần tải lại.
   3. Với trang "Lỗi", trả lý do lỗi đã chuyển sang tiếng Việt dễ hiểu và nút "Dịch lại" (F04.03).
 - **Đầu ra:** danh sách trang và trạng thái hiện hành.
 - **Quy tắc nghiệp vụ:**
-  - Trang chưa "Xong" khi mở thì hiện thông báo đang xử lý, không bật Hover & Dịch.
+  - Trang chưa có chữ khi mở thì hiện thông báo "Đang nhận diện chữ…", chưa bật Hover & Dịch. Trang đã có chữ nhưng chưa "Xong" thì bật ngay Hover & Dịch trên ảnh gốc và báo "Đang xóa chữ và đắp bản dịch…" cho hai dạng ảnh dịch.
+  - Trình đọc tự hỏi lại trang đang mở khoảng mỗi 3 giây tới khi "Xong" hoặc "Lỗi"; tạm dừng khi tab bị ẩn và hỏi lại ngay khi quay lại.
   - Chỉ xem được trạng thái trang mà người dùng có quyền đọc (F03.10).
 - **Ngoại lệ:**
   - Mất mạng khi tự cập nhật: giữ trạng thái cũ và thử lại ở chu kỳ sau.
@@ -1162,7 +1170,7 @@ wbsDiagram { node { FontSize 11 } }
   4. Khi chuyển dạng, giao diện giữ nguyên vị trí cuộn và mức phóng to.
 - **Đầu ra:** trang hiển thị ở dạng được chọn.
 - **Quy tắc nghiệp vụ:**
-  - Trang chưa "Xong": hai dạng đã xóa chữ và đã dịch bị vô hiệu hóa kèm chú thích lý do; ảnh gốc vẫn xem được.
+  - Trang chưa "Xong": hai dạng đã xóa chữ và đã dịch bị vô hiệu hóa kèm chú thích lý do; ảnh gốc vẫn xem được, và nếu trang đã có chữ (F04.01 giai đoạn 1) thì lớp Hover & Dịch đã dùng được trên ảnh gốc.
   - Chuyển dạng tạm thời không đổi thiết lập mặc định đã lưu.
   - Khách chỉ xem được ảnh gốc và ảnh đã dịch của chương đọc thử (US-KH-04).
 - **Ngoại lệ:**
