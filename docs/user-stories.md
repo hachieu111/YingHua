@@ -21,7 +21,7 @@ YingHua là ứng dụng web hỗ trợ học tiếng Trung qua truyện tranh v
 | HG | Bộ hẹn giờ hệ thống |
 | HP | Hướng phát triển (story ghi nhận ý tưởng, không tính vào tổng, xem mục 11) |
 
-Các story NH được chia thành nhóm chức năng A–P, đặt tiêu đề nhóm bằng `####`.
+Các story NH được chia thành nhóm chức năng A–R, đặt tiêu đề nhóm bằng `####`.
 
 **Độ ưu tiên.** Must (bắt buộc cho bản phát hành đầu), Should (nên có), Could (có thể bổ sung nếu còn thời gian).
 
@@ -40,13 +40,13 @@ Các story NH được chia thành nhóm chức năng A–P, đặt tiêu đề 
 | Actor | Loại | Số story | Mã |
 |---|---|---|---|
 | Khách | Chính | 6 | US-KH-01 … 06 |
-| Người học | Chính | 82 | US-NH-01 … 82 |
-| Quản trị viên | Chính (kế thừa Người học) | 16 (riêng) | US-QT-01 … 16 |
+| Người học | Chính | 101 | US-NH-01 … 101 |
+| Quản trị viên | Chính (kế thừa Người học) | 18 (riêng) | US-QT-01 … 18 |
 | Pipeline xử lý ảnh | Phụ (hệ thống) | 9 | US-XL-01 … 09 |
 | Dịch vụ TTS bên ngoài | Phụ (hệ thống) | 3 | US-TTS-01 … 03 |
 | Dịch vụ LLM bên ngoài | Phụ (hệ thống) | 3 | US-LLM-01 … 03 |
-| Bộ hẹn giờ hệ thống | Phụ (hệ thống) | 4 | US-HG-01 … 04 |
-| **Tổng** | | **123** | |
+| Bộ hẹn giờ hệ thống | Phụ (hệ thống) | 6 | US-HG-01 … 06 |
+| **Tổng** | | **146** | |
 
 Ghi chú: hai story hướng phát triển US-HP-01, US-HP-02 (mục 11) chưa thuộc phạm vi triển khai nên không tính vào tổng.
 
@@ -961,7 +961,7 @@ Các story của nhóm này mô tả tính năng đã có trên giao diện Sổ
 
 #### Nhóm O — Đồng bộ với giao diện: câu thoại đã lưu, lưu cả trang, gợi ý truyện, độ phủ từ vựng, cỡ chữ, Flashcard AI, ghi nhớ đăng nhập, trang mẫu (bổ sung 25/10/2026)
 
-Các story của nhóm này mô tả tính năng đã có trên giao diện nhưng chưa có trong tài liệu; được bổ sung theo `.claude/rules/dev-workflow.md` §3. US-NH-70 … 75 thuộc giai đoạn 5; US-NH-76, US-NH-77 và US-NH-82 (hộp thông báo, đặt cuối nhóm P để giữ nguyên số thứ tự các story đã có) thuộc giai đoạn 6.
+Các story của nhóm này mô tả tính năng đã có trên giao diện nhưng chưa có trong tài liệu; được bổ sung theo `.claude/rules/dev-workflow.md` §3. US-NH-70 … 75 thuộc giai đoạn 5; US-NH-76, US-NH-77, US-NH-82 (hộp thông báo) và US-NH-83 (chọn nguồn đọc trong trình đọc, bổ sung 30/10/2026), đặt cuối nhóm P để giữ nguyên số thứ tự các story đã có, thuộc giai đoạn 6.
 
 ### US-NH-70 — Lưu câu thoại
 **Là** Người học, **tôi muốn** lưu nguyên một câu thoại khi đọc truyện và xem lại, nghe lại trong Hồ sơ, **để** ôn các câu hay hoặc khó mà không chỉ lưu từng từ.
@@ -1122,17 +1122,17 @@ Các story của nhóm này dùng nguyên tắc: AI chỉ sinh dữ liệu theo 
 7. **Cho trước** không có việc nào thỏa điều kiện, **khi** mở trang chủ, **thì** hiện lời chúc đã hoàn thành hôm nay kèm lối đi tới Thư viện.
 8. **Cho trước** tôi là Khách chưa đăng nhập, **khi** mở trang chủ, **thì** vẫn thấy khối giới thiệu như hiện tại (US-KH-01), không có khối "Hôm nay nên học gì".
 
-### US-NH-81 — Mini-game luyện bộ thủ yếu
-**Là** Người học, **tôi muốn** chơi một trò chơi ngắn luyện đúng những bộ thủ tôi hay quên, **để** củng cố việc nhận mặt chữ một cách vui và có thưởng.
+### US-NH-81 — Mini-game Phi Kiếm Trảm Tự
+**Là** Người học, **tôi muốn** chơi trò gõ pinyin chém chữ Hán rơi theo band HSK hoặc theo bộ thủ tôi hay quên, **để** nhớ mặt chữ và âm đọc một cách vui và có thưởng.
 
 - **Độ ưu tiên:** Could   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** P (giai đoạn 6.5, phụ thuộc M16 Gamification)
 
 **Tiêu chí chấp nhận (Acceptance Criteria):**
 1. **Cho trước** tôi đã có lượt ôn mức Quên hoặc Khó, **khi** mở mini-game, **thì** thấy gợi ý tối đa 3 bộ thủ xuất hiện nhiều nhất trong các thẻ tôi hay quên, mỗi bộ thủ kèm số lần xuất hiện.
-2. **Cho trước** tôi chọn một bộ thủ mục tiêu, **khi** bắt đầu ván, **thì** các chữ Hán rơi xuống màn hình trong 30 giây và tôi chạm hoặc vuốt để chọn những chữ có chứa bộ thủ đó.
-3. **Cho trước** bộ chữ của ván, **khi** tạo, **thì** chữ lấy từ sổ tay của tôi và từ HSK có cấp không vượt quá trình độ + 1; chữ cần chọn có chứa bộ thủ mục tiêu, chữ nhiễu thì không.
-4. **Cho trước** tôi chọn một chữ, **khi** chọn, **thì** thấy ngay đúng hoặc sai; ván kết thúc khi hết 30 giây và hiện điểm, số lần đúng, số lần sai.
-5. **Cho trước** ván kết thúc, **khi** nộp kết quả, **thì** máy chủ tự tính lại đúng sai và điểm, lưu ván chơi, và cộng XP hoặc xu theo quy định của M16 (khi M16 đã có cơ chế XP).
+2. **Cho trước** tôi chọn band HSK 1–6, HSK 7–9 hoặc một bộ thủ hay quên, **khi** bắt đầu ván, **thì** các chữ Hán thư pháp dạng 3D rơi xuống trong tối đa 120 giây với 3 mạng, và tôi gõ pinyin (không dấu, `ü` gõ là `u`) để chém chữ; từ boss hai chữ gõ liền.
+3. **Cho trước** bộ chữ của ván, **khi** tạo, **thì** chế độ HSK ưu tiên chữ mới của đúng band và bù bằng chữ band thấp hơn; chế độ bộ thủ lấy chữ có bộ thủ đó từ sổ tay và HSK có cấp không vượt quá trình độ + 1.
+4. **Cho trước** tôi đang gõ, **khi** nhấn phím, **thì** thấy hiệu ứng từng ký tự; gõ đúng hết thì phi kiếm bay tới và chữ bị chém đứt đôi, combo tăng; chữ chạm đáy thì nhân vật tự chạy tới đỡ nhưng tôi mất một mạng và combo về 0. Ván kết thúc khi hết giờ, hết mạng, hết chữ hoặc tôi dừng, rồi hiện hạng S/A/B/C, điểm, độ chính xác, combo lớn nhất và các chữ bị rơi.
+5. **Cho trước** ván kết thúc, **khi** nộp kết quả, **thì** máy chủ tự kiểm tra sự kiện và tính lại điểm, lưu ván chơi và kỷ lục theo band, cộng XP theo quy định của M16 (số chữ chém chia 2, tối đa 10 XP mỗi ván, chỉ 5 ván đầu mỗi ngày được tính; US-NH-84).
 6. **Cho trước** tôi chưa có bộ thủ nào đủ số lần xuất hiện, **khi** mở mini-game, **thì** hệ thống gợi ý bộ thủ phổ biến theo cấp HSK của tôi kèm thông báo chưa có dữ liệu để gợi ý bộ thủ yếu.
 7. **Cho trước** sổ tay và danh sách HSK không đủ chữ để dựng ván, **khi** bắt đầu, **thì** hiện thông báo cần lưu thêm từ và không bắt đầu ván.
 8. **Cho trước** ván chơi, **khi** kết thúc, **thì** lịch ôn của thẻ FSRS không bị thay đổi.
@@ -1151,11 +1151,264 @@ Các story của nhóm này dùng nguyên tắc: AI chỉ sinh dữ liệu theo 
 6. **Cho trước** nội dung thông báo, **khi** hiển thị, **thì** là văn bản thuần, không thực thi mã.
 7. **Cho trước** máy chủ tạm không phản hồi, **khi** chuông cập nhật số, **thì** giữ số đang hiển thị và thử lại, không coi là phiên hết hạn.
 
+### US-NH-83 — Chọn truyện riêng tư, ảnh tải lên và chương ngay trong trình đọc
+**Là** Người học, **tôi muốn** chọn truyện riêng tư, bộ ảnh tải lên và chương ngay trong trình đọc, **để** chuyển giữa các nguồn đọc mà không phải quay về Thư viện, và mở lại đúng trang đang đọc khi tải lại hoặc chia sẻ liên kết.
+
+- **Độ ưu tiên:** Must   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** O (giai đoạn 6, bổ sung 30/10/2026)
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tôi đã tải nhiều ảnh bằng tải nhanh còn hạn, **khi** đọc một trong các ảnh đó, **thì** cột trái "Trang truyện" liệt kê toàn bộ ảnh tải nhanh còn hạn của tôi từ cũ đến mới ("Ảnh 1 … n", tối đa 100), ảnh đang xem được tô nổi, tiêu đề ghi "Ảnh bạn tải lên · Ảnh i/n"; danh sách tự cập nhật sau khi tôi tải thêm ảnh và khi quay lại tab.
+2. **Cho trước** tôi đang đọc một chương, **khi** nhìn cột trái, **thì** thấy "Chương N · k trang" và danh sách Trang 1, 2, 3 …; bấm một mục thì chuyển đến trang đó.
+3. **Cho trước** tôi mở bộ chọn nguồn đọc trên thanh đầu trang, **khi** bảng chọn hiện ra, **thì** có mục "Ảnh tải lên của tôi" (kèm số ảnh), mục "Truyện riêng tư của tôi" (bìa nhỏ, tên, số chương), dấu hiệu truyện đang đọc và lối "Khám phá thêm ở Thư viện"; bảng đóng được bằng phím Esc hoặc bấm ra ngoài và thao tác được bằng bàn phím.
+4. **Cho trước** tôi bấm một truyện riêng tư trong bộ chọn, **khi** truyện có chương, **thì** mở chương đang đọc dở, nếu chưa đọc thì mở chương đầu; **khi** truyện chưa có chương, **thì** mục hiển thị mờ kèm chữ "Chưa có chương" và không mở được.
+5. **Cho trước** truyện có nhiều hơn một chương, **khi** tôi đang đọc, **thì** chọn được chương ngay trong trình đọc; đến trang cuối của chương thì bước tiếp sang chương kế (chương cuối thì đứng yên và báo "Đã hết truyện"), lùi ở trang đầu thì về chương trước nếu có.
+6. **Cho trước** tôi mở trình đọc khi chưa chọn truyện (`/doc`), **khi** màn hình hiện ra, **thì** liệt kê truyện riêng tư của tôi và lưới khoảng 12 ảnh tải lên gần đây để mở trực tiếp, vẫn giữ mục "Đọc dở gần đây".
+7. **Cho trước** tôi đổi trang, ảnh hoặc chương, **khi** thao tác xong, **thì** đường dẫn trình duyệt khớp trang đang xem (thay thế mục lịch sử, không thêm mục mới); nút Back/Forward, F5 và liên kết chia sẻ mở đúng trang đó; đổi trang trong cùng chương hoặc bộ ảnh không nạp lại cả chương.
+8. **Cho trước** tôi là Khách đọc thử chương công khai (US-KH-04), **khi** xem trình đọc, **thì** không thấy mục "Ảnh tải lên của tôi" và "Truyện riêng tư của tôi"; truyện hoặc ảnh của người khác mở bằng đường dẫn thì bị từ chối như không tồn tại.
+
+#### Nhóm Q — Gamification: XP, nhiệm vụ, xếp hạng, mùa thi đua, huy hiệu (bổ sung 30/10/2026, giai đoạn 6.5)
+
+Các story nhóm Q và R theo quyết định của người dùng ngày 30/10/2026: không thanh toán tiền thật; XP, xu và VIP chỉ kiếm bằng học tập; mùa thi đua theo tuần giờ Việt Nam; bảng xếp hạng không hiện email. Con số cụ thể (XP từng hành động, trần ngày, giá đổi thưởng) ở `docs/modules-functions.md` mục 4.16, 4.17.
+
+### US-NH-84 — Kiếm XP từ hoạt động học và xem XP
+**Là** Người học, **tôi muốn** được cộng điểm kinh nghiệm (XP) khi đọc, ôn thẻ, lưu từ, làm bài kiểm tra và chơi mini-game, và thấy XP hôm nay, XP tuần này, **để** thấy công sức học được ghi nhận mỗi ngày.
+
+- **Độ ưu tiên:** Should   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** Q (giai đoạn 6.5)
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tôi đọc một trang lần đầu, chấm một thẻ, lưu một từ mới, nộp một bài kiểm tra có trả lời ít nhất một nửa số câu, hoặc nộp một ván mini-game, **khi** máy chủ ghi nhận hành động, **thì** tôi được cộng đúng số XP quy định cho hành động đó (2 / 1 / 3 / 10 + số câu đúng tối đa 20 / điểm chia 2 tối đa 10).
+2. **Cho trước** tôi mở lại một trang đã đọc, gửi lại cùng một lượt chấm thẻ hoặc lưu lại một từ đã xóa trước đó, **khi** máy chủ ghi nhận, **thì** không được cộng XP lần nữa.
+3. **Cho trước** tôi đã nhận 300 XP từ hoạt động trong ngày, **khi** tiếp tục học, **thì** hoạt động vẫn được lưu bình thường nhưng không cộng thêm XP hoạt động; XP thưởng nhiệm vụ, mục tiêu tuần, mốc chuỗi vẫn được cộng.
+4. **Cho trước** tôi nộp bài kiểm tra mà trả lời dưới một nửa số câu, **khi** nộp, **thì** bài vẫn được chấm nhưng không được cộng XP.
+5. **Cho trước** tôi đã đăng nhập, **khi** nhìn thanh điều hướng, **thì** viên cạnh chuỗi ngày hiện "+n XP" là XP kiếm được hôm nay (theo múi giờ của tôi), đọc từ máy chủ, đúng sau F5 và cập nhật khi quay lại tab; chưa có XP thì hiện "+0 XP".
+6. **Cho trước** tôi mở bảng xếp hạng, **khi** xem khối "Hoạt động tuần của bạn", **thì** thấy XP từng ngày Thứ Hai đến Chủ Nhật của tuần hiện tại và tổng tuần.
+7. **Cho trước** tôi xóa một từ hoặc một truyện, **khi** xem lại XP, **thì** XP đã cộng trước đó không bị trừ.
+
+### US-NH-85 — Nhiệm vụ ngày
+**Là** Người học, **tôi muốn** có ba nhiệm vụ nhỏ mỗi ngày và được thưởng XP khi hoàn thành, **để** có mục tiêu rõ ràng cho buổi học hôm nay.
+
+- **Độ ưu tiên:** Should   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** Q (giai đoạn 6.5)
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** một ngày mới theo múi giờ của tôi, **khi** mở khối "Nhiệm vụ kiếm EXP", **thì** thấy ba nhiệm vụ "Đọc 2 trang truyện mới" (+20 XP), "Lật 15 thẻ Flashcard" (+15 XP), "Làm 1 bài kiểm tra từ HSK" (+30 XP), mỗi nhiệm vụ có tiến độ (ví dụ "Đã đọc 1/2 trang") và số nhiệm vụ đã hoàn thành "x/3".
+2. **Cho trước** tôi vừa đọc trang mới thứ hai trong ngày, **khi** máy chủ ghi nhận, **thì** nhiệm vụ đọc trang chuyển sang hoàn thành và tôi được cộng 20 XP ngay, không cần bấm nhận.
+3. **Cho trước** một nhiệm vụ đã được thưởng hôm nay, **khi** tôi làm thêm hoạt động đó, **thì** không được thưởng lần hai trong cùng ngày.
+4. **Cho trước** tôi hoàn thành đủ 3/3 nhiệm vụ trong ngày, **khi** nhiệm vụ cuối được thưởng, **thì** tôi được cộng thêm 20 xu Sakura, đúng một lần mỗi ngày.
+5. **Cho trước** nhiệm vụ làm bài kiểm tra chưa xong, **khi** bấm "Làm ngay (+30 XP)", **thì** được chuyển tới màn tạo bài kiểm tra; bài nộp có trả lời ít nhất một nửa số câu (kể cả đề dự phòng) mới tính cho nhiệm vụ.
+6. **Cho trước** sang ngày mới theo múi giờ của tôi, **khi** mở lại khối nhiệm vụ, **thì** tiến độ về 0; trạng thái nhiệm vụ đọc từ máy chủ, đúng sau F5.
+
+### US-NH-86 — Mục tiêu tuần
+**Là** Người học, **tôi muốn** đặt mục tiêu số trang đọc mỗi tuần, theo dõi tiến độ và nhận thưởng khi đạt, **để** duy trì đà đọc đều.
+
+- **Độ ưu tiên:** Could   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** Q (giai đoạn 6.5)
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tôi chưa đặt mục tiêu tuần, **khi** mở Hồ sơ, **thì** khối "Mục tiêu tuần này" dùng mục tiêu mặc định 20 trang, hiện "x / 20 trang", phần trăm, thanh tiến độ, "Còn n trang nữa" và phần thưởng "+150 XP và Khung Avatar Hoa Anh Đào Vàng".
+2. **Cho trước** tôi đã đặt mục tiêu N trang trong cài đặt, **khi** mở khối, **thì** mục tiêu hiện đúng N; số trang đã đọc chỉ đếm trang đọc lần đầu từ Thứ Hai 00:00 theo múi giờ của tôi.
+3. **Cho trước** tôi đọc trang làm số trang trong tuần đạt mục tiêu, **khi** máy chủ ghi nhận, **thì** tôi được cộng 150 XP và khung "Hoa Anh Đào Vàng" dùng trong 7 ngày, đúng một lần mỗi tuần.
+4. **Cho trước** tôi đặt mục tiêu dưới 10 trang, **khi** đọc đủ số đó, **thì** khối hiện đã đạt mục tiêu nhưng phần thưởng chỉ trao khi tôi đọc từ 10 trang trở lên trong tuần.
+5. **Cho trước** tôi đã được thưởng tuần này rồi đổi mục tiêu, **khi** đọc tiếp, **thì** không được thưởng lần hai trong tuần.
+6. **Cho trước** tôi đã sở hữu vĩnh viễn khung "Hoa Anh Đào Vàng" từ thưởng mùa, **khi** đạt mục tiêu tuần, **thì** vẫn được 150 XP, khung không bị đổi thành bản có hạn.
+
+### US-NH-87 — Thưởng mốc chuỗi ngày
+**Là** Người học, **tôi muốn** được thưởng khi chuỗi ngày học liên tiếp chạm các mốc 7, 30, 100 ngày, **để** có thêm động lực giữ chuỗi.
+
+- **Độ ưu tiên:** Could   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** Q (giai đoạn 6.5)
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** chuỗi ngày học của tôi (US-NH-57) vừa đạt 7 ngày, **khi** tôi ôn thẻ hoặc đọc trang trong ngày thứ 7, **thì** được cộng 50 XP và 50 xu Sakura và nhận một thông báo.
+2. **Cho trước** chuỗi đạt 30 ngày, **khi** máy chủ ghi nhận, **thì** được 200 XP, 200 xu và 3 ngày VIP; đạt 100 ngày thì được 500 XP, 500 xu và 7 ngày VIP.
+3. **Cho trước** đã nhận thưởng mốc 7 ngày của chuỗi hiện tại, **khi** tiếp tục học các ngày sau, **thì** không nhận lại mốc 7 ngày trong cùng chuỗi.
+4. **Cho trước** chuỗi bị đứt rồi tôi bắt đầu chuỗi mới, **khi** chuỗi mới đạt 7 ngày, **thì** được nhận lại thưởng mốc 7 ngày.
+5. **Cho trước** việc gửi thông báo bị lỗi, **khi** đạt mốc, **thì** phần thưởng vẫn được ghi.
+
+### US-NH-88 — Bảng xếp hạng
+**Là** Người học, **tôi muốn** xem bảng xếp hạng theo EXP, từ vựng, trang đã đọc và chuỗi ngày trong tuần, tháng hoặc toàn thời gian, **để** so sánh tiến độ với mọi người và biết mình cần thêm bao nhiêu để lên hạng.
+
+- **Độ ưu tiên:** Should   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** Q (giai đoạn 6.5)
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tôi mở "Bảng Vàng Danh Dự", **khi** chọn một chỉ số (EXP, Từ vựng, Trang đã đọc, Chuỗi streak) và một khoảng (Tuần này, Tháng này, Toàn thời gian), **thì** thấy bục top 1–3 và danh sách các hạng tiếp theo đúng theo chỉ số và khoảng đó, mỗi dòng có hạng, tên hiển thị, ảnh đại diện, cấp HSK, điểm kèm đơn vị, huy hiệu và khung đang đeo.
+2. **Cho trước** bất kỳ dòng nào của người khác, **khi** hiển thị, **thì** không bao giờ có email hay mã người dùng.
+3. **Cho trước** tôi không nằm trong trang đang xem, **khi** xem bảng, **thì** vẫn thấy dòng "Bạn" với hạng và điểm của tôi; chọn EXP tuần này thì thấy "Chỉ cần thêm n EXP để lọt Top k" với k là mốc thưởng kế tiếp (50, 10, 3, rồi 1) kèm thanh tiến độ.
+4. **Cho trước** chọn chỉ số Chuỗi streak, **khi** xem, **thì** điểm là chuỗi ngày hiện tại và bộ lọc thời gian không làm thay đổi kết quả (được làm mờ).
+5. **Cho trước** hai người cùng điểm, **khi** xếp, **thì** người đạt điểm đó sớm hơn đứng trên.
+6. **Cho trước** tài khoản đang bị khóa, **khi** xếp hạng, **thì** không xuất hiện trong bảng và không nhận thưởng mùa; tài khoản Quản trị viên được xếp hạng và nhận thưởng như Người học.
+7. **Cho trước** đầu trang, **khi** hiển thị, **thì** thấy tổng số học viên, tổng số trang đã đọc trong khoảng và tổng XP của mùa này, lấy từ dữ liệu thật.
+8. **Cho trước** tôi chưa đăng nhập, **khi** mở bảng xếp hạng, **thì** được yêu cầu đăng nhập.
+
+### US-NH-89 — Ẩn khỏi bảng xếp hạng
+**Là** Người học, **tôi muốn** tắt việc hiện tên và ảnh của mình trên bảng xếp hạng, **để** giữ riêng tư mà vẫn tham gia thi đua.
+
+- **Độ ưu tiên:** Should   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** Q (giai đoạn 6.5)
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tài khoản mới, **khi** xem cài đặt, **thì** tùy chọn "Hiện tôi trên bảng xếp hạng" đang bật.
+2. **Cho trước** tôi tắt tùy chọn, **khi** người khác xem bảng xếp hạng, **thì** dòng của tôi hiện "Học viên ẩn danh" với ảnh đại diện mặc định, không có cấp HSK, huy hiệu, khung hay dấu VIP; hạng và điểm vẫn giữ.
+3. **Cho trước** tôi đã tắt tùy chọn, **khi** tôi tự xem bảng xếp hạng, **thì** dòng "Bạn" vẫn hiện đầy đủ thông tin của tôi kèm ghi chú đang ẩn tên.
+4. **Cho trước** tôi đang ẩn và lọt top 50 khi mùa chốt, **khi** chốt mùa, **thì** tôi vẫn nhận đủ phần thưởng mùa.
+5. **Cho trước** tôi bật lại tùy chọn, **khi** người khác tải lại bảng, **thì** tên và ảnh của tôi hiện lại.
+
+### US-NH-90 — Mùa thi đua và phần thưởng mùa
+**Là** Người học, **tôi muốn** thi đua theo từng mùa một tuần có đếm ngược và phần thưởng rõ ràng, **để** có mục tiêu ngắn hạn và được thưởng khi lọt top.
+
+- **Độ ưu tiên:** Should   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** Q (giai đoạn 6.5)
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** mùa hiện hành, **khi** mở bảng xếp hạng, **thì** thấy nhãn "Mùa Đua Top Hoa Anh Đào • Kỳ N" với N là số kỳ thật (tăng dần từ 1) và đếm ngược "Còn x ngày y giờ" tới 23:59:59 Chủ Nhật giờ Việt Nam, tính theo giờ máy chủ chứ không theo đồng hồ máy tôi.
+2. **Cho trước** khối "Phần thưởng mùa", **khi** hiển thị, **thì** có ba bậc: Top 1–3 (khung "Hoa Anh Đào Vàng", 30 ngày VIP "mở khóa toàn bộ Manhua VIP 1 tháng", danh hiệu "Đệ Nhất Học Giả"); Top 4–10 (khung "Cánh Hoa Mùa Xuân", 3 vé đọc truyện VIP); Top 11–50 (500 xu Sakura, huy hiệu "Người Gieo Hạt"); bậc tôi sẽ nhận nếu mùa chốt lúc này được tô nổi.
+3. **Cho trước** XP phát sinh sau 23:59:59 Chủ Nhật giờ Việt Nam, **khi** tính, **thì** thuộc mùa kế tiếp.
+4. **Cho trước** tôi có dưới 50 XP trong mùa, **khi** mùa chốt, **thì** không nhận thưởng dù hạng nằm trong top 50.
+5. **Cho trước** các mùa đã chốt, **khi** xem lịch sử, **thì** thấy kỳ, hạng, XP và phần thưởng tôi đã nhận.
+6. **Cho trước** mùa đã hết giờ nhưng chưa chốt xong, **khi** mở bảng xếp hạng, **thì** thấy "Đang tổng kết mùa" và mùa mới vẫn nhận XP bình thường.
+
+### US-NH-91 — Huy hiệu tự mở khóa
+**Là** Người học, **tôi muốn** huy hiệu tự mở khóa theo thành tích học thật và thấy tiến độ tới cấp tiếp theo, **để** có mục tiêu dài hạn.
+
+- **Độ ưu tiên:** Could   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** Q (giai đoạn 6.5)
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tab "Huy hiệu" ở Hồ sơ, **khi** mở, **thì** thấy 7 huy hiệu (Thành viên Hoa Anh Đào, Đệ Nhất Học Giả, Tinh Anh Manhua, Người Gieo Hạt, Vua Từ Vựng HSK 3, Cú Đêm Cày Truyện, Dịch Giả Tập Sự), mỗi huy hiệu có mô tả, cấp đã đạt và tiến độ tới cấp kế tiếp (ví dụ "Tiến độ 182/500"), đọc từ dữ liệu thật.
+2. **Cho trước** tôi đọc trang đầu tiên thứ 100, **khi** máy chủ ghi nhận, **thì** huy hiệu "Tinh Anh Manhua" cấp I được mở khóa, tôi được cộng 50 xu và nhận thông báo.
+3. **Cho trước** một huy hiệu đã mở khóa ở một cấp, **khi** có đánh giá lại, **thì** không được thưởng xu lần hai cho cùng cấp; vượt nhiều cấp cùng lúc thì nhận đủ thưởng của từng cấp.
+4. **Cho trước** tôi đã mở khóa "Người Gieo Hạt" rồi xóa bớt từ khiến số từ dưới 300, **khi** xem lại, **thì** huy hiệu vẫn còn.
+5. **Cho trước** huy hiệu tính từ dữ liệu không sinh XP (số bong bóng đã tra), **khi** tôi đạt ngưỡng, **thì** huy hiệu được mở khóa muộn nhất sau 60 phút.
+6. **Cho trước** "Đệ Nhất Học Giả", **khi** xem điều kiện, **thì** chỉ nhận được khi lọt top 1–3 một mùa.
+
+### US-NH-92 — Đeo huy hiệu
+**Là** Người học, **tôi muốn** chọn một huy hiệu đã mở khóa để hiện cạnh tên, **để** thể hiện thành tích với mọi người.
+
+- **Độ ưu tiên:** Could   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** Q (giai đoạn 6.5)
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tôi có huy hiệu đã mở khóa, **khi** chọn huy hiệu đó trong hộp "Sửa hồ sơ" và lưu, **thì** huy hiệu hiện cạnh tên ở Hồ sơ và trên bảng xếp hạng, đúng sau F5.
+2. **Cho trước** tôi đang đeo một huy hiệu, **khi** chọn huy hiệu khác, **thì** chỉ huy hiệu mới được hiện; mỗi lúc chỉ đeo một huy hiệu.
+3. **Cho trước** huy hiệu chưa mở khóa, **khi** tôi cố đeo (kể cả gọi API trực tiếp), **thì** bị từ chối và huy hiệu đang đeo giữ nguyên.
+4. **Cho trước** tôi chưa đeo huy hiệu nào hoặc đã tháo, **khi** xem Hồ sơ, **thì** không hiện viên huy hiệu.
+
+#### Nhóm R — VIP và phần thưởng (bổ sung 30/10/2026, giai đoạn 6.5)
+
+### US-NH-93 — Ví xu Sakura và lịch sử
+**Là** Người học, **tôi muốn** xem số xu Sakura, số vé đọc truyện VIP và lịch sử nhận, tiêu, **để** biết mình kiếm được bao nhiêu và đã dùng vào đâu.
+
+- **Độ ưu tiên:** Should   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** R (giai đoạn 6.5)
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tôi đã đăng nhập, **khi** mở ví, **thì** thấy số xu, số vé, hạn VIP và khung đang đeo, đọc từ máy chủ.
+2. **Cho trước** tôi đã nhận và tiêu xu, **khi** mở lịch sử, **thì** thấy các dòng mới nhất trước, mỗi dòng có số lượng (dương là nhận, âm là tiêu), số dư sau, lý do bằng tiếng Việt và thời điểm, có phân trang và lọc theo loại.
+3. **Cho trước** tài khoản mới chưa nhận phần thưởng nào, **khi** mở ví, **thì** mọi số bằng 0, không báo lỗi.
+4. **Cho trước** số xu và số vé, **khi** có bất kỳ thao tác nào, **thì** không bao giờ âm.
+5. **Cho trước** hệ thống, **khi** tôi tìm cách nạp xu, **thì** không có chức năng thanh toán bằng tiền; xu chỉ có từ nhiệm vụ, mốc chuỗi, huy hiệu, thưởng mùa hoặc điều chỉnh của Quản trị viên.
+
+### US-NH-94 — Trạng thái VIP và quà chào mừng
+**Là** Người học, **tôi muốn** biết mình có đang là VIP, hạn đến khi nào và được hưởng gì, **để** tận dụng quyền lợi trước khi hết hạn.
+
+- **Độ ưu tiên:** Should   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** R (giai đoạn 6.5)
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tôi vừa đăng ký tài khoản mới, **khi** đăng ký thành công, **thì** được tặng 3 ngày VIP (khớp dòng "Nhận ngay 3 ngày mở khóa VIP & Flashcard AI") và nhận một thông báo; mỗi tài khoản chỉ nhận một lần.
+2. **Cho trước** tôi đang VIP còn 2 ngày, **khi** được cộng thêm 7 ngày, **thì** hạn mới là hạn cũ cộng 7 ngày (cộng dồn), không bị tính lại từ hôm nay.
+3. **Cho trước** hạn VIP đã qua, **khi** tôi gửi yêu cầu kế tiếp, **thì** được xử lý như người không VIP mà không cần chờ tác vụ nền; từ, thẻ, tiến độ đọc đã lưu không bị ảnh hưởng.
+4. **Cho trước** tôi mở Hồ sơ, **khi** hiển thị, **thì** thấy "Hạn VIP: dd/mm/yyyy" nếu đang VIP hoặc "Chưa có VIP", và danh sách quyền lợi với hạn mức AI hiệu lực của tôi.
+5. **Cho trước** VIP của tôi còn dưới 24 giờ, **khi** tác vụ nhắc chạy, **thì** tôi nhận đúng một thông báo sắp hết hạn cho hạn đó; được cộng thêm ngày thì được nhắc lại cho hạn mới.
+6. **Cho trước** việc tặng quà chào mừng bị lỗi, **khi** đăng ký, **thì** tài khoản vẫn được tạo thành công.
+
+### US-NH-95 — Hạn mức AI cao hơn khi VIP
+**Là** Người học đang VIP, **tôi muốn** dùng nhiều lượt AI hơn mỗi ngày (đề kiểm tra AI, Flashcard AI, phân tích ngữ pháp, "Vì sao sai?"), **để** học sâu hơn trong thời gian VIP.
+
+- **Độ ưu tiên:** Should   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** R (giai đoạn 6.5)
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tôi đang VIP với cấu hình mặc định, **khi** dùng các tính năng AI, **thì** hạn mức mỗi ngày là 10 đề kiểm tra AI, 40 Thẻ mở rộng AI, 60 lượt phân tích ngữ pháp, 40 lượt giải thích lỗi sai (người không VIP: 5, 20, 30, 20).
+2. **Cho trước** Quản trị viên đổi hạn mức VIP ở cấu hình hệ thống, **khi** tôi dùng tính năng tiếp theo, **thì** hạn mức mới có hiệu lực ngay.
+3. **Cho trước** Quản trị viên đặt hạn mức VIP thấp hơn hạn mức thường, **khi** tôi đang VIP, **thì** tôi vẫn được dùng theo hạn mức thường.
+4. **Cho trước** tôi đã dùng 25 Thẻ mở rộng AI hôm nay khi còn VIP, **khi** VIP hết hạn giữa ngày, **thì** hạn mức về 20 và tôi nhận nội dung dự phòng cho tới ngày mai, không có lỗi kỹ thuật.
+5. **Cho trước** Quản trị viên tắt dịch vụ LLM, **khi** tôi đang VIP, **thì** tôi nhận nội dung dự phòng như mọi người.
+
+### US-NH-96 — Đọc truyện VIP
+**Là** Người học, **tôi muốn** đọc thử truyện VIP và đọc toàn bộ khi là VIP hoặc đã mở khóa, **để** có thêm truyện hay làm phần thưởng cho việc học.
+
+- **Độ ưu tiên:** Should   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** R (giai đoạn 6.5)
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** một truyện công khai có cờ VIP, **khi** tôi duyệt Thư viện hoặc mở chi tiết truyện, **thì** thấy nhãn "VIP", chương đọc thử mở được, các chương khác có biểu tượng khóa nếu tôi chưa có quyền.
+2. **Cho trước** tôi không VIP và chưa mở khóa truyện, **khi** mở chương không phải đọc thử (kể cả mở đường dẫn trang hoặc ảnh trang trực tiếp), **thì** bị từ chối với thông báo cần VIP kèm lối dùng vé, đổi thưởng hoặc xem cách kiếm VIP.
+3. **Cho trước** tôi đang VIP hoặc đã mở khóa truyện bằng vé, **khi** mở bất kỳ chương nào, **thì** đọc được như truyện thường.
+4. **Cho trước** VIP của tôi hết hạn khi đang đọc chương VIP, **khi** sang trang hoặc chương kế, **thì** bị chặn như người không VIP; từ, câu thoại và ngữ cảnh đã lưu từ chương đó vẫn còn trong sổ tay.
+5. **Cho trước** tôi là Khách, **khi** mở truyện VIP, **thì** đọc được chương đọc thử như US-KH-04; chương khác yêu cầu đăng nhập.
+6. **Cho trước** tôi là Quản trị viên, **khi** mở truyện VIP, **thì** đọc được mọi chương dù không VIP.
+
+### US-NH-97 — Mở khóa truyện VIP bằng vé
+**Là** Người học, **tôi muốn** dùng vé đọc truyện VIP để mở khóa vĩnh viễn một truyện VIP tôi thích, **để** đọc tiếp truyện đó cả khi không còn VIP.
+
+- **Độ ưu tiên:** Could   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** R (giai đoạn 6.5)
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tôi có ít nhất 1 vé, **khi** bấm "Dùng vé mở khóa" ở một truyện VIP và xác nhận, **thì** truyện được mở khóa vĩnh viễn cho tôi và số vé giảm 1.
+2. **Cho trước** tôi bấm đúp hoặc gửi lại cùng yêu cầu, **khi** máy chủ xử lý, **thì** chỉ trừ đúng 1 vé.
+3. **Cho trước** tôi không còn vé, **khi** cố mở khóa, **thì** bị từ chối, số vé giữ nguyên và giao diện gợi ý đổi vé ở cửa hàng.
+4. **Cho trước** truyện đã mở khóa hoặc không phải truyện VIP, **khi** cố mở khóa, **thì** bị từ chối và không trừ vé.
+5. **Cho trước** tôi đang VIP, **khi** mở khóa một truyện VIP, **thì** giao diện hỏi xác nhận vì hiện đã đọc được; xác nhận thì vẫn mở khóa để giữ quyền đọc sau khi hết VIP.
+6. **Cho trước** Quản trị viên bỏ cờ VIP của truyện tôi đã mở khóa, **khi** đọc, **thì** đọc được như truyện thường; vé không được hoàn.
+
+### US-NH-98 — Cửa hàng đổi thưởng
+**Là** Người học, **tôi muốn** đổi xu Sakura lấy ngày VIP, vé đọc truyện VIP hoặc khung avatar, **để** dùng thành quả học tập cho quyền lợi tôi muốn.
+
+- **Độ ưu tiên:** Could   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** R (giai đoạn 6.5)
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** cửa hàng, **khi** mở, **thì** thấy các món đang bán kèm giá xu (mặc định: 1 ngày VIP 120 xu, 7 ngày VIP 700 xu, 1 vé 300 xu, khung "Lá Trúc Xanh" 800 xu, khung "Mây Mực" 800 xu), món nào đủ xu, khung nào đã sở hữu.
+2. **Cho trước** tôi có 800 xu, **khi** đổi 7 ngày VIP và xác nhận, **thì** số xu còn 100, hạn VIP được cộng dồn 7 ngày, lịch sử ví có dòng tiêu xu.
+3. **Cho trước** tôi có 100 xu, **khi** cố đổi món giá 120 xu, **thì** bị từ chối, hiện số xu còn thiếu, số dư không đổi.
+4. **Cho trước** tôi bấm đổi hai lần liên tiếp cùng một yêu cầu, **khi** máy chủ xử lý, **thì** chỉ trừ xu một lần.
+5. **Cho trước** tôi đã sở hữu một khung, **khi** cố đổi lại khung đó, **thì** bị từ chối và không trừ xu.
+6. **Cho trước** Quản trị viên đổi giá sau khi tôi đã đổi, **khi** xem lịch sử, **thì** lượt đổi cũ vẫn ghi giá lúc tôi đổi.
+7. **Cho trước** khung thưởng mùa và khung VIP, **khi** mở cửa hàng, **thì** không có trong danh sách bán.
+
+### US-NH-99 — Khung avatar và dấu VIP
+**Là** Người học, **tôi muốn** chọn khung avatar đã có và hiện dấu VIP, **để** hồ sơ và tên trên bảng xếp hạng nổi bật hơn.
+
+- **Độ ưu tiên:** Could   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** R (giai đoạn 6.5)
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** danh sách khung, **khi** mở, **thì** thấy mọi khung kèm cách kiếm (thưởng mùa, mục tiêu tuần, cửa hàng, VIP), khung đã sở hữu, hạn dùng nếu có và khung đang đeo.
+2. **Cho trước** tôi sở hữu một khung còn hạn, **khi** chọn đeo, **thì** khung hiện ở ảnh đại diện trên Hồ sơ, thanh điều hướng và bảng xếp hạng, đúng sau F5.
+3. **Cho trước** khung "Hoa Anh Đào Vàng" 7 ngày từ mục tiêu tuần đã hết hạn, **khi** hiển thị, **thì** khung tự không hiện nữa mà không cần thao tác gì.
+4. **Cho trước** tôi đang VIP, **khi** xem Hồ sơ, **thì** có dấu "VIP" và tôi đeo được khung VIP; hết VIP thì dấu và khung VIP tự không hiện.
+5. **Cho trước** khung chưa sở hữu hoặc khung VIP khi tôi không VIP, **khi** cố đeo (kể cả gọi API trực tiếp), **thì** bị từ chối và khung đang đeo giữ nguyên.
+
+### US-NH-100 — Hướng dẫn người mới theo luồng
+**Là** Khách hoặc Người học mới, **tôi muốn** được chỉ từng tính năng ngay trên giao diện, **để** biết YingHua làm được gì mà không phải tự dò.
+
+- **Độ ưu tiên:** Should   ·   **Nguồn:** Người dùng yêu cầu 31/10/2026
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tôi vào trang chủ lần đầu, **khi** trang tải xong, **thì** thấy thẻ chào với "Bắt đầu xem", "Để sau", "Không nhắc lại".
+2. **Cho trước** tôi đang xem hướng dẫn, **khi** sang một bước, **thì** trang tối nhẹ, vùng tính năng được tô sáng, thẻ nhỏ bên cạnh nói lợi ích của tính năng kèm tiến độ và các nút quay lại, tiếp tục.
+3. **Cho trước** tôi chọn "Không nhắc lại" hoặc đi hết hướng dẫn, **khi** quay lại lần sau, **thì** hướng dẫn không tự hiện; đã đăng nhập thì đúng trên mọi thiết bị.
+4. **Cho trước** tôi chọn "Để sau" hoặc "Bỏ qua", **khi** quay lại phiên sau, **thì** hướng dẫn được nhắc lại.
+5. **Cho trước** tôi mở lần đầu trình đọc, hộp tải ảnh, thư viện, từ vựng, bảng xếp hạng, hồ sơ, cửa hàng, mini-game, trang mẫu hoặc trang quản trị, **khi** màn hình sẵn sàng, **thì** thấy hướng dẫn ngắn riêng của màn hình đó; hướng dẫn không tự chuyển sang trang khác.
+6. **Cho trước** tính năng không hiển thị ở khổ màn hình hoặc vai trò của tôi, **khi** tới bước đó, **thì** bước được bỏ qua.
+7. **Cho trước** tôi đã tắt hướng dẫn, **khi** bấm "Xem lại hướng dẫn", **thì** hướng dẫn chạy lại từ đầu.
+8. **Cho trước** tôi chỉ dùng bàn phím, **khi** xem hướng dẫn, **thì** dùng được mũi tên, Esc và focus nằm trong thẻ.
+
+### US-NH-101 — Giao diện sáng tối
+**Là** Khách hoặc Người học, **tôi muốn** đổi giao diện sáng hoặc tối trên toàn web, **để** đọc và học thoải mái theo điều kiện ánh sáng.
+
+- **Độ ưu tiên:** Should   ·   **Nguồn:** Người dùng yêu cầu 31/10/2026
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** tôi đang ở bất kỳ trang nào, **khi** bấm nút sáng/tối, **thì** giao diện mới lan từ nút bấm và phủ toàn trang.
+2. **Cho trước** tôi đã chọn một giao diện, **khi** F5 hoặc mở lại, **thì** giữ đúng lựa chọn và không nháy trắng.
+3. **Cho trước** tôi chưa chọn, **khi** vào web, **thì** giao diện theo cài đặt hệ điều hành.
+4. **Cho trước** giao diện tối, **khi** đọc truyện, **thì** ảnh truyện và lớp chữ dịch trên ảnh giữ nguyên.
+5. **Cho trước** máy bật giảm chuyển động, **khi** đổi giao diện, **thì** đổi ngay, không có hiệu ứng lan.
+
 ---
 
 ## 5. Quản trị viên
 
-**Kế thừa.** Quản trị viên kế thừa toàn bộ hành vi của Người học (US-NH-01 … US-NH-82): có thể đăng nhập, đọc, tra cứu, lưu từ, ôn tập, làm kiểm tra như Người học và được áp dụng cùng tiêu chí chấp nhận, nên không viết lại ở đây. Các story dưới đây chỉ mô tả quyền bổ sung. Riêng quy tắc sở hữu (US-NH-15) được mở rộng: Quản trị viên được sửa/xóa bất kỳ truyện nào (US-QT-05).
+**Kế thừa.** Quản trị viên kế thừa toàn bộ hành vi của Người học (US-NH-01 … US-NH-99): có thể đăng nhập, đọc, tra cứu, lưu từ, ôn tập, làm kiểm tra như Người học và được áp dụng cùng tiêu chí chấp nhận, nên không viết lại ở đây. Các story dưới đây chỉ mô tả quyền bổ sung. Riêng quy tắc sở hữu (US-NH-15) được mở rộng: Quản trị viên được sửa/xóa bất kỳ truyện nào (US-QT-05). Ngoại lệ ở nhóm Q, R (bổ sung 30/10/2026): Quản trị viên có XP, huy hiệu, ví, **được xếp hạng và nhận thưởng mùa** như Người học (US-NH-88 TC6), luôn đọc được truyện VIP (US-NH-96 TC6) và được tự cấp/thu phần thưởng cho chính mình, có ghi nhật ký (US-QT-18 TC4) — người dùng chốt 30/10/2026.
 
 ### US-QT-01 — Xem và tìm người dùng
 **Là** Quản trị viên, **tôi muốn** xem và tìm danh sách người dùng, **để** quản lý tài khoản trong hệ thống.
@@ -1352,6 +1605,32 @@ Các story của nhóm này dùng nguyên tắc: AI chỉ sinh dữ liệu theo 
 4. **Cho trước** ngày bắt đầu sau ngày kết thúc hoặc khoảng vượt 366 ngày, **khi** xuất, **thì** bị từ chối với thông báo cụ thể.
 5. **Cho trước** không có dữ liệu trong khoảng đã chọn, **khi** xuất, **thì** hiện thông báo "Không có nội dung trong khoảng thời gian này" và tệp chỉ có dòng tiêu đề.
 6. **Cho trước** tôi là Người học, **khi** cố xuất báo cáo, **thì** bị từ chối vì không có quyền; thao tác xuất được ghi nhật ký quản trị.
+
+### US-QT-17 — Quản lý truyện VIP và danh mục đổi thưởng
+**Là** Quản trị viên, **tôi muốn** đánh dấu truyện công khai là truyện VIP và cấu hình các món trong cửa hàng đổi thưởng, **để** điều chỉnh phần thưởng cho phù hợp với nội dung và mức kiếm xu thực tế.
+
+- **Độ ưu tiên:** Could   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** giai đoạn 6.5
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** một truyện công khai, **khi** tôi bật cờ VIP, **thì** người không VIP chỉ đọc được chương đọc thử của truyện đó; truyện chưa có chương đọc thử thì tôi nhận cảnh báo nhưng vẫn lưu được.
+2. **Cho trước** một truyện riêng tư, **khi** tôi cố bật cờ VIP, **thì** bị từ chối.
+3. **Cho trước** danh mục đổi thưởng, **khi** tôi thêm món mới hoặc sửa giá, tên, giới hạn, trạng thái bán, **thì** cửa hàng của Người học hiện thay đổi ở lần mở kế tiếp; giá ngoài khoảng 1–100.000 xu bị từ chối.
+4. **Cho trước** một món đã có người đổi, **khi** tôi muốn bỏ, **thì** chỉ ngừng bán được (không xóa) và lịch sử đổi của Người học giữ nguyên giá cũ.
+5. **Cho trước** khung thưởng mùa hoặc khung VIP, **khi** tôi cố đưa vào cửa hàng, **thì** bị từ chối.
+6. **Cho trước** mọi thao tác đổi cờ VIP và sửa danh mục, **khi** lưu, **thì** được ghi nhật ký quản trị; Người học cố thực hiện thì bị từ chối vì không có quyền.
+
+### US-QT-18 — Cấp và thu VIP, xu, vé của người dùng
+**Là** Quản trị viên, **tôi muốn** xem ví và lịch sử phần thưởng của một người dùng, cấp hoặc thu VIP và điều chỉnh xu, vé, **để** hỗ trợ người học khi có sự cố và xử lý gian lận.
+
+- **Độ ưu tiên:** Could   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** giai đoạn 6.5
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** một người dùng, **khi** tôi mở phần thưởng của họ, **thì** thấy số xu, số vé, hạn VIP, truyện đã mở khóa, khung sở hữu và lịch sử sổ có phân trang.
+2. **Cho trước** tôi cấp 7 ngày VIP kèm lý do, **khi** lưu, **thì** hạn VIP của người đó được cộng dồn 7 ngày, người đó nhận thông báo; thu hồi VIP thì hạn VIP về thời điểm hiện tại.
+3. **Cho trước** người dùng có 100 xu, **khi** tôi điều chỉnh -200 xu, **thì** bị từ chối vì kết quả âm và số dư giữ nguyên; điều chỉnh hợp lệ thì có dòng sổ "Điều chỉnh bởi quản trị viên" kèm lý do.
+4. **Cho trước** tôi chọn chính tài khoản của mình, **khi** cấp hoặc thu VIP, xu, vé, **thì** thao tác thực hiện được và vẫn ghi nhật ký quản trị với tôi là cả người thực hiện lẫn người nhận.
+5. **Cho trước** thiếu lý do, số lượng bằng 0 hoặc vượt giới hạn (365 ngày, 100.000 xu, 10 vé mỗi lần), **khi** lưu, **thì** bị từ chối với thông báo cụ thể.
+6. **Cho trước** mọi thao tác cấp, thu, điều chỉnh, **khi** thành công, **thì** được ghi nhật ký quản trị trong cùng giao dịch; không ghi được nhật ký thì thao tác bị hủy; Người học cố truy cập thì bị từ chối.
 
 ---
 
@@ -1580,6 +1859,31 @@ Các story của nhóm này dùng nguyên tắc: AI chỉ sinh dữ liệu theo 
 3. **Cho trước** gửi nhắc thất bại (ví dụ email lỗi), **khi** xảy ra, **thì** ghi nhật ký và không gửi lặp nhiều lần trong ngày.
 4. **Cho trước** tài khoản bị khóa, **khi** đến giờ H, **thì** không gửi nhắc.
 
+### US-HG-05 — Chốt mùa thi đua và trao thưởng
+**Là** Bộ hẹn giờ hệ thống, **tôi cần** chốt bảng xếp hạng khi mùa thi đua kết thúc và trao thưởng cho top 50, **để** người học nhận thưởng tự động, đúng và đủ.
+
+- **Độ ưu tiên:** Should   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** giai đoạn 6.5
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** mùa kết thúc lúc 23:59:59 Chủ Nhật giờ Việt Nam, **khi** tác vụ chốt chạy (mỗi 15 phút), **thì** ghi kết quả 50 hạng đầu theo XP của mùa (người có từ 50 XP, tài khoản Người học đang hoạt động, kể cả người ẩn danh).
+2. **Cho trước** kết quả mùa, **khi** trao thưởng, **thì** mỗi người nhận đúng phần thưởng của bậc (Top 1–3, 4–10, 11–50 theo US-NH-90) và một thông báo kèm hạng.
+3. **Cho trước** tác vụ chạy lại hoặc hai tiến trình cùng chạy, **khi** chốt, **thì** không ai nhận thưởng hai lần cho cùng một mùa.
+4. **Cho trước** máy chủ tắt lúc mùa kết thúc và bật lại sáng Thứ Hai, **khi** tác vụ chạy bù, **thì** kết quả giống hệt khi chốt đúng giờ, vì XP được tính theo thời điểm ghi nhận; XP phát sinh sau giờ kết thúc thuộc mùa mới.
+5. **Cho trước** trao thưởng cho một người bị lỗi, **khi** chốt, **thì** những người khác vẫn được trao; người lỗi được trao ở lần chạy sau và mùa chỉ chuyển sang "đã chốt" khi đã trao đủ.
+6. **Cho trước** một tuần không có ai có XP, **khi** tác vụ chạy, **thì** không tạo kỳ rỗng; số kỳ của các mùa vẫn tăng liên tục.
+
+### US-HG-06 — Nhắc VIP sắp hết hạn
+**Là** Bộ hẹn giờ hệ thống, **tôi cần** báo cho Người học khi VIP còn dưới 24 giờ, **để** họ kịp dùng quyền lợi hoặc kiếm thêm ngày VIP.
+
+- **Độ ưu tiên:** Could   ·   **Nguồn:** [Đề xuất]   ·   **Nhóm:** giai đoạn 6.5
+
+**Tiêu chí chấp nhận (Acceptance Criteria):**
+1. **Cho trước** Người học có hạn VIP trong vòng 24 giờ tới, **khi** tác vụ chạy (mỗi 60 phút), **thì** gửi đúng một thông báo "VIP sắp hết hạn" kèm thời điểm hết hạn.
+2. **Cho trước** đã nhắc cho một hạn VIP, **khi** tác vụ chạy lần sau, **thì** không nhắc lại cho cùng hạn đó; hạn được cộng thêm thì nhắc lại cho hạn mới.
+3. **Cho trước** tài khoản bị khóa, **khi** tác vụ chạy, **thì** không gửi.
+4. **Cho trước** VIP đã hết hạn, **khi** Người học gửi yêu cầu, **thì** quyền lợi VIP tự không còn mà không phụ thuộc tác vụ này đã chạy hay chưa.
+5. **Cho trước** gửi thông báo lỗi, **khi** xảy ra, **thì** ghi nhật ký và lần chạy sau thử lại.
+
 ---
 
 ## 10. Ma trận truy vết: chức năng thuyết minh → user story
@@ -1594,12 +1898,13 @@ Các story của nhóm này dùng nguyên tắc: AI chỉ sinh dữ liệu theo 
 | Flashcard & SRS | US-NH-38, 39, 40, 41, 42, 43, 44, 48, 67, 68, 75; US-HG-02, 03; US-NH-45 … 50, 69 (kiểm tra); US-LLM-01 … 03; US-QT-14 |
 | TTS | US-NH-08, 53, 54, 55; US-TTS-01 … 03; US-QT-13 |
 | Cá nhân hóa | US-NH-06, 07, 08, 45 … 52, 59, 69, 72, 73, 75; US-HG-03, 04 |
-| UI/UX | US-KH-01; US-NH-07, 16, 19, 22, 23, 56, 57, 61 … 65, 74, 77; US-QT-08 |
+| UI/UX | US-KH-01; US-NH-07, 16, 19, 22, 23, 56, 57, 61 … 65, 74, 77, 83; US-QT-08 |
 | Quản lý tài khoản và thư viện (hỗ trợ) | US-KH-02, 03, 06; US-NH-01 … 05, 09 … 16, 61, 62, 65, 76; US-QT-01 … 05, 13, 14, 15, 16 |
 | Trải nghiệm đọc cá nhân (bổ sung, đề xuất) | US-NH-61 … 65 |
 | Sổ tay và Flashcard (bổ sung, đề xuất) | US-NH-66 … 69 |
-| Đồng bộ giao diện giai đoạn 5 và 6 (bổ sung 25/10/2026, đề xuất) | US-NH-70 … 77, 82; US-QT-15, 16 |
+| Đồng bộ giao diện giai đoạn 5 và 6 (bổ sung 25/10/2026, đề xuất) | US-NH-70 … 77, 82, 83; US-QT-15, 16 |
 | Học với AI và trang chủ cá nhân hóa (bổ sung 25/10/2026, đề xuất) | US-NH-78 … 81 |
+| Gamification và VIP & Phần thưởng (bổ sung 30/10/2026, đề xuất; giai đoạn 6.5) | US-NH-84 … 99; US-QT-17, 18; US-HG-05, 06 |
 
 ---
 

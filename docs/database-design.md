@@ -1,6 +1,6 @@
 # Thiết kế cơ sở dữ liệu YingHua (v1.0)
 
-> Căn cứ: `docs/modules-functions.md` (mục "Dữ liệu chính" của 16 module; M16 Gamification bổ sung 25/10/2026), `docs/user-stories.md`, `.claude/rules/database.md`, `naming-conventions.md`.
+> Căn cứ: `docs/modules-functions.md` (mục "Dữ liệu chính" của 17 module; M16 Gamification bổ sung 25/10/2026, đặc tả đầy đủ cùng M17 VIP & Phần thưởng ngày 30/10/2026), `docs/user-stories.md`, `.claude/rules/database.md`, `naming-conventions.md`.
 > Kế thừa thiết kế cũ (`Backend/app/models.py`, `Backend/docs/database_design.md`, CSDL `ptud_db`), có chỉnh sửa và bổ sung.
 > Trạng thái: **đã duyệt 23/10/2026** (gồm mục 6.2; phạm vi mục 6.3 chốt ở mục 8). Các bảng được tạo **theo từng giai đoạn** bằng Alembic, đúng như thiết kế này. Muốn đổi thiết kế thì phải duyệt lại.
 
@@ -43,11 +43,15 @@ Ký hiệu trong bảng cột: **PK** khóa chính · **FK** khóa ngoại · **
 | M13 Quản trị (phần còn lại) | `system_settings`, `content_removals` | GĐ6 |
 | M14 Phản hồi & Thông báo | `error_reports`, `notifications`, `reminder_logs` | GĐ6 |
 | M05 Phân tích ngữ pháp (F05.09) | `grammar_analyses`, `grammar_requests` | GĐ6 |
-| M16 Gamification (mini-game, F16.01) | `minigame_sessions` | GĐ6.5 |
+| M16 Gamification (mini-game, F16.01) | `minigame_sessions` | GĐ6.5 (migration 0012) |
+| M16 Gamification (XP, mùa, huy hiệu; F16.02–F16.12) | `xp_events`, `seasons`, `season_results`, `achievements`, `user_achievements` | GĐ6.5 (migration 0012) |
+| M17 VIP & Phần thưởng (F17.01–F17.10) | `wallets`, `wallet_ledger`, `vip_unlocks`, `avatar_frames`, `user_frames`, `reward_items`, `reward_redemptions` | GĐ6.5 (migration 0013) |
+
+Cột mới ở GĐ6.5 (30/10/2026, chờ duyệt): `user_settings.show_on_leaderboard` (F16.08, migration 0012), `series.is_vip` (F17.05, F17.09, migration 0013). Nhiệm vụ ngày (F16.04) và mục tiêu tuần (F16.05) **không thêm bảng**: tiến độ tính từ `daily_activities`, mục tiêu lấy từ `user_settings.weekly_page_goal` (đã có từ GĐ1), việc đã thưởng nhận biết qua khóa chống trùng của `xp_events`. Huy hiệu và khung đang đeo lưu ở bảng của module sở hữu (`user_achievements.is_equipped`, `wallets.equipped_frame_id`), **không** thêm cột vào `users` (M01) để giữ ranh giới module.
 
 Cột mới ở GĐ6 (25/10/2026): `quiz_questions.mistake_review`, `quiz_questions.mistake_review_at` (F09.10); `users.avatar_preset` (F01.10, migration 0010); `notifications.data` JSONB (F14.05, F14.06: đích điều hướng của thông báo; tạo cùng bảng ở migration 0009). F12.04 không thêm bảng. F01.11 (ghi nhớ đăng nhập), F13.04 (cờ kiểm duyệt tự động) và F04.16 (trang mẫu) cũng không thêm bảng hay cột: chế độ ghi nhớ suy ra từ hạn của `refresh_tokens`, cờ kiểm duyệt tính khi liệt kê, trang mẫu là khóa `sample_page_id` trong `system_settings`.
 
-Tổng (cập nhật 25/10/2026, ba bảng mới: `grammar_analyses`, `grammar_requests`, `minigame_sessions`): **44 bảng**, gồm 41 bảng đã thiết kế trước đó (37 bảng gốc, thêm `library_items`, `page_annotations` theo mục 6.2 và `series_ratings` theo mục 4.6, cập nhật 24/10/2026; bỏ `chapter_vocab` ở GĐ5, thêm `saved_sentences` (F07.11) và `vocab_ai_notes` (F08.11), cập nhật 25/10/2026). So với bản cũ: giữ 18 bảng (có đổi tên hoặc thêm cột), bỏ `vocab_suggestions` (SRS yêu cầu gợi ý tính khi gọi, không lưu sẵn), thêm 23 bảng mới. Cột mới ở GĐ5: `user_settings.bubble_font_scale` (F02.04).
+Tổng (cập nhật 30/10/2026, mười hai bảng mới của GĐ6.5: 5 bảng M16 và 7 bảng M17): **57 bảng**. Trước đó (cập nhật 25/10/2026, ba bảng mới: `grammar_analyses`, `grammar_requests`, `minigame_sessions`): 44 bảng, gồm 41 bảng đã thiết kế trước đó (37 bảng gốc, thêm `library_items`, `page_annotations` theo mục 6.2 và `series_ratings` theo mục 4.6, cập nhật 24/10/2026; bỏ `chapter_vocab` ở GĐ5, thêm `saved_sentences` (F07.11) và `vocab_ai_notes` (F08.11), cập nhật 25/10/2026). So với bản cũ: giữ 18 bảng (có đổi tên hoặc thêm cột), bỏ `vocab_suggestions` (SRS yêu cầu gợi ý tính khi gọi, không lưu sẵn), thêm 23 bảng mới. Cột mới ở GĐ5: `user_settings.bubble_font_scale` (F02.04).
 
 ## 3. Sơ đồ ERD (PlantUML, chỉ ghi khóa và quan hệ chính)
 
@@ -110,6 +114,22 @@ package "M05 ngữ pháp / M16" {
   entity grammar_requests { *id\n--\nuser_id\nanalysis_id }
   entity minigame_sessions { *id\n--\nuser_id }
 }
+package "M16 Gamification" {
+  entity xp_events { *id\n--\nuser_id }
+  entity seasons { *id }
+  entity season_results { *season_id\n*user_id }
+  entity achievements { *id }
+  entity user_achievements { *user_id\n*achievement_id }
+}
+package "M17 VIP & Phần thưởng" {
+  entity wallets { *user_id\n--\nequipped_frame_id }
+  entity wallet_ledger { *id\n--\nuser_id\nactor_id }
+  entity vip_unlocks { *user_id\n*series_id }
+  entity avatar_frames { *id }
+  entity user_frames { *user_id\n*frame_id }
+  entity reward_items { *id\n--\nframe_id }
+  entity reward_redemptions { *id\n--\nuser_id\nitem_id }
+}
 package "M12/M13/M14/M15" {
   entity daily_activities { *user_id\n*activity_date }
   entity system_settings { *key }
@@ -155,6 +175,21 @@ users ||--o{ dismissed_suggestions
 grammar_analyses ||--o{ grammar_requests
 users ||--o{ grammar_requests
 users ||--o{ minigame_sessions
+users ||--o{ xp_events
+seasons ||--o{ season_results
+users ||--o{ season_results
+achievements ||--o{ user_achievements
+users ||--o{ user_achievements
+users ||--o| wallets
+avatar_frames |o--o{ wallets
+users ||--o{ wallet_ledger
+users ||--o{ vip_unlocks
+series ||--o{ vip_unlocks
+avatar_frames ||--o{ user_frames
+users ||--o{ user_frames
+avatar_frames |o--o{ reward_items
+reward_items ||--o{ reward_redemptions
+users ||--o{ reward_redemptions
 users ||--o{ daily_activities
 users ||--o{ error_reports
 users ||--o{ notifications
@@ -230,7 +265,11 @@ Ghi nhớ đăng nhập (F01.11): **không có cột riêng**. Đăng nhập v�
 | reminder_time | TIME | | Giờ địa phương |
 | timezone | VARCHAR(64) | NN, mặc định `Asia/Ho_Chi_Minh` | Tính "hôm nay" và chuỗi ngày học |
 | bubble_font_scale | SMALLINT | NN, mặc định 100, CHECK BETWEEN 80 AND 160 | Cỡ chữ lớp dịch trên trang, đơn vị phần trăm, bước 10 (F02.04, US-NH-74); thêm ở GĐ5 bằng migration mới |
+| dismissed_tours | VARCHAR(16)[] | NN, mặc định rỗng | Các tour đã xem hoặc chọn không nhắc lại: khóa tour của F02.05 (migration 0016) |
+| show_on_leaderboard | BOOLEAN | NN, mặc định true | Hiện tên, ảnh, huy hiệu, khung trên bảng xếp hạng; tắt thì người khác thấy "Học viên ẩn danh" (F16.08, US-NH-89); **thêm ở GĐ6.5, migration 0012** |
 | updated_at | TIMESTAMPTZ | NN | |
+
+Ghi chú: hai cột `learning_goal` và `weekly_page_goal` (CHECK 1–1000) đã tạo ở GĐ1 theo mục 6.2; `weekly_page_goal` là mục tiêu tuần của F12.04 và F16.05 (NULL thì F16.05 dùng mặc định 20 trang).
 
 ### 4.3 M13 Quản trị (phần người dùng) — GĐ1
 
@@ -354,6 +393,7 @@ IX `(user_id, term)`, `(user_id, created_at)`.
 | est_hsk_level | SMALLINT | CHECK 1–9 | |
 | created_by | BIGINT | FK users SET NULL | |
 | genres | VARCHAR(32)[] | NN, mặc định mảng rỗng | Thể loại hiển thị trên thẻ truyện (mục 6.2); **tạo ở GĐ3, migration 0005** |
+| is_vip | BOOLEAN | NN, mặc định false | Truyện VIP (F17.05, F17.09): người không VIP chỉ đọc chương `is_trial`. CHECK `NOT is_vip OR visibility = 'public'` (truyện riêng tư không có VIP). IX `(is_vip) WHERE is_vip`. **Thêm ở GĐ6.5, migration 0013** |
 | created_at, updated_at | TIMESTAMPTZ | NN | |
 
 **`chapters`**: id PK · series_id FK series CASCADE NN · number NUMERIC(6,1) NN · title VARCHAR(255) · is_trial BOOLEAN NN mặc định false (**mới**, cho phép Khách đọc thử, F03.03) · created_at, updated_at. UQ `(series_id, number)`.
@@ -654,7 +694,7 @@ F12.04 (trang chủ "Hôm nay nên học gì", GĐ6) **không thêm bảng**: da
 
 **`system_settings`**: key VARCHAR(48) PK · value JSONB NN · updated_by FK users SET NULL · updated_at. Các khóa ban đầu: `llm_enabled`, `tts_enabled`, `quiz_daily_llm_limit` (F13.05). Các khóa bổ sung ngày 25/10/2026, không cần bảng mới: `ai_note_daily_limit` (F08.11), `maintenance_mode`, `auto_moderation_enabled`, `ocr_on_upload_enabled`, `admin_notifications_enabled` (F13.05, mở rộng); `legal_terms`, `legal_privacy` (F13.08; value là JSON gồm `content`, `version`, `effective_date`); `sample_page_id` (F04.16, trang mẫu do quản trị chọn). Hạn mức Thẻ mở rộng AI ở GĐ5 đọc từ `Settings`, chuyển sang khóa `ai_note_daily_limit` ở GĐ6. Khóa bổ sung 25/10/2026, không cần bảng mới: `grammar_daily_limit` (F05.09), `mistake_review_daily_limit` (F09.10).
 
-Danh sách khóa cấu hình hiện hành của F13.05 (11 khóa, kiểm kiểu và khoảng trong `admin/domain/system_settings.py`): `llm_enabled`, `tts_enabled` (BOOL); `quiz_daily_llm_limit`, `ai_note_daily_limit`, `grammar_daily_limit`, `mistake_review_daily_limit` (số nguyên 0 đến 1000); `maintenance_mode`, `auto_moderation_enabled`, `ocr_on_upload_enabled`, `admin_notifications_enabled` (BOOL); `sample_page_id` (số nguyên dương hoặc null). **Khóa chưa có dòng trong bảng dùng giá trị mặc định lấy từ cấu hình máy chủ** (`Settings`/`.env`; riêng hạn mức ngữ pháp mặc định 30 và giải thích lỗi sai mặc định 20 là hằng số có tên ở domain; bảo trì tắt, kiểm duyệt tự động bật, OCR khi tải bật, thông báo quản trị bật, không có trang mẫu); chỉ khi quản trị viên lưu mới có dòng. Bộ đệm trong tiến trình vài giây, bị xóa ngay khi lưu. `ocr_on_upload_enabled` đã lưu được nhưng **chưa có tác dụng** (chờ duyệt: cần trạng thái bản dịch mới và migration). Khóa `legal_terms`, `legal_privacy` của F13.08 không thuộc 11 khóa này (GĐ6.6).
+Danh sách khóa cấu hình hiện hành của F13.05 (11 khóa, kiểm kiểu và khoảng trong `admin/domain/system_settings.py`): `llm_enabled`, `tts_enabled` (BOOL); `quiz_daily_llm_limit`, `ai_note_daily_limit`, `grammar_daily_limit`, `mistake_review_daily_limit` (số nguyên 0 đến 1000); `maintenance_mode`, `auto_moderation_enabled`, `ocr_on_upload_enabled`, `admin_notifications_enabled` (BOOL); `sample_page_id` (số nguyên dương hoặc null). **Khóa chưa có dòng trong bảng dùng giá trị mặc định lấy từ cấu hình máy chủ** (`Settings`/`.env`; riêng hạn mức ngữ pháp mặc định 30 và giải thích lỗi sai mặc định 20 là hằng số có tên ở domain; bảo trì tắt, kiểm duyệt tự động bật, OCR khi tải bật, thông báo quản trị bật, không có trang mẫu); chỉ khi quản trị viên lưu mới có dòng. Bộ đệm trong tiến trình vài giây, bị xóa ngay khi lưu. `ocr_on_upload_enabled` đã lưu được nhưng **chưa có tác dụng** (chờ duyệt: cần trạng thái bản dịch mới và migration). Khóa `legal_terms`, `legal_privacy` của F13.08 không thuộc 11 khóa này (GĐ6.6). **Bổ sung GĐ6.5 (F17.04, không cần bảng hay migration):** 4 khóa hạn mức VIP `vip_quiz_daily_llm_limit` (mặc định 10), `vip_ai_note_daily_limit` (40), `vip_grammar_daily_limit` (60), `vip_mistake_review_daily_limit` (40), số nguyên 0 đến 1000; tổng 15 khóa. Mặc định đặt trong `Settings`/`.env`. Cách đếm lượt đã dùng không đổi (mục 4.8, 4.11, 4.13).
 
 **`content_removals`**: id PK · file_id FK stored_files SET NULL · page_id FK pages SET NULL · reason VARCHAR(500) NN · removed_by FK users SET NULL · created_at (F13.04). Gỡ ảnh còn đặt `stored_files.removed_at` cho ảnh gốc, ảnh đã xóa chữ, ảnh đã dịch và ảnh ngữ cảnh (`snippet`) cắt từ ảnh đó; từ và thẻ không bị xóa. **Cờ kiểm duyệt tự động không có bảng**: tính khi liệt kê từ `stored_files` (chiều rộng, chiều cao, `sha256`) và trạng thái bản dịch `failed`, theo ngưỡng cạnh ngắn dưới 200 px, cạnh dài trên 12000 px.
 
@@ -676,7 +716,7 @@ Danh sách khóa cấu hình hiện hành của F13.05 (11 khóa, kiểm kiểu 
 | handled_at | TIMESTAMPTZ | |
 | created_at | TIMESTAMPTZ | NN |
 
-**`notifications`**: id PK · user_id FK users CASCADE NN · kind VARCHAR(24) NN (hiện có `reminder`, `report_resolved`, `report_rejected`, `content_removed`) · title VARCHAR(200) NN · body TEXT · channel VARCHAR(8) CHECK `in_app`/`email` · status VARCHAR(8) CHECK `pending`/`sent`/`failed` · **data JSONB NN mặc định `{}`** · read_at · created_at · sent_at. IX `(user_id, read_at)`, `(user_id, created_at)`.
+**`notifications`**: id PK · user_id FK users CASCADE NN · kind VARCHAR(24) NN (hiện có `reminder`, `report_resolved`, `report_rejected`, `content_removed`; GĐ6.5 thêm `season_reward`, `achievement_unlocked`, `streak_milestone`, `vip_granted`, `vip_expiring`, `wallet_adjusted`, không cần migration vì cột không có CHECK) · title VARCHAR(200) NN · body TEXT · channel VARCHAR(8) CHECK `in_app`/`email` · status VARCHAR(8) CHECK `pending`/`sent`/`failed` · **data JSONB NN mặc định `{}`** · read_at · created_at · sent_at. IX `(user_id, read_at)`, `(user_id, created_at)`.
 
 `data` (F14.05, F14.06) là đích điều hướng và số liệu đi kèm để chuông thông báo mở đúng màn hình khi bấm: thông báo báo lỗi có `report_id`, `page_id`, `status`; thông báo nhắc ôn có `due_cards`. Hộp thông báo (F14.06) chỉ đọc các dòng `channel = in_app` của chính người dùng, tính số chưa đọc bằng `read_at IS NULL` nhờ chỉ mục `(user_id, read_at)`; không thêm bảng nào khác.
 
@@ -684,7 +724,83 @@ Danh sách khóa cấu hình hiện hành của F13.05 (11 khóa, kiểm kiểu 
 
 ### 4.18 M16 Gamification — GĐ6.5
 
-Các bảng XP, nhiệm vụ ngày, bảng xếp hạng, huy hiệu (mục 6.3, 8) sẽ thiết kế khi viết đặc tả M16. Hiện chỉ có bảng của mini-game (đã duyệt 25/10/2026).
+Đặc tả bảng XP, mùa thi đua, huy hiệu bổ sung ngày 30/10/2026 (F16.02–F16.12, đã triển khai 31/10/2026); bảng của mini-game đã duyệt 25/10/2026. Cả sáu bảng của M16 (gồm `minigame_sessions`) tạo trong **migration 0012** (`0012_gd65_gamification`), kèm cột `user_settings.show_on_leaderboard` và dữ liệu khởi tạo 7 dòng của `achievements`.
+
+Cân nhắc khi thiết kế (vì sao **không** có bảng nhiệm vụ, mục tiêu tuần, bảng xếp hạng):
+- Nhiệm vụ ngày (F16.04) là 3 hằng số trong domain; tiến độ đọc thẳng từ `daily_activities` (đã có, cập nhật cùng giao dịch với hành động). Việc "đã thưởng nhiệm vụ X ngày D" chính là sự tồn tại của dòng `xp_events (source='quest', source_ref='read_pages:2026-10-30')`, nên bảng `quest_definitions`/`user_quest_progress` là thừa.
+- Mục tiêu tuần (F16.05) lấy mục tiêu từ `user_settings.weekly_page_goal`, tiến độ từ tổng `daily_activities.pages_read`, đã thưởng là dòng `xp_events (source='weekly_goal')`.
+- Bảng xếp hạng (F16.07) tính khi gọi bằng `SUM` trên `xp_events` hoặc `daily_activities` theo khoảng thời gian; chỉ kết quả **đã chốt** của mùa mới lưu (`season_results`), vì đó là căn cứ trao thưởng không được đổi.
+
+**`xp_events`** (F16.02, sổ cái XP chỉ thêm; không UPDATE, không DELETE trừ khi xóa tài khoản)
+
+| Cột | Kiểu | Ràng buộc | Ghi chú |
+|---|---|---|---|
+| id | BIGINT | PK | |
+| user_id | BIGINT | FK users CASCADE, NN | |
+| source | VARCHAR(20) | NN, CHECK `page_read`/`review`/`word_saved`/`quiz`/`minigame`/`quest`/`weekly_goal`/`streak_milestone` | |
+| source_ref | VARCHAR(64) | NN | Mã trang, mã lượt ôn, từ, mã bài, mã ván; `read_pages:<ngày>`; ngày đầu tuần; `<mốc>:<ngày bắt đầu chuỗi>` |
+| amount | SMALLINT | NN, CHECK `amount BETWEEN 0 AND 1000` | XP thực nhận sau khi áp trần (có thể 0) |
+| capped | BOOLEAN | NN, mặc định false | Bị cắt vì trần ngày |
+| activity_date | DATE | NN | Ngày theo múi giờ Người học: tính trần ngày và nhiệm vụ |
+| created_at | TIMESTAMPTZ | NN | Thời điểm máy chủ ghi nhận: quyết định sự kiện thuộc mùa nào |
+
+UQ `(user_id, source, source_ref)`: **chống cộng trùng** (idempotent), gửi lại cùng sự kiện thì `INSERT … ON CONFLICT DO NOTHING`. IX `(created_at, user_id)` để tính bảng xếp hạng tuần/tháng/mùa; IX `(user_id, activity_date)` cho trần ngày, XP hôm nay và nhiệm vụ. Mọi truy vấn cá nhân lọc `user_id`.
+
+**`seasons`** (F16.09, F16.10)
+
+| Cột | Kiểu | Ràng buộc | Ghi chú |
+|---|---|---|---|
+| id | BIGINT | PK | |
+| number | INTEGER | NN, UQ, CHECK `number >= 1` | "Kỳ N", tăng dần |
+| starts_at | TIMESTAMPTZ | NN, UQ | Thứ Hai 00:00 giờ Việt Nam (lưu UTC: Chủ Nhật 17:00 UTC); UQ chống hai yêu cầu cùng tạo một mùa |
+| ends_at | TIMESTAMPTZ | NN, CHECK `ends_at > starts_at` | Mốc loại trừ: Thứ Hai kế tiếp 00:00 giờ Việt Nam; sự kiện có `created_at < ends_at` thuộc mùa |
+| status | VARCHAR(12) | NN, CHECK `active`/`finalizing`/`finalized`, mặc định `active` | IX `(status, ends_at)` cho tác vụ chốt |
+| finalized_at | TIMESTAMPTZ | | |
+| created_at | TIMESTAMPTZ | NN | |
+
+**`season_results`** (F16.10; chỉ top 50 đủ điều kiện)
+
+| Cột | Kiểu | Ràng buộc | Ghi chú |
+|---|---|---|---|
+| season_id | BIGINT | PK (thành phần), FK seasons CASCADE | |
+| user_id | BIGINT | PK (thành phần), FK users CASCADE, IX | Lịch sử mùa của tôi (F16.09) |
+| rank | SMALLINT | NN, CHECK `rank BETWEEN 1 AND 50` | UQ `(season_id, rank)` |
+| xp | INTEGER | NN, CHECK `xp >= 0` | XP trong mùa lúc chốt |
+| tier | VARCHAR(8) | NN, CHECK `top3`/`top10`/`top50` | |
+| reward_granted_at | TIMESTAMPTZ | | NULL = chưa trao xong; tác vụ chạy lại chỉ xử lý dòng NULL |
+| created_at | TIMESTAMPTZ | NN | |
+
+PK `(season_id, user_id)` bảo đảm mỗi người một kết quả mỗi mùa; kết hợp khóa `season:<mã mùa>` ở `wallet_ledger` để không trao thưởng hai lần.
+
+**`achievements`** (F16.11; danh mục huy hiệu, dữ liệu khởi tạo trong migration)
+
+| Cột | Kiểu | Ràng buộc | Ghi chú |
+|---|---|---|---|
+| id | BIGINT | PK | |
+| code | VARCHAR(32) | NN, UQ | `sakura_member`, `top_scholar`, `manhua_elite`, `seed_sower`, `hsk3_master`, `night_owl`, `apprentice_translator` |
+| name | VARCHAR(64) | NN | Tên tiếng Việt khớp `data/achievements.ts` |
+| description | VARCHAR(255) | NN | |
+| metric | VARCHAR(24) | NN, CHECK `study_days`/`pages_read`/`words_saved`/`hsk3_mastered`/`night_pages`/`bubble_lookups`/`season_top3` | Chỉ số dùng để mở khóa |
+| thresholds | INTEGER[] | NN, CHECK `cardinality(thresholds) BETWEEN 1 AND 3` | Ngưỡng cấp I/II/III tăng dần (kiểm thứ tự ở tầng ứng dụng) |
+| coin_rewards | INTEGER[] | NN | Xu thưởng từng cấp, cùng số phần tử với `thresholds` |
+| style_key | VARCHAR(32) | NN | Biểu tượng và màu viết sẵn ở giao diện |
+| sort_order | SMALLINT | NN, mặc định 0 | |
+| is_active | BOOLEAN | NN, mặc định true | |
+| created_at, updated_at | TIMESTAMPTZ | NN | |
+
+**`user_achievements`** (F16.11, F16.12)
+
+| Cột | Kiểu | Ràng buộc | Ghi chú |
+|---|---|---|---|
+| user_id | BIGINT | PK (thành phần), FK users CASCADE | |
+| achievement_id | BIGINT | PK (thành phần), FK achievements RESTRICT | Không xóa định nghĩa đã có người đạt (chỉ tắt `is_active`) |
+| tier | SMALLINT | NN, CHECK `tier BETWEEN 1 AND 3` | Cấp cao nhất đã đạt; không giảm |
+| source | VARCHAR(8) | NN, CHECK `rule`/`season` | Mở khóa theo luật hay do thưởng mùa |
+| is_equipped | BOOLEAN | NN, mặc định false | UQ một phần `(user_id) WHERE is_equipped`: mỗi người tối đa một huy hiệu đang đeo |
+| unlocked_at | TIMESTAMPTZ | NN | Lần đầu đạt cấp I |
+| tier_reached_at | TIMESTAMPTZ | NN | Lần lên cấp gần nhất |
+
+Chỉ số của huy hiệu tính khi đánh giá, không lưu: `study_days` đếm dòng `daily_activities` có `reviews_count + pages_read > 0`; `pages_read` đếm `page_reads`; `words_saved` đếm `vocab_entries`; `hsk3_mastered` đếm `vocab_entries` có `hsk_level = 3` và (`status = 'known'` hoặc có `cards.state = 'review'` với `stability >= 21`); `night_pages` đếm `page_reads` có giờ địa phương của `first_read_at` (theo `user_settings.timezone`) trong 23:00–03:59; `bubble_lookups` đếm `DISTINCT bubble_id` của `lookup_events` hành động `hover`/`lookup`. Xu của mỗi cấp ghi vào `wallet_ledger` với khóa `achievement:<mã>:<cấp>`.
 
 **`minigame_sessions`** (F16.01, US-NH-81): mỗi ván mini-game. Bộ thủ yếu được tính khi gọi từ `review_logs` (rating 1–2) nối `cards`, `vocab_entries` và `hanzi.radical`/`components`, nên không lưu bảng thống kê riêng.
 
@@ -700,7 +816,98 @@ Các bảng XP, nhiệm vụ ngày, bảng xếp hạng, huy hiệu (mục 6.3, 
 | duration_ms | INTEGER | NN | Thời gian chơi thực tế, máy chủ giới hạn hợp lý |
 | played_at | TIMESTAMPTZ | NN | IX `(user_id, played_at)` |
 
-Cộng XP/xu cho ván chơi do cơ chế XP của M16 xử lý (bảng `xp_events` chưa thiết kế); đến khi đó `minigame_sessions` chỉ lưu kết quả.
+**`minigame_rounds`** (F16.01, migration `0014_gd65_minigame_rounds`; bổ sung 31/10/2026): lượt do máy chủ phát, chống tự dựng bộ chữ và nộp lại. id UUID PK · user_id FK users CASCADE, NN · radical VARCHAR NN · chars VARCHAR(8)[] NN (bộ chữ đã phát) · issued_at TIMESTAMPTZ NN · submitted_at TIMESTAMPTZ (NULL = chưa nộp). IX `(user_id, issued_at)`. Dòng cũ hơn 7 ngày do tác vụ `purge_minigame_rounds` dọn. Bảng này là thứ 57 của hệ thống. Migration `0015_gd65_pinyin_blade` bổ sung cho game gõ pinyin: `minigame_rounds` thêm `mode` (`hsk`/`weak_radical`), `hsk_band` (1–7), `items` JSONB (bộ mục kèm đáp án), `radical` được NULL, bỏ cột `chars`; `minigame_sessions` thêm `game_type = 'pinyin_blade'`, `hsk_band`, `max_combo`, `typos`, `target_radical` được NULL.
+
+XP của ván chơi ghi vào `xp_events` (`source = 'minigame'`, `source_ref` = `minigame_sessions.id`) trong cùng giao dịch lưu ván (F16.01 bước 6, F16.02). Ván chơi không cộng xu.
+
+### 4.19 M17 VIP & Phần thưởng — GĐ6.5
+
+Đặc tả bổ sung ngày 30/10/2026 (F17.01–F17.10, đã triển khai 31/10/2026). Bảy bảng tạo trong **migration 0013** (`0013_gd65_vip_rewards`), kèm cột `series.is_vip` và dữ liệu khởi tạo 5 khung (`avatar_frames`) và 5 món đổi thưởng (`reward_items`). **Không có bảng thanh toán, thẻ hay giao dịch tiền** (người dùng chốt 30/10/2026). Đã cân nhắc tách `coin_ledger` và `vip_grants` thành hai bảng như gợi ý ở mục 6.3, nhưng gộp thành một sổ `wallet_ledger` có cột loại (`currency`) vì ba loại (xu, vé, ngày VIP) có cùng vòng đời, cùng khóa chống trùng và thường được trao cùng nhau trong một gói thưởng.
+
+**`wallets`** (F17.01–F17.03, F17.08; quan hệ 1–1 với `users`, tạo khi người dùng nhận phần thưởng đầu tiên)
+
+| Cột | Kiểu | Ràng buộc | Ghi chú |
+|---|---|---|---|
+| user_id | BIGINT | PK, FK users CASCADE | |
+| coin_balance | INTEGER | NN, mặc định 0, CHECK `coin_balance >= 0` | Xu Sakura; không bao giờ âm |
+| ticket_balance | SMALLINT | NN, mặc định 0, CHECK `ticket_balance BETWEEN 0 AND 99` | Vé đọc truyện VIP |
+| vip_until | TIMESTAMPTZ | | NULL = chưa từng VIP; đang VIP khi `vip_until > now` (tính khi hỏi, không có job đổi trạng thái). IX `(vip_until) WHERE vip_until IS NOT NULL` cho tác vụ nhắc |
+| vip_reminded_for | TIMESTAMPTZ | | Giá trị `vip_until` đã được nhắc sắp hết hạn (F17.03); khác `vip_until` thì nhắc lại |
+| equipped_frame_id | BIGINT | FK avatar_frames SET NULL | Khung đang đeo; khi hiển thị chỉ dùng nếu còn hiệu lực |
+| created_at, updated_at | TIMESTAMPTZ | NN | |
+
+Mọi thay đổi số dư khóa dòng ví bằng `SELECT … FOR UPDATE` trong cùng giao dịch với dòng sổ (Unit of Work).
+
+**`wallet_ledger`** (F17.01; sổ chỉ thêm)
+
+| Cột | Kiểu | Ràng buộc | Ghi chú |
+|---|---|---|---|
+| id | BIGINT | PK | |
+| user_id | BIGINT | FK users CASCADE, NN | |
+| currency | VARCHAR(8) | NN, CHECK `coin`/`ticket`/`vip_days` | |
+| amount | INTEGER | NN, CHECK `amount <> 0` | Dương là nhận, âm là tiêu/thu |
+| balance_after | INTEGER | | Số dư sau (xu, vé); NULL với `vip_days` |
+| vip_until_after | TIMESTAMPTZ | | Hạn VIP sau (chỉ `vip_days`) |
+| reason | VARCHAR(20) | NN, CHECK `season_reward`/`quest_bonus`/`streak_milestone`/`achievement`/`welcome`/`redemption`/`vip_unlock`/`admin_adjust` | |
+| idempotency_key | VARCHAR(80) | NN | `season:<id>`, `quests_all:<ngày>`, `<mốc>:<ngày>`, `achievement:<mã>:<cấp>`, `welcome`, mã yêu cầu UUID, `admin:<request_id>` |
+| note | VARCHAR(500) | | Lý do của Quản trị viên |
+| actor_id | BIGINT | FK users SET NULL | Quản trị viên thực hiện (F17.10); NULL với phần thưởng tự động |
+| created_at | TIMESTAMPTZ | NN | |
+
+UQ `(user_id, currency, idempotency_key)`: một gói thưởng có thể có nhiều loại nhưng mỗi loại chỉ ghi một lần. IX `(user_id, created_at)` cho lịch sử ví (phân trang).
+
+**`vip_unlocks`** (F17.06): PK `(user_id, series_id)` · user_id FK users CASCADE · series_id FK series CASCADE, IX · source VARCHAR(8) NN CHECK `ticket`/`admin` · unlocked_at TIMESTAMPTZ NN. Mở khóa vĩnh viễn, không phụ thuộc `wallets.vip_until`.
+
+**`avatar_frames`** (F17.08; danh mục khung, dữ liệu khởi tạo)
+
+| Cột | Kiểu | Ràng buộc | Ghi chú |
+|---|---|---|---|
+| id | BIGINT | PK | |
+| code | VARCHAR(32) | NN, UQ | `sakura_gold`, `spring_petal`, `vip_sakura`, `bamboo_leaf`, `ink_cloud` |
+| name | VARCHAR(64) | NN | "Hoa Anh Đào Vàng", "Cánh Hoa Mùa Xuân", "Khung VIP Hoa Anh Đào", "Lá Trúc Xanh", "Mây Mực" |
+| description | VARCHAR(255) | | Cách kiếm |
+| style_key | VARCHAR(32) | NN | Kiểu hiển thị viết sẵn ở giao diện, không phải tệp ảnh |
+| acquire_kind | VARCHAR(8) | NN, CHECK `season`/`shop`/`vip` | `season` = thưởng mùa/mục tiêu tuần (không bán); `vip` = dùng khi đang VIP, không cần sở hữu |
+| is_active | BOOLEAN | NN, mặc định true | |
+| created_at | TIMESTAMPTZ | NN | |
+
+**`user_frames`** (F17.01, F17.08): PK `(user_id, frame_id)` · user_id FK users CASCADE · frame_id FK avatar_frames RESTRICT · source VARCHAR(12) NN CHECK `season`/`weekly_goal`/`redemption`/`admin` · acquired_at TIMESTAMPTZ NN · expires_at TIMESTAMPTZ (NULL = vĩnh viễn; khung từ mục tiêu tuần có hạn 7 ngày, nhận lại thì gia hạn tới mốc muộn hơn; đã vĩnh viễn thì không đổi thành có hạn).
+
+**`reward_items`** (F17.07, F17.09; danh mục cửa hàng do Quản trị viên cấu hình)
+
+| Cột | Kiểu | Ràng buộc | Ghi chú |
+|---|---|---|---|
+| id | BIGINT | PK | |
+| code | VARCHAR(32) | NN, UQ | `vip_1d`, `vip_7d`, `vip_ticket`, `frame_bamboo`, `frame_ink` |
+| name | VARCHAR(100) | NN | |
+| description | VARCHAR(255) | | |
+| kind | VARCHAR(12) | NN, CHECK `vip_days`/`vip_ticket`/`avatar_frame` | |
+| price_coins | INTEGER | NN, CHECK `price_coins BETWEEN 1 AND 100000` | Mặc định 120 / 700 / 300 / 800 / 800 |
+| vip_days | SMALLINT | CHECK `vip_days BETWEEN 1 AND 365` | Có khi `kind = 'vip_days'` |
+| ticket_count | SMALLINT | CHECK `ticket_count BETWEEN 1 AND 10` | Có khi `kind = 'vip_ticket'` |
+| frame_id | BIGINT | FK avatar_frames RESTRICT | Có khi `kind = 'avatar_frame'`; chỉ khung `acquire_kind = 'shop'` (kiểm ở ứng dụng) |
+| per_user_limit | SMALLINT | CHECK `per_user_limit >= 1` | NULL = không giới hạn |
+| is_active | BOOLEAN | NN, mặc định true | Ngừng bán thay cho xóa |
+| sort_order | SMALLINT | NN, mặc định 0 | |
+| updated_by | BIGINT | FK users SET NULL | |
+| created_at, updated_at | TIMESTAMPTZ | NN | |
+
+CHECK nhất quán theo loại: `(kind = 'vip_days') = (vip_days IS NOT NULL)`, `(kind = 'vip_ticket') = (ticket_count IS NOT NULL)`, `(kind = 'avatar_frame') = (frame_id IS NOT NULL)`.
+
+**`reward_redemptions`** (F17.07)
+
+| Cột | Kiểu | Ràng buộc | Ghi chú |
+|---|---|---|---|
+| id | BIGINT | PK | |
+| user_id | BIGINT | FK users CASCADE, NN | |
+| item_id | BIGINT | FK reward_items RESTRICT, NN | Không xóa món đã có lượt đổi |
+| price_coins | INTEGER | NN, CHECK `price_coins > 0` | Giá tại thời điểm đổi |
+| request_id | UUID | NN | Chống bấm đúp; cũng là `idempotency_key` của dòng sổ trừ xu |
+| created_at | TIMESTAMPTZ | NN | |
+
+UQ `(user_id, request_id)`. IX `(user_id, item_id)` để đếm giới hạn mỗi người; IX `(user_id, created_at)`.
+
+Quyền đọc truyện VIP (F17.05) không cần bảng mới: suy ra từ `series.is_vip`, `chapters.is_trial`, `users.role`, `wallets.vip_until` và `vip_unlocks`. Hạn mức AI theo VIP (F17.04) dùng 4 khóa mới trong `system_settings` (mục 4.16), không thêm bảng. Thao tác quản trị (F17.09, F17.10) ghi `admin_audit_logs` với `action` `series.vip_changed`, `reward_item.created`, `reward_item.updated`, `rewards.vip_granted`, `rewards.vip_revoked`, `rewards.wallet_adjusted`.
 
 ## 5. Thay đổi so với thiết kế cũ (`ptud_db`)
 
@@ -751,10 +958,10 @@ Giao diện hiện dùng toàn dữ liệu giả (mock), chưa gọi API nào. �
 
 | Tính năng | Nếu làm thì cần |
 |---|---|
-| XP, nhiệm vụ hằng ngày (+20/+15/+30 XP) | `xp_events` (sổ cái XP), `daily_quests` |
-| Bảng xếp hạng theo tuần / tháng / mùa | Tính từ `xp_events` + `daily_activities`; bảng `seasons` |
-| Huy hiệu / thành tích (7 loại) | `achievements`, `user_achievements` |
-| VIP, xu, phần thưởng | `subscriptions`, ví xu (đây là nghiệp vụ thanh toán) |
+| XP, nhiệm vụ hằng ngày (+20/+15/+30 XP) | Đã đưa vào SRS ngày 30/10/2026: F16.02, F16.04 (US-NH-84, US-NH-85); bảng `xp_events`, **không** có `daily_quests` (tiến độ tính từ `daily_activities`, mục 4.18) |
+| Bảng xếp hạng theo tuần / tháng / mùa | Đã đưa vào SRS ngày 30/10/2026: F16.07–F16.10 (US-NH-88 … US-NH-90, US-HG-05); tính từ `xp_events` + `daily_activities`; bảng `seasons`, `season_results` |
+| Huy hiệu / thành tích (7 loại) | Đã đưa vào SRS ngày 30/10/2026: F16.11, F16.12 (US-NH-91, US-NH-92); bảng `achievements`, `user_achievements` |
+| VIP, xu, phần thưởng | Đã đưa vào SRS ngày 30/10/2026: M17, F17.01–F17.10 (US-NH-93 … US-NH-99, US-QT-17, US-QT-18, US-HG-06). **Không phải nghiệp vụ thanh toán**: người dùng chốt không dùng tiền thật, nên không có `subscriptions`; thay bằng `wallets`, `wallet_ledger`, `vip_unlocks`, `avatar_frames`, `user_frames`, `reward_items`, `reward_redemptions` (mục 4.19) |
 | Chấm sao truyện | `series_ratings` (đã đưa vào SRS: F03.14, US-NH-62; xem mục 4.6) |
 | Tác giả / cộng đồng gửi bài chờ duyệt | Quy trình kiểm duyệt nội dung cộng đồng (lớn) |
 | Mục ngữ pháp trên trang | Đã đưa vào SRS ngày 25/10/2026: F05.09 (US-NH-78), LLM sinh theo lược đồ cố định; bảng `grammar_analyses`, `grammar_requests` (mục 4.8) |
@@ -779,10 +986,11 @@ Mọi tính năng đang có trên giao diện React đều được hiện thự
 | Mục ngữ pháp trên trang (grammar spotlight, khối "Cấu trúc trọng điểm") | M05, **đã đưa vào SRS: F05.09 (US-NH-78)**; bảng `grammar_analyses`, `grammar_requests` | GĐ6 (trước đây dự kiến GĐ3–5) |
 | Giải thích lỗi sai và câu luyện thêm trong kết quả kiểm tra | M09, **đã đưa vào SRS: F09.10 (US-NH-79)**; cột `quiz_questions.mistake_review`, `mistake_review_at` | GĐ6 |
 | Trang chủ "Hôm nay nên học gì" | M12, **đã đưa vào SRS: F12.04 (US-NH-80)**; không cần bảng mới | GĐ6 |
+| Chọn nguồn đọc trong trình đọc (bộ chọn truyện riêng tư / ảnh tải lên / chương, cột trái liệt kê trang, URL khớp trang đang xem) | M05, **đã đưa vào SRS: F05.10 (US-NH-83, 30/10/2026)**; **không thêm bảng hay cột**, chỉ đọc dữ liệu hiện có (`series`, `chapters`, `pages`, `reading_progress`, ảnh tải nhanh) qua API sẵn có | GĐ6 |
 | Mini-game luyện bộ thủ yếu | **M16**, **đã đưa vào SRS: F16.01 (US-NH-81)**; bảng `minigame_sessions` | GĐ6.5 |
 | Trợ lý học tập dạng trò chuyện có công cụ; chấm phát âm bằng biểu đồ thanh điệu | Hướng phát triển, chỉ ghi mô tả và user story (`docs/modules-functions.md` mục 7, US-HP-01, US-HP-02); không có mã F, không có bảng | Sau GĐ6.6 |
-| XP, nhiệm vụ ngày, bảng xếp hạng tuần/tháng/mùa, huy hiệu & thành tựu, mục tiêu tuần/tháng | **M16 Gamification** | GĐ6.5 |
-| VIP, xu Sakura, phần thưởng mùa, khung avatar | **M17 VIP & Phần thưởng** | GĐ6.5 |
+| XP, nhiệm vụ ngày, bảng xếp hạng tuần/tháng/mùa, huy hiệu & thành tựu, mục tiêu tuần | **M16 Gamification**, **đã đưa vào SRS: F16.02–F16.12 (US-NH-84 … US-NH-92, US-HG-05; 30/10/2026)**; bảng `xp_events`, `seasons`, `season_results`, `achievements`, `user_achievements`, cột `user_settings.show_on_leaderboard` (migration 0012). Mục tiêu theo tháng không có trên giao diện hiện tại nên không đặc tả | GĐ6.5 |
+| VIP, xu Sakura, phần thưởng mùa, khung avatar, truyện VIP, cửa hàng đổi thưởng | **M17 VIP & Phần thưởng**, **đã đưa vào SRS: F17.01–F17.10 (US-NH-93 … US-NH-99, US-QT-17, US-QT-18, US-HG-06; 30/10/2026)**; không thanh toán tiền thật; bảng `wallets`, `wallet_ledger`, `vip_unlocks`, `avatar_frames`, `user_frames`, `reward_items`, `reward_redemptions`, cột `series.is_vip` (migration 0013) | GĐ6.5 |
 | Tác giả / cộng đồng gửi truyện, bản dịch, học liệu; hàng chờ duyệt; duyệt tác giả | **M18 Nội dung cộng đồng** | GĐ6.6 |
 | Đăng nhập Google / WeChat / Apple | **M19 Đăng nhập liên kết (OAuth)** | GĐ6.6 |
 | Đổi email (có xác thực) | M01 (thêm chức năng) | GĐ6.6 |
@@ -795,7 +1003,7 @@ Mọi tính năng đang có trên giao diện React đều được hiện thự
 | Gợi ý truyện theo trình độ ở Hồ sơ | M10, **đã đưa vào SRS: F10.04 (US-NH-72)**; không cần bảng mới | GĐ5 |
 | Độ phủ từ vựng của chương ("đã nắm X/Y từ HSK n") | M10, **đã đưa vào SRS: F10.05 (US-NH-73)**; tính khi gọi từ `bubbles.tokens` | GĐ5 |
 | Cỡ chữ bong bóng dịch (80–160%) | M02, **đã đưa vào SRS: F02.04 (US-NH-74)**; cột `user_settings.bubble_font_scale` | GĐ5 |
-| Flashcard AI (thẻ mở rộng: ví dụ mới, mẹo chiết tự, cụm từ; LLM Google Gemini, chọn 25/10/2026) | M08, **đã đưa vào SRS: F08.11 (US-NH-75)**; bảng `vocab_ai_notes`. Giới hạn theo VIP ("3 ngày mở khóa VIP & Flashcard AI") làm ở M17 | GĐ5 (VIP: GĐ6.5) |
+| Flashcard AI (thẻ mở rộng: ví dụ mới, mẹo chiết tự, cụm từ; LLM Google Gemini, chọn 25/10/2026) | M08, **đã đưa vào SRS: F08.11 (US-NH-75)**; bảng `vocab_ai_notes`. Hạn mức theo VIP: F17.04 (khóa `vip_ai_note_daily_limit`); "3 ngày mở khóa VIP & Flashcard AI" là quà chào mừng của F17.03 | GĐ5 (VIP: GĐ6.5) |
 | Ghi nhớ đăng nhập | M01, **đã đưa vào SRS: F01.11 (US-NH-76)**; không cần bảng mới (đổi thời hạn mã làm mới và nơi lưu ở trình duyệt) | GĐ6 |
 | Chọn ảnh đại diện có sẵn | M01, **mở rộng F01.10 (US-NH-65 TC6)**; thêm cột `users.avatar_preset VARCHAR(32)` (mã ảnh mặc định, loại trừ với `avatar_file_id`) | GĐ6 |
 | Trang Điều khoản dịch vụ và Chính sách bảo mật do quản trị soạn | M13, **đã đưa vào SRS: F13.08 (US-QT-15)**; lưu ở `system_settings` (khóa `legal_terms`, `legal_privacy`) | GĐ6.6 |
@@ -811,7 +1019,7 @@ Mọi tính năng đang có trên giao diện React đều được hiện thự
 | Màn hình giám sát xử lý ảnh của quản trị (đã có API, giao diện chưa nối) | M04, F04.05 | GĐ5 (nối giao diện) |
 | Màn hình tác vụ nền của quản trị (đã có API, giao diện chưa nối) | M15, F15.03 | GĐ5 (nối giao diện) |
 
-Với mỗi mục trên: **viết bổ sung user story + chức năng (F) + đặc tả bảng và trình duyệt trước khi làm**, giống 104 chức năng gốc. Cập nhật 25/10/2026 (đợt AI): bốn mục F05.09, F09.10, F12.04 (GĐ6) và F16.01 (GĐ6.5) đưa tổng lên 128 chức năng và 122 user story, thêm ba bảng `grammar_analyses`, `grammar_requests`, `minigame_sessions` (tổng 44 bảng) và hai cột `quiz_questions.mistake_review`, `mistake_review_at`. Cập nhật 25/10/2026 (đợt trước): F09.09 (câu hỏi từ mở rộng, US-NH-69) đưa tổng lên 114; sau đó mười mục F07.11, F07.12, F08.11, F10.04, F10.05, F02.04 (GĐ5) và F01.11, F04.16, F13.08, F13.09 (GĐ6 đến 6.6) đưa tổng lên 124 chức năng và 118 user story, cùng hai bảng `saved_sentences`, `vocab_ai_notes` và cột `user_settings.bubble_font_scale` (GĐ5), cột `users.avatar_preset` (GĐ6). Cập nhật 24/10/2026: năm mục đã ghi "đã đưa vào SRS" làm tổng chức năng thành 109; bổ sung cùng ngày ba mục của GĐ4 (F07.09, F07.10, F08.10) đưa tổng lên 112 (xem `docs/modules-functions.md`).
+Với mỗi mục trên: **viết bổ sung user story + chức năng (F) + đặc tả bảng và trình duyệt trước khi làm**, giống 104 chức năng gốc. Cập nhật 30/10/2026 (GĐ6.5, chờ duyệt): M16 (F16.02–F16.12) và M17 (F17.01–F17.10) đưa tổng lên 151 chức năng và 144 user story, thêm 12 bảng (tổng 57 bảng) và hai cột `user_settings.show_on_leaderboard`, `series.is_vip`; migration dự kiến 0012 (M16 và `minigame_sessions`) và 0013 (M17). Cập nhật 30/10/2026: F05.10 (chọn nguồn đọc trong trình đọc, US-NH-83) đưa tổng lên 130 chức năng và 124 user story, không thêm bảng hay cột. Cập nhật 25/10/2026 (đợt AI): bốn mục F05.09, F09.10, F12.04 (GĐ6) và F16.01 (GĐ6.5) đưa tổng lên 128 chức năng và 122 user story, thêm ba bảng `grammar_analyses`, `grammar_requests`, `minigame_sessions` (tổng 44 bảng) và hai cột `quiz_questions.mistake_review`, `mistake_review_at`. Cập nhật 25/10/2026 (đợt trước): F09.09 (câu hỏi từ mở rộng, US-NH-69) đưa tổng lên 114; sau đó mười mục F07.11, F07.12, F08.11, F10.04, F10.05, F02.04 (GĐ5) và F01.11, F04.16, F13.08, F13.09 (GĐ6 đến 6.6) đưa tổng lên 124 chức năng và 118 user story, cùng hai bảng `saved_sentences`, `vocab_ai_notes` và cột `user_settings.bubble_font_scale` (GĐ5), cột `users.avatar_preset` (GĐ6). Cập nhật 24/10/2026: năm mục đã ghi "đã đưa vào SRS" làm tổng chức năng thành 109; bổ sung cùng ngày ba mục của GĐ4 (F07.09, F07.10, F08.10) đưa tổng lên 112 (xem `docs/modules-functions.md`).
 
 ## 9. Chép dữ liệu từ `ptud_db`
 

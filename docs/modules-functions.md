@@ -2,7 +2,7 @@
 
 > Tài liệu thiết kế chức năng, học phần Phát triển ứng dụng, Trường Đại học Lạc Hồng.
 > Sinh viên thực hiện: Hoàng Hạc Hiếu, Đinh Thị Quỳnh Anh. GVHD: TS. Đoàn Thiện Minh.
-> Căn cứ: `docs/user-stories.md` (123 user story kèm tiêu chí chấp nhận) và `docs/danh-gia-luong-2-3.md` (kiến trúc đã chốt).
+> Căn cứ: `docs/user-stories.md` (146 user story kèm tiêu chí chấp nhận) và `docs/danh-gia-luong-2-3.md` (kiến trúc đã chốt).
 
 ## 1. Giới thiệu
 
@@ -16,7 +16,7 @@ Hệ thống chưa được hiện thực; tài liệu chỉ mô tả thiết k�
 
 | Ký hiệu | Ý nghĩa |
 |---|---|
-| `M01` … `M16` | Mã module (M16 Gamification được đặc tả dần từ giai đoạn 6; hiện mới có F16.01) |
+| `M01` … `M17` | Mã module (M16 Gamification và M17 VIP & Phần thưởng đặc tả đầy đủ ngày 30/10/2026, giai đoạn 6.5) |
 | `F08.02` | Chức năng số 02 của module M08 |
 | `US-NH-39` | Mã user story trong `docs/user-stories.md` |
 | TC*n* | Tiêu chí chấp nhận thứ *n* của user story |
@@ -45,6 +45,8 @@ Phân module bám theo phương án gợi ý gồm 15 module; có các điều c
 | 10 | Bổ sung (25/10/2026) 10 chức năng đồng bộ với giao diện, gắn với US-NH-70 … US-NH-77, US-QT-15, US-QT-16: **F07.11** (lưu câu thoại), **F07.12** (lưu tất cả từ của trang), **F08.11** (Flashcard AI), **F10.04** (gợi ý truyện theo trình độ), **F10.05** (độ phủ từ vựng của chương), **F02.04** (cỡ chữ bong bóng dịch) thuộc giai đoạn 5; **F01.11** (ghi nhớ đăng nhập), **F04.16** (thử với trang mẫu), **F13.08** (trang nội dung pháp lý), **F13.09** (xuất báo cáo vi phạm) thuộc giai đoạn 6 đến 6.6. Mở rộng không đổi mã: F01.10 (chọn ảnh đại diện có sẵn, US-NH-65) và F13.05 (chế độ bảo trì và các công tắc hệ thống, US-QT-13). Tổng số chức năng từ 114 lên 124 (M01 từ 10 lên 11, M02 từ 3 lên 4, M04 từ 15 lên 16, M07 từ 10 lên 12, M08 từ 10 lên 11, M10 từ 3 lên 5, M13 từ 7 lên 9); tổng user story từ 108 lên 118. | Các tính năng đã có trên giao diện nhưng chưa có trong tài liệu; theo `.claude/rules/dev-workflow.md` §3, thêm vào hệ thống và SRS. Người dùng duyệt ngày 25/10/2026. F08.11 dùng dịch vụ LLM (Google Gemini, chọn 25/10/2026) qua cổng riêng, có dự phòng từ dữ liệu từ điển và chiết tự. Thêm hai bảng `saved_sentences` (F07.11) và `vocab_ai_notes` (F08.11) và cột `user_settings.bubble_font_scale` (F02.04); các chức năng còn lại không thêm bảng (xem `docs/database-design.md`). |
 | 11 | Bổ sung (25/10/2026) 4 chức năng dùng AI theo nguyên tắc "AI chỉ sinh dữ liệu theo lược đồ cố định, máy chủ kiểm tra, giao diện hiển thị bằng component viết sẵn", gắn với US-NH-78 … US-NH-81: **F05.09** (phân tích ngữ pháp câu thoại, M05), **F09.10** (giải thích lỗi sai và câu luyện thêm trong kết quả kiểm tra, M09), **F12.04** (trang chủ "Hôm nay nên học gì", M12) thuộc giai đoạn 6; **F16.01** (mini-game luyện bộ thủ yếu, module mới M16) thuộc giai đoạn 6.5. Tổng số chức năng từ 124 lên 128 (M05 từ 8 lên 9, M09 từ 9 lên 10, M12 từ 3 lên 4, thêm M16 với 1 chức năng); tổng user story từ 118 lên 122. Hai ý tưởng còn lại (trợ lý học tập dạng trò chuyện có công cụ, chấm phát âm bằng biểu đồ thanh điệu) chỉ ghi ở mục 7 "Hướng phát triển", **không** có mã F và không tính vào tổng. | Người dùng duyệt ngày 25/10/2026. F05.09 hoàn thiện mục "Mục ngữ pháp trên trang (grammar spotlight)" từng ghi ở `docs/database-design.md` §8 (không tạo thêm dòng trùng). F09.10 mở rộng F09.03 (chỉ thêm phần giải thích, không lặp quy tắc chấm điểm). F12.04 chỉ tổng hợp và điều hướng tới F08.01, F03.12, F09.01, F12.02, F10.01, không tính lại số liệu của F12.01/F12.02. F16.01 chỉ thêm một loại hoạt động cho M16, không đụng tới nhiệm vụ ngày hay XP. Thêm ba bảng `grammar_analyses`, `grammar_requests` (F05.09), `minigame_sessions` (F16.01) và hai cột `quiz_questions.mistake_review`, `quiz_questions.mistake_review_at` (F09.10); F12.04 không thêm bảng (xem `docs/database-design.md`). Không dùng React Server Components, Vercel AI SDK hay Next.js (trái `tech-stack.md`); mọi lời gọi Gemini qua REST bằng `httpx`, sau một port riêng. |
 | 12 | Bổ sung (25/10/2026) chức năng **F14.06** (hộp thông báo trong ứng dụng, biểu tượng chuông), gắn với US-NH-82, thuộc giai đoạn 6. Tổng số chức năng từ 128 lên 129 (M14 từ 5 lên 6); tổng user story từ 122 lên 123. Đồng thời chốt lại các chi tiết của F01.10, F01.11, F04.16, F05.09, F09.10, F12.04, F13.04 và F13.05 theo mã nguồn đã làm ở giai đoạn 6 (không đổi mã F, không thêm bảng). | Giao diện đã có chuông thông báo nhưng chưa có chức năng cho Người học đọc và đánh dấu đã đọc: F14.05 chỉ mô tả việc gửi. Theo `.claude/rules/dev-workflow.md` §3, thêm F14.06 và cột `notifications.data` (JSONB, đích điều hướng của thông báo) vào `docs/database-design.md` §4.17. Phần còn lại là cập nhật cho khớp mã nguồn: các khóa cấu hình hệ thống, luật kiểm duyệt tự động, ảnh đại diện có sẵn, ghi nhớ đăng nhập, ngưỡng của "Hôm nay nên học gì". |
+| 13 | Bổ sung (30/10/2026) chức năng **F05.10** (chọn nguồn đọc trong trình đọc), gắn với US-NH-83, thuộc giai đoạn 6; cập nhật F05.01 (nguồn đọc và cột trái "Trang truyện"). Tổng số chức năng từ 129 lên 130 (M05 từ 9 lên 10); tổng user story từ 123 lên 124. | Trình đọc trước đây chỉ nạp một chương hoặc đúng một ảnh lẻ theo đường dẫn, không có chỗ chọn truyện riêng tư, ảnh tải nhanh hay chương ngay trong trình đọc, và đổi trang không đổi URL. Theo `.claude/rules/dev-workflow.md` §3, thêm vào SRS. Chỉ thay đổi giao diện: dùng lại API sẵn có (danh sách truyện của tôi, chi tiết truyện, chi tiết chương, ảnh tải nhanh, tiến độ đọc), **không thêm bảng hay API mới** (xem `docs/database-design.md`). |
+| 14 | Bổ sung (30/10/2026) đặc tả giai đoạn 6.5: **M16 Gamification** thêm 11 chức năng **F16.02 … F16.12** (sổ cái XP, xem XP và hoạt động tuần, nhiệm vụ ngày, mục tiêu tuần, thưởng mốc chuỗi ngày, bảng xếp hạng, ẩn khỏi bảng xếp hạng, mùa thi đua, chốt mùa và trao thưởng, huy hiệu, đeo huy hiệu); thêm module mới **M17 VIP & Phần thưởng** với 10 chức năng **F17.01 … F17.10** (sổ phần thưởng, ví xu và vé, trạng thái VIP, hạn mức AI theo VIP, đọc truyện VIP, mở khóa bằng vé, cửa hàng đổi thưởng, khung avatar và dấu VIP, quản lý truyện VIP và danh mục đổi thưởng, cấp/thu VIP và xu). Gắn với US-NH-84 … US-NH-99, US-QT-17, US-QT-18, US-HG-05, US-HG-06. Tổng số chức năng từ 130 lên 151 (M16 từ 1 lên 12, thêm M17 với 10); tổng user story từ 124 lên 144. Bổ sung 3 chức năng nội bộ F16.02, F17.01, F17.04. Sửa F08.11 (hạn mức theo VIP), F13.05 (4 khóa hạn mức VIP) và F16.01 (con số XP của ván chơi). | Giao diện đã có bảng xếp hạng, mùa thi đua, nhiệm vụ kiếm EXP, huy hiệu, mục tiêu tuần, hạn VIP, quảng cáo "3 ngày mở khóa VIP & Flashcard AI", viên "+50 XP" nhưng toàn dữ liệu giả; theo `.claude/rules/dev-workflow.md` §3, thêm vào hệ thống và SRS. Quyết định của người dùng ngày 30/10/2026: **không thanh toán tiền thật**, VIP và xu chỉ kiếm bằng học tập; quyền lợi VIP gồm hạn mức AI cao hơn, khung và dấu VIP, đọc truyện VIP; mùa thi đua theo tuần giờ Việt Nam; bảng xếp hạng không hiện email và cho phép ẩn. Thêm 12 bảng và 2 cột (xem `docs/database-design.md` mục 4.18, 4.19). Không thêm thư viện, dịch vụ ngoài hay Redis. |
 | 6 | Ở F06.08, khi từ **không có** trong danh sách HSK thì lấy **cấp cao nhất của các chữ cấu thành**; không chữ nào có cấp thì gán "Ngoài HSK". | Nhóm đã chốt cách này, thống nhất với US-NH-31 TC2 và tài liệu đánh giá Luồng 2. Nhờ vậy từ ghép, thành ngữ, tên riêng không có trong danh sách vẫn có cấp ước lượng để lọc sổ tay và xếp gợi ý. |
 | 8 | Bổ sung (24/10/2026) chức năng **F13.07** (xem và quản lý dữ liệu học tập của người dùng) cho Quản trị viên, gắn với US-QT-14. Tổng số chức năng từ 112 lên 113 (M13 từ 6 lên 7). Đồng thời nới quy tắc "chỉ chủ sở hữu" đối với sổ tay, thẻ, cài đặt, thư viện: Quản trị viên được xem và sửa qua F13.07. | Quyết định của người dùng ngày 24/10/2026: Quản trị viên xem và sửa được toàn bộ dữ liệu của mọi người dùng (đã đồng bộ `.claude/rules/security.md`). Mọi thao tác sửa/xóa ghi nhật ký quản trị (F13.06); người dùng thường vẫn chỉ truy cập dữ liệu của mình. Không thêm bảng dữ liệu mới (xem `docs/database-design.md`). |
 
@@ -53,10 +55,10 @@ Phân module bám theo phương án gợi ý gồm 15 module; có các điều c
 | Mã | Tên module | Mục đích | Actor sử dụng | Số chức năng |
 |---|---|---|---|---|
 | M01 | Xác thực & Tài khoản | Quản lý vòng đời tài khoản, phiên đăng nhập và kiểm tra quyền cho mọi yêu cầu. | Khách, Người học, Quản trị viên | 11 |
-| M02 | Cài đặt cá nhân | Lưu các tùy chọn học tập của từng Người học (trình độ HSK, chế độ đọc, giọng đọc, cỡ chữ bong bóng dịch). | Người học, Quản trị viên; Dịch vụ TTS (phụ) | 4 |
+| M02 | Cài đặt cá nhân | Lưu các tùy chọn học tập của từng Người học (trình độ HSK, chế độ đọc, giọng đọc, cỡ chữ bong bóng dịch) hướng dẫn người mới và giao diện sáng tối. | Khách, Người học, Quản trị viên; Dịch vụ TTS (phụ) | 6 |
 | M03 | Thư viện truyện | Quản lý truyện, chương, trang, ảnh tải nhanh, quyền sở hữu và tiến độ đọc. | Khách, Người học, Quản trị viên; Pipeline (phụ) | 14 |
 | M04 | Xử lý ảnh & Nhận diện văn bản | Đưa trang qua pipeline nhận diện, dịch, xóa chữ, đắp chữ và theo dõi trạng thái xử lý. | Người học, Quản trị viên; Pipeline xử lý ảnh (phụ) | 16 |
-| M05 | Đọc truyện & Hover-Dịch | Hiển thị trang ở ba dạng, tra nhanh bằng Hover/chạm, quản lý bản sửa dịch cá nhân và phân tích ngữ pháp câu thoại. | Khách, Người học, Quản trị viên; Pipeline, Dịch vụ LLM (phụ) | 9 |
+| M05 | Đọc truyện & Hover-Dịch | Hiển thị trang ở ba dạng, tra nhanh bằng Hover/chạm, quản lý bản sửa dịch cá nhân và phân tích ngữ pháp câu thoại, chọn nguồn đọc ngay trong trình đọc. | Khách, Người học, Quản trị viên; Pipeline, Dịch vụ LLM (phụ) | 10 |
 | M06 | Từ điển & Tra cứu | Cung cấp tra cứu đa chiều, tách từ, phân rã chữ Hán, dữ liệu từ điển và danh sách HSK. | Khách (hạn chế), Người học, Quản trị viên; Pipeline (phụ) | 8 |
 | M07 | Sổ tay cá nhân | Lưu từ kèm ngữ cảnh gốc, cấp HSK, ghi chú, trạng thái học, câu thoại đã lưu và xuất dữ liệu. | Người học, Quản trị viên; Pipeline (phụ) | 12 |
 | M08 | Flashcard & Ôn tập (FSRS) | Lập lịch ôn bằng FSRS, tổ chức phiên ôn với ba loại thẻ, quản lý lịch sử ôn và sinh thẻ mở rộng AI. | Người học, Quản trị viên; Dịch vụ TTS, Dịch vụ LLM, Bộ hẹn giờ (phụ) | 11 |
@@ -67,8 +69,9 @@ Phân module bám theo phương án gợi ý gồm 15 module; có các điều c
 | M13 | Quản trị hệ thống | Quản lý người dùng và dữ liệu học tập của họ, kiểm duyệt ảnh, cấu hình dịch vụ ngoài, trang nội dung pháp lý, xuất báo cáo vi phạm và nhật ký quản trị. | Quản trị viên | 9 |
 | M14 | Phản hồi & Thông báo | Tiếp nhận, xử lý báo lỗi, gửi thông báo, nhắc ôn tập và hộp thông báo trong ứng dụng. | Người học, Quản trị viên; Bộ hẹn giờ (phụ) | 6 |
 | M15 | Tác vụ nền & Lập lịch | Dọn dữ liệu hết hạn và điều phối các tác vụ định kỳ. | Bộ hẹn giờ hệ thống (phụ) | 3 |
-| M16 | Gamification | Trò chơi hóa việc học (XP, nhiệm vụ ngày, bảng xếp hạng, huy hiệu, mục tiêu sẽ đặc tả ở giai đoạn 6.5); hiện đã đặc tả mini-game luyện bộ thủ yếu. | Người học, Quản trị viên | 1 |
-| | **Tổng** | | | **129** |
+| M16 | Gamification | Trò chơi hóa việc học bằng dữ liệu máy chủ ghi nhận: sổ cái XP, nhiệm vụ ngày, mục tiêu tuần, mốc chuỗi ngày, bảng xếp hạng, mùa thi đua theo tuần, huy hiệu, mini-game luyện bộ thủ yếu. | Người học, Quản trị viên; Bộ hẹn giờ (phụ) | 12 |
+| M17 | VIP & Phần thưởng | Ghi sổ và tiêu phần thưởng kiếm bằng học tập (xu Sakura, vé đọc truyện VIP, ngày VIP, khung avatar); quyền lợi VIP (hạn mức AI, truyện VIP, khung/dấu VIP); cửa hàng đổi thưởng; không thanh toán tiền thật. | Khách (chỉ đọc thử truyện VIP), Người học, Quản trị viên; Bộ hẹn giờ (phụ) | 10 |
+| | **Tổng** | | | **153** |
 
 ## 3. Sơ đồ phân rã chức năng
 
@@ -137,6 +140,7 @@ wbsDiagram { node { FontSize 11 } }
 *** F05.07 Đánh dấu trang đã lưu
 *** F05.08 Ghi chú trên trang
 *** F05.09 Phân tích ngữ pháp câu thoại
+*** F05.10 Chọn nguồn đọc trong trình đọc
 ** M06 Từ điển & Tra cứu
 *** F06.01 Tra cứu chi tiết từ
 *** F06.02 Tìm kiếm từ
@@ -223,6 +227,28 @@ wbsDiagram { node { FontSize 11 } }
 *** F15.03 Lập lịch tác vụ (nội bộ)
 ** M16 Gamification
 *** F16.01 Mini-game luyện bộ thủ yếu
+*** F16.02 Sổ cái XP (nội bộ)
+*** F16.03 Xem XP & hoạt động tuần
+*** F16.04 Nhiệm vụ ngày
+*** F16.05 Mục tiêu tuần
+*** F16.06 Thưởng mốc chuỗi ngày
+*** F16.07 Bảng xếp hạng
+*** F16.08 Ẩn khỏi bảng xếp hạng
+*** F16.09 Mùa thi đua & phần thưởng mùa
+*** F16.10 Chốt mùa & trao thưởng
+*** F16.11 Huy hiệu & thành tựu
+*** F16.12 Đeo huy hiệu
+** M17 VIP & Phần thưởng
+*** F17.01 Sổ phần thưởng (nội bộ)
+*** F17.02 Ví xu & vé
+*** F17.03 Trạng thái VIP
+*** F17.04 Hạn mức AI theo VIP (nội bộ)
+*** F17.05 Đọc truyện VIP
+*** F17.06 Mở khóa truyện bằng vé
+*** F17.07 Cửa hàng đổi thưởng
+*** F17.08 Khung avatar & dấu VIP
+*** F17.09 Quản lý truyện VIP & danh mục
+*** F17.10 Cấp/thu VIP, xu, vé
 @endwbs
 ```
 
@@ -477,6 +503,8 @@ wbsDiagram { node { FontSize 11 } }
 | F02.02 | Chọn chế độ mặc định Đọc/Học | Người học, Quản trị viên (kế thừa) | US-NH-07 |
 | F02.03 | Chọn giọng đọc Text-to-Speech | Người học, Quản trị viên (kế thừa); Dịch vụ TTS (phụ) | US-NH-08 |
 | F02.04 | Chỉnh cỡ chữ bong bóng dịch | Người học, Quản trị viên (kế thừa) | US-NH-74 |
+| F02.05 | Hướng dẫn người mới theo luồng | Khách, Người học, Quản trị viên (kế thừa) | US-NH-100 |
+| F02.06 | Giao diện sáng tối | Khách, Người học, Quản trị viên (kế thừa) | US-NH-101 |
 
 ##### F02.01 — Khai báo trình độ HSK
 - **Actor:** Người học (chính), Quản trị viên (kế thừa)
@@ -545,6 +573,43 @@ wbsDiagram { node { FontSize 11 } }
   - Quản trị viên xem và sửa giá trị này của người khác qua F13.07.
 - **Ngoại lệ:**
   - Giá trị ngoài khoảng hoặc không đúng bước: từ chối với thông báo giá trị không hợp lệ, giá trị cũ giữ nguyên.
+
+##### F02.05 — Hướng dẫn người mới theo luồng
+- **Actor:** Khách, Người học (chính), Quản trị viên (kế thừa)
+- **User story:** US-NH-100 (người dùng yêu cầu 31/10/2026)
+- **Mô tả:** Tô sáng lần lượt từng tính năng trên giao diện kèm thẻ giải thích ngắn, để người mới biết hệ thống làm được gì. Có 11 tour, chạy lần đầu người dùng tự mở màn hình tương ứng: `home`, `reader`, `upload` (hộp tải ảnh), `library`, `flashcards`, `leaderboard`, `profile`, `shop`, `game`, `sample`, `admin`.
+- **Đầu vào:** khóa tour; (đã đăng nhập) `dismissed_tours` trong `GET/PATCH /api/v1/settings`.
+- **Xử lý chính:**
+  1. Khi trang sẵn sàng và không có hộp thoại mở, kiểm tra tour đã tắt chưa: đã đăng nhập đọc `user_settings.dismissed_tours`, Khách đọc bộ nhớ trình duyệt.
+  2. Chưa tắt thì hiện thẻ chào (tour `home`) rồi lần lượt các bước; bước không có phần tử hiển thị được bỏ qua.
+  3. Đi hết tour hoặc chọn "Không nhắc lại" thì lưu đã xem; "Để sau", "Bỏ qua" chỉ đóng trong phiên.
+  4. Khi Khách đăng nhập, danh sách đã xem được gộp vào máy chủ.
+  5. "Xem lại hướng dẫn" ở menu và cài đặt chạy lại tour.
+- **Đầu ra:** lớp tô sáng và thẻ hướng dẫn; trạng thái đã xem.
+- **Quy tắc nghiệp vụ:**
+  - Không chuyển trang giữa tour; không chặn việc dùng trang khi lưu trạng thái lỗi.
+  - Chỉ giới thiệu tính năng có thật; nội dung nằm ở giao diện, không gọi LLM.
+  - PATCH thay toàn bộ danh sách; khóa hợp lệ là 11 tour nêu trên.
+- **Ngoại lệ:**
+  - Khóa tour lạ: 422.
+  - Lỗi mạng khi lưu: giữ trạng thái trong phiên, lần sau lưu lại khi có thể.
+
+##### F02.06 — Giao diện sáng tối
+- **Actor:** Khách, Người học (chính), Quản trị viên (kế thừa)
+- **User story:** US-NH-101 (người dùng yêu cầu 31/10/2026)
+- **Mô tả:** Chuyển giao diện sáng hoặc tối trên toàn web bằng nút ở thanh đầu trang (menu ☰ trên điện thoại); giao diện mới lan từ nút bấm như gợn nước.
+- **Đầu vào:** lựa chọn sáng/tối, lưu ở bộ nhớ trình duyệt khóa `yinghua-theme`.
+- **Xử lý chính:**
+  1. Chưa chọn thì theo cài đặt hệ điều hành.
+  2. Gắn class `dark` lên `<html>` trước khi vẽ trang để F5 không nháy trắng.
+  3. Bấm nút thì chạy hiệu ứng lan bằng View Transitions; trình duyệt không hỗ trợ hoặc bật giảm chuyển động thì đổi ngay.
+  4. Đồng bộ giữa các tab.
+- **Đầu ra:** toàn bộ trang và hộp thoại theo giao diện đã chọn.
+- **Quy tắc nghiệp vụ:**
+  - Lựa chọn lưu theo trình duyệt, không theo tài khoản.
+  - Ảnh truyện và lớp chữ dịch đè trên ảnh giữ nguyên trong giao diện tối.
+- **Ngoại lệ:**
+  - Trình duyệt chặn lưu trữ: vẫn đổi giao diện trong phiên.
 
 ### 4.3 M03 — Thư viện truyện
 
@@ -1140,7 +1205,7 @@ wbsDiagram { node { FontSize 11 } }
 
 ### 4.5 M05 — Đọc truyện & Hover-Dịch
 
-- **Mục đích & phạm vi:** Cung cấp trình đọc truyện: hiển thị trang ở ba dạng (gốc, đã xóa chữ, đã dịch), tra nhanh bằng Hover hoặc chạm trên dữ liệu đã tính sẵn của pipeline, và cho phép mỗi Người học sửa bản dịch bong bóng cho riêng mình, cùng phân tích ngữ pháp một câu thoại bằng AI (F05.09). Khung Hover là điểm khởi phát cho các thao tác của module khác: Lưu từ (M07), nghe phát âm (M11), xem chi tiết (M06), báo lỗi (M14).
+- **Mục đích & phạm vi:** Cung cấp trình đọc truyện: hiển thị trang ở ba dạng (gốc, đã xóa chữ, đã dịch), tra nhanh bằng Hover hoặc chạm trên dữ liệu đã tính sẵn của pipeline, và cho phép mỗi Người học sửa bản dịch bong bóng cho riêng mình, cùng phân tích ngữ pháp một câu thoại bằng AI (F05.09) và chọn nguồn đọc (truyện riêng tư, ảnh tải lên, chương) ngay trong trình đọc (F05.10). Khung Hover là điểm khởi phát cho các thao tác của module khác: Lưu từ (M07), nghe phát âm (M11), xem chi tiết (M06), báo lỗi (M14).
 - **Actor sử dụng:** Khách (đọc thử, tra giới hạn), Người học (chính); Quản trị viên (kế thừa); Pipeline xử lý ảnh (phụ, cung cấp dữ liệu bong bóng và từ đã tách); Dịch vụ LLM (phụ, chỉ cho F05.09).
 - **Module phụ thuộc:** M03 (trang, quyền đọc, đọc thử), M04 (trạng thái, bong bóng, từ đã tách, ảnh dẫn xuất), M06 (nghĩa từ, chi tiết), M02 (chế độ mặc định, trình độ HSK), M07, M11, M14 (các nút trên khung Hover), M13 (bật/tắt LLM, hạn mức phân tích ngữ pháp mỗi ngày; F05.09).
 - **Dữ liệu chính:** Bản sửa dịch cá nhân (theo Người học và bong bóng), Ghi chú trang (theo Người học và trang: cờ đánh dấu, bong bóng được tô màu, nét vẽ), Bộ đếm lượt tra của Khách (theo phiên ẩn danh), Kết quả phân tích ngữ pháp (dùng chung, theo nội dung câu) và Lượt yêu cầu phân tích (theo Người học, để tính hạn mức).
@@ -1157,11 +1222,12 @@ wbsDiagram { node { FontSize 11 } }
 | F05.07 | Đánh dấu trang và xem danh sách trang đã lưu | Người học, Quản trị viên (kế thừa) | US-NH-63 |
 | F05.08 | Ghi chú trên trang (tô màu bong bóng, vẽ tự do) | Người học, Quản trị viên (kế thừa) | US-NH-64 |
 | F05.09 | Phân tích ngữ pháp câu thoại | Người học, Quản trị viên (kế thừa); Dịch vụ LLM (phụ) | US-NH-78 |
+| F05.10 | Chọn nguồn đọc trong trình đọc | Người học, Quản trị viên (kế thừa); Khách (chỉ phần xem chương đọc thử) | US-NH-83 |
 
 ##### F05.01 — Xem trang ở ba dạng hiển thị
 - **Actor:** Người học (chính), Quản trị viên (kế thừa); Khách (khi đọc thử qua F03.03)
-- **User story:** US-NH-19 [TM] (áp dụng thiết lập của US-NH-07)
-- **Mô tả:** Hiển thị trang ở ba dạng: ảnh gốc, ảnh đã xóa chữ và ảnh đã đắp bản dịch tiếng Việt, cho phép chuyển qua lại để đọc hiểu và đối chiếu với bản gốc.
+- **User story:** US-NH-19 [TM] (áp dụng thiết lập của US-NH-07); phần nguồn đọc và cột trái: US-NH-83
+- **Mô tả:** Hiển thị trang ở ba dạng: ảnh gốc, ảnh đã xóa chữ và ảnh đã đắp bản dịch tiếng Việt, cho phép chuyển qua lại để đọc hiểu và đối chiếu với bản gốc. Nguồn đọc có thể là một chương của truyện hoặc bộ ảnh tải nhanh còn hạn của người dùng (F03.08); cột trái "Trang truyện" liệt kê các trang của nguồn đang đọc (xem F05.10).
 - **Đầu vào:** trang cần xem, dạng hiển thị được chọn (nếu có).
 - **Xử lý chính:**
   1. Kiểm tra quyền đọc (F03.10) và ảnh chưa bị gỡ (F13.04).
@@ -1173,6 +1239,7 @@ wbsDiagram { node { FontSize 11 } }
   - Trang chưa "Xong": hai dạng đã xóa chữ và đã dịch bị vô hiệu hóa kèm chú thích lý do; ảnh gốc vẫn xem được, và nếu trang đã có chữ (F04.01 giai đoạn 1) thì lớp Hover & Dịch đã dùng được trên ảnh gốc.
   - Chuyển dạng tạm thời không đổi thiết lập mặc định đã lưu.
   - Khách chỉ xem được ảnh gốc và ảnh đã dịch của chương đọc thử (US-KH-04).
+  - Cột trái: với chương hiển thị "Chương N · k trang" và Trang 1, 2, 3 …; với ảnh tải nhanh hiển thị toàn bộ ảnh còn hạn của người dùng (xem F05.10), trang đang xem được tô nổi.
 - **Ngoại lệ:**
   - Đường truyền chậm: hiện chỉ báo đang tải, không hiện ảnh vỡ.
   - Ảnh đã bị gỡ do kiểm duyệt: không hiển thị, thông báo nội dung đã bị gỡ.
@@ -1331,6 +1398,31 @@ wbsDiagram { node { FontSize 11 } }
   - LLM tắt, lỗi, quá thời gian hoặc hết hạn mức: hiện thông báo nhẹ ("Tạm thời chưa phân tích được câu này"); trang vẫn đọc, Hover & Dịch và các nút khác hoạt động bình thường.
   - Cây cú pháp không hợp lệ và không còn điểm ngữ pháp hợp lệ: hiện "Chưa phân tích được câu này", không lưu cache kết quả rỗng.
   - Bong bóng không có chữ Hán (chỉ số hoặc ký hiệu): không có nút phân tích.
+
+##### F05.10 — Chọn nguồn đọc trong trình đọc
+- **Actor:** Người học (chính), Quản trị viên (kế thừa); Khách (chỉ ở phần xem chương đọc thử)
+- **User story:** US-NH-83 [Đề xuất]
+- **Mô tả:** Cho Người học chọn truyện riêng tư, bộ ảnh tải nhanh và chương ngay trong trình đọc, không phải quay về Thư viện, và giữ đường dẫn luôn khớp trang đang xem. Chỉ thay đổi giao diện và cách gọi API sẵn có; không thêm bảng hay API mới.
+- **Đầu vào:** nguồn đọc (ảnh tải nhanh, hoặc chương của một truyện); trang, ảnh hoặc chương được chọn; thao tác bước tiếp/lùi.
+- **Xử lý chính:**
+  1. Ảnh tải nhanh thành một bộ: khi đọc một ảnh tải nhanh, lấy danh sách ảnh tải nhanh còn hạn của người dùng (F03.08, `GET /quick-uploads`), xếp cũ → mới, đặt tên "Ảnh 1 … n" (tối đa 100); cột trái "Trang truyện" tô ảnh đang xem, tiêu đề "Ảnh bạn tải lên · Ảnh i/n". Danh sách được đọc lại sau khi tải thêm ảnh và khi quay lại tab.
+  2. Cột trái cho chương: ghi "Chương N · k trang" và liệt kê Trang 1, 2, 3 … (`GET /chapters/{id}`).
+  3. Bộ chọn nguồn đọc trên thanh đầu trang (bảng chọn, đóng bằng Esc hoặc bấm ra ngoài, thao tác bằng bàn phím): mục "Ảnh tải lên của tôi" kèm số ảnh; mục "Truyện riêng tư của tôi" (`GET /series?scope=mine`) gồm bìa nhỏ, tên, số chương; bấm một truyện thì mở chương đang đọc dở (F03.12, `GET /reading-progress/continue`), chưa có thì mở chương đầu (`GET /series/{id}`); đánh dấu truyện đang đọc; lối "Khám phá thêm ở Thư viện".
+  4. Chọn chương: khi truyện có nhiều hơn một chương, trình đọc có bộ chọn chương. Đến trang cuối thì bước tiếp sang chương kế; hết chương cuối thì đứng yên và báo "Đã hết truyện". Lùi ở trang đầu thì về chương trước nếu có.
+  5. Màn chưa chọn truyện (`/doc`): liệt kê truyện riêng tư của người dùng và lưới khoảng 12 ảnh tải lên gần đây để mở trực tiếp; giữ mục "Đọc dở gần đây".
+  6. Đồng bộ đường dẫn: mỗi lần đổi trang, ảnh hoặc chương, cập nhật URL (`/doc/:chương?trang=N` hoặc `/doc/anh/:trang`) bằng cách thay thế mục lịch sử; đổi trang trong cùng chương hoặc bộ ảnh không nạp lại cả chương.
+- **Đầu ra:** trình đọc hiển thị đúng nguồn, trang hoặc chương được chọn; đường dẫn khớp trang đang xem.
+- **Quy tắc nghiệp vụ:**
+  - Tham số trên đường dẫn được kiểm và ép kiểu (số nguyên dương); sai thì về trang mặc định hoặc trang 404.
+  - Khách chỉ đọc thử chương công khai (US-KH-04) và không thấy mục "Ảnh tải lên của tôi", "Truyện riêng tư của tôi".
+  - Quyền đọc vẫn do F03.10 kiểm ở máy chủ; giao diện chỉ là trải nghiệm. Truyện hoặc ảnh của người khác trả lời như không tồn tại.
+  - Trạng thái hiển thị (số ảnh, danh sách truyện, chương đang đọc dở) lấy từ máy chủ, đúng sau F5 và khi quay lại tab.
+  - Back/Forward, F5 và liên kết chia sẻ phải mở đúng trang đang xem.
+- **Ngoại lệ:**
+  - Truyện chưa có chương: mục hiển thị mờ "Chưa có chương", không mở được.
+  - Ảnh tải nhanh đã hết hạn hoặc đã bị dọn: báo như F03.08 ("Ảnh đã hết hạn lưu" hoặc "Không tìm thấy ảnh").
+  - Không có ảnh tải lên nào: mục "Ảnh tải lên của tôi" hiển thị số 0 kèm gợi ý tải ảnh.
+  - Máy chủ tạm không phản hồi: giữ danh sách đang hiển thị và thử lại, không coi là phiên hết hạn.
 
 ### 4.6 M06 — Từ điển & Tra cứu
 
@@ -1966,7 +2058,7 @@ wbsDiagram { node { FontSize 11 } }
   - Thời điểm tạo nội dung (để tiết kiệm lượt): ở chi tiết mục từ, nội dung AI chỉ được tạo khi Người học bấm xem; ở mặt sau thẻ ôn, nội dung được tạo khi lật thẻ lần đầu (các lần sau lấy từ bộ đệm).
   - Không báo lỗi kỹ thuật khi LLM lỗi: Người học luôn nhận được nội dung, có thể là dự phòng; sự kiện dự phòng ghi nhật ký mức cảnh báo.
   - Nội dung chỉ để học, không đổi lịch ôn, trạng thái hay ghi chú của mục từ; xóa mục từ xóa luôn thẻ mở rộng.
-  - Ghi chú về giao diện: màn hình hiện có quảng cáo "3 ngày mở khóa VIP & Flashcard AI". Việc giới hạn theo VIP thuộc M17 (giai đoạn 6.5); ở giai đoạn 5 mọi Người học dùng được trong hạn mức ngày.
+  - Hạn mức theo VIP (giai đoạn 6.5, F17.04): Flashcard AI **không** khóa riêng cho VIP; mọi Người học dùng được trong hạn mức ngày `ai_note_daily_limit`, Người học đang VIP dùng hạn mức `vip_ai_note_daily_limit` (mặc định 40, F13.05). Quảng cáo "3 ngày mở khóa VIP & Flashcard AI" ở form đăng ký ứng với quà chào mừng 3 ngày VIP của F17.03. Lượt đã dùng trong ngày được tính chung, nên VIP hết hạn giữa ngày thì hạn mức trở về mức thường và lượt đã dùng vẫn được trừ.
 - **Ngoại lệ:**
   - LLM tắt, lỗi, quá thời gian, trả kết quả không hợp lệ hoặc hết hạn mức: dùng nội dung dự phòng như bước 5.
   - Từ không có dữ liệu từ điển hay chiết tự: phần tương ứng bị ẩn, không hiện giá trị rỗng.
@@ -2603,11 +2695,11 @@ wbsDiagram { node { FontSize 11 } }
 - **Đầu vào:** cờ bật/tắt LLM, cờ bật/tắt TTS, giới hạn N đề mỗi ngày; mở rộng: cờ chế độ bảo trì, cờ kiểm duyệt ảnh tự động, cờ xử lý OCR ngay khi tải, cờ thông báo quản trị, giới hạn số lần tạo Thẻ mở rộng AI mỗi ngày, giới hạn số lượt phân tích ngữ pháp mỗi ngày, giới hạn số lượt giải thích lỗi sai mỗi ngày.
 - **Xử lý chính:**
   1. Kiểm tra vai trò Quản trị viên.
-  2. Kiểm tra N và các giới hạn Thẻ mở rộng AI, phân tích ngữ pháp, giải thích lỗi sai là số nguyên không âm.
+  2. Kiểm tra N và các giới hạn Thẻ mở rộng AI, phân tích ngữ pháp, giải thích lỗi sai (cả mức thường và mức VIP) là số nguyên không âm.
   3. Lưu Cấu hình hệ thống; các module M05, M08, M09, M11 đọc cấu hình ở mỗi yêu cầu qua cổng công khai của M13.
   4. Ghi nhật ký thay đổi (F13.06).
 - **Đầu ra:** cấu hình mới có hiệu lực ngay.
-- **Các khóa cấu hình (giai đoạn 6):** `llm_enabled`, `tts_enabled`, `quiz_daily_llm_limit` (đề kiểm tra LLM mỗi ngày), `ai_note_daily_limit` (Thẻ mở rộng AI, F08.11), `grammar_daily_limit` (phân tích ngữ pháp, F05.09), `mistake_review_daily_limit` (giải thích lỗi sai, F09.10), `maintenance_mode`, `auto_moderation_enabled`, `ocr_on_upload_enabled`, `admin_notifications_enabled`, `sample_page_id` (trang mẫu của F04.16, có thể đặt rỗng để bỏ; Quản trị viên **chọn từ danh sách** `GET /api/v1/admin/system-settings/sample-page-candidates` — các trang thuộc truyện công khai, đã dịch xong, ảnh chưa bị gỡ, mới nhất trước, tối đa 100, kèm tên truyện, chương, số trang và số khung thoại — thay vì gõ mã trang; trang đang đặt mà không còn hợp lệ vẫn hiện để đổi). Gửi `null` cho một khóa đưa khóa đó về mặc định. Khóa chưa được đặt trong CSDL lấy **giá trị mặc định từ cấu hình máy chủ** (`Settings`/`.env`); Quản trị viên đặt lại thì giá trị trong CSDL thắng. Hạn mức là số nguyên từ 0 đến 1000. Giao diện quản trị xem và sửa bằng `GET`/`PATCH /api/v1/admin/system-settings` (chỉ gửi khóa cần đổi; một giá trị sai làm cả lượt bị từ chối). **Hạn mức của mọi tính năng AI** (đề kiểm tra, Thẻ mở rộng AI, phân tích ngữ pháp, giải thích lỗi sai) và công tắc LLM/TTS đều đọc từ cấu hình này; thay đổi có hiệu lực ngay (bộ đệm trong tiến trình chỉ vài giây và bị xóa khi lưu).
+- **Các khóa cấu hình (giai đoạn 6):** `llm_enabled`, `tts_enabled`, `quiz_daily_llm_limit` (đề kiểm tra LLM mỗi ngày), `ai_note_daily_limit` (Thẻ mở rộng AI, F08.11), `grammar_daily_limit` (phân tích ngữ pháp, F05.09), `mistake_review_daily_limit` (giải thích lỗi sai, F09.10), `maintenance_mode`, `auto_moderation_enabled`, `ocr_on_upload_enabled`, `admin_notifications_enabled`, `sample_page_id` (trang mẫu của F04.16, có thể đặt rỗng để bỏ; Quản trị viên **chọn từ danh sách** `GET /api/v1/admin/system-settings/sample-page-candidates` — các trang thuộc truyện công khai, đã dịch xong, ảnh chưa bị gỡ, mới nhất trước, tối đa 100, kèm tên truyện, chương, số trang và số khung thoại — thay vì gõ mã trang; trang đang đặt mà không còn hợp lệ vẫn hiện để đổi). **Khóa bổ sung giai đoạn 6.5 (F17.04, 30/10/2026):** `vip_quiz_daily_llm_limit` (mặc định 10), `vip_ai_note_daily_limit` (mặc định 40), `vip_grammar_daily_limit` (mặc định 60), `vip_mistake_review_daily_limit` (mặc định 40) là hạn mức mỗi ngày áp dụng cho Người học đang VIP, cùng khoảng 0 đến 1000; tổng số khóa của màn cấu hình thành 15. Gửi `null` cho một khóa đưa khóa đó về mặc định. Khóa chưa được đặt trong CSDL lấy **giá trị mặc định từ cấu hình máy chủ** (`Settings`/`.env`); Quản trị viên đặt lại thì giá trị trong CSDL thắng. Hạn mức là số nguyên từ 0 đến 1000. Giao diện quản trị xem và sửa bằng `GET`/`PATCH /api/v1/admin/system-settings` (chỉ gửi khóa cần đổi; một giá trị sai làm cả lượt bị từ chối). **Hạn mức của mọi tính năng AI** (đề kiểm tra, Thẻ mở rộng AI, phân tích ngữ pháp, giải thích lỗi sai) và công tắc LLM/TTS đều đọc từ cấu hình này; thay đổi có hiệu lực ngay (bộ đệm trong tiến trình chỉ vài giây và bị xóa khi lưu).
 - **Trạng thái công khai:** `GET /api/v1/system/status` (không cần đăng nhập) trả cờ bảo trì kèm thông điệp, LLM và TTS đang bật hay tắt, và có trang mẫu hay không; giao diện dùng để hiện biểu ngữ bảo trì và ẩn nút "Thử với trang mẫu".
 - **Quy tắc nghiệp vụ:**
   - Tắt LLM: Người học yêu cầu bài kiểm tra nhận đề dự phòng (F09.08).
@@ -2619,6 +2711,7 @@ wbsDiagram { node { FontSize 11 } }
   - Thông báo quản trị tắt: hệ thống không gửi thông báo cho Quản trị viên (báo lỗi mới, lỗi xử lý ảnh hàng loạt); dữ liệu vẫn xem được ở màn hình quản trị.
   - Hết hạn mức Thẻ mở rộng AI trong ngày (F08.11): vẫn trả nội dung dự phòng, không từ chối.
   - Hết hạn mức phân tích ngữ pháp trong ngày (F05.09): chỉ trả kết quả đã có trong bộ nhớ dùng chung; câu mới hiện thông báo nhẹ, không báo lỗi kỹ thuật. Hết hạn mức giải thích lỗi sai (F09.10): trả nội dung dự phòng như khi LLM tắt.
+  - Hạn mức VIP (F17.04): Người học đang VIP dùng **giá trị lớn hơn** giữa khóa `vip_*` và khóa thường tương ứng, nên Quản trị viên đặt nhầm hạn mức VIP thấp hơn mức thường thì VIP không bị thiệt. Tắt LLM (`llm_enabled = false`) áp dụng cho cả VIP.
 - **Ngoại lệ:**
   - Giới hạn âm hoặc không phải số: từ chối với thông báo cụ thể.
 
@@ -2893,29 +2986,41 @@ wbsDiagram { node { FontSize 11 } }
 
 ### 4.16 M16 — Gamification
 
-- **Mục đích & phạm vi:** Trò chơi hóa việc học để duy trì động lực: XP, nhiệm vụ ngày, bảng xếp hạng, huy hiệu và mục tiêu (xem `docs/database-design.md` §8, giai đoạn 6.5; các chức năng này **chưa được đặc tả mã F**, sẽ viết user story và đặc tả riêng, trình duyệt trước khi làm). Hiện module có một chức năng đã duyệt (25/10/2026): mini-game luyện bộ thủ yếu (F16.01), là một **loại hoạt động mới** của M16, không thay thế hay trùng nhiệm vụ ngày, XP, huy hiệu.
-- **Actor sử dụng:** Người học (chính), Quản trị viên (kế thừa).
-- **Module phụ thuộc:** M08 (lượt ôn `review_logs`, thẻ), M07 (sổ tay), M06 (dữ liệu chữ Hán `hanzi`, danh sách HSK), M02 (trình độ HSK). Phần cộng XP/xu phụ thuộc cơ chế XP của M16 (chưa đặc tả); đến khi có thì F16.01 chỉ lưu kết quả ván chơi.
-- **Dữ liệu chính:** Ván chơi mini-game (Người học, loại game, bộ thủ mục tiêu, điểm, số đúng/sai, thời gian chơi).
-- **Gợi ý router FastAPI:** `gamification`.
+- **Mục đích & phạm vi:** Trò chơi hóa việc học để duy trì động lực, **chỉ dựa trên hoạt động học do máy chủ ghi nhận**: sổ cái điểm kinh nghiệm (XP; giao diện gọi là "EXP", hai tên cùng một đại lượng), nhiệm vụ ngày, mục tiêu tuần, thưởng mốc chuỗi ngày, bảng xếp hạng theo 4 chỉ số × 3 khoảng thời gian, mùa thi đua theo tuần có chốt mùa và trao thưởng tự động, huy hiệu và thành tựu, mini-game luyện bộ thủ yếu (F16.01, đã duyệt 25/10/2026). M16 quyết định **ai được thưởng gì**; phần thưởng có giá trị trao đổi (xu Sakura, vé đọc truyện VIP, ngày VIP, khung avatar) do M17 ghi sổ (F17.01). Đặc tả F16.02 … F16.12 bổ sung ngày 30/10/2026 [Đề xuất] theo quyết định của người dùng: không thanh toán tiền thật; mùa theo tuần giờ Việt Nam; bảng xếp hạng không bao giờ hiện email và cho phép ẩn.
+- **Actor sử dụng:** Người học (chính), Quản trị viên (kế thừa đầy đủ: có XP, được xếp hạng và nhận thưởng mùa như Người học — người dùng chốt 30/10/2026); Bộ hẹn giờ hệ thống (phụ: chốt mùa F16.10, quét huy hiệu F16.11).
+- **Module phụ thuộc:** M12 (`daily_activities`, chuỗi ngày F12.02: nguồn số liệu của nhiệm vụ, mục tiêu tuần, bảng xếp hạng), M03 (`page_reads`), M07 (mục từ), M08 (thẻ, `review_logs`), M06 (`hanzi`, `lookup_events`, HSK), M02 (trình độ, múi giờ, `weekly_page_goal`, `show_on_leaderboard`), M01 (tên hiển thị, ảnh đại diện, vai trò, trạng thái), M17 (ghi phần thưởng F17.01; khung và dấu VIP để hiển thị), M14 (thông báo F14.05), M15 (lập lịch F15.03). Mọi lời gọi qua `application/public.py` của module đích. **Chiều ngược lại** (M03, M07, M08, M09 báo sự kiện học để cộng XP) đi qua một port đặt ở `core/` (`LearningEventPort`, cùng cách làm với `AiPolicy`), M16 hiện thực và được lắp ở `container.py`, nên không có vòng phụ thuộc giữa module [Đề xuất].
+- **Dữ liệu chính:** Sự kiện XP (sổ cái chỉ thêm, khóa chống trùng), Mùa thi đua, Kết quả mùa (hạng, XP, bậc thưởng, thời điểm trao), Định nghĩa thành tựu, Thành tựu của người dùng (cấp, đang đeo), Ván chơi mini-game. Nhiệm vụ ngày và mục tiêu tuần **không có bảng riêng**: tiến độ tính từ `daily_activities`, việc đã thưởng nhận biết qua khóa của sự kiện XP (xem `docs/database-design.md` mục 4.18).
+- **Gợi ý router FastAPI:** `gamification` (tag `M16 Gamification`), tiền tố `/api/v1/gamification`.
+- **Múi giờ:** "hôm nay" của trần XP, nhiệm vụ ngày và mục tiêu tuần tính theo múi giờ Người học (`user_settings.timezone`, giống F12.02, F12.04); **mùa thi đua và bảng xếp hạng tuần/tháng** tính theo giờ Việt Nam `Asia/Ho_Chi_Minh` cho mọi người, để mọi người thi trên cùng một khung thời gian.
 
 | Mã | Tên chức năng | Actor | User story |
 |---|---|---|---|
 | F16.01 | Mini-game luyện bộ thủ yếu | Người học, Quản trị viên (kế thừa) | US-NH-81 |
+| F16.02 | Ghi nhận XP từ hoạt động học (chức năng nội bộ) | Hệ thống (phục vụ Người học) | hỗ trợ US-NH-84, US-NH-85, US-NH-86, US-NH-87, US-NH-81 |
+| F16.03 | Xem XP và hoạt động tuần | Người học, Quản trị viên (kế thừa) | US-NH-84 |
+| F16.04 | Nhiệm vụ ngày | Người học, Quản trị viên (kế thừa) | US-NH-85 |
+| F16.05 | Mục tiêu tuần | Người học, Quản trị viên (kế thừa) | US-NH-86 |
+| F16.06 | Thưởng mốc chuỗi ngày | Người học, Quản trị viên (kế thừa) | US-NH-87 |
+| F16.07 | Bảng xếp hạng | Người học, Quản trị viên (kế thừa) | US-NH-88 |
+| F16.08 | Ẩn khỏi bảng xếp hạng | Người học, Quản trị viên (kế thừa) | US-NH-89 |
+| F16.09 | Mùa thi đua và phần thưởng mùa | Người học, Quản trị viên (kế thừa) | US-NH-90 |
+| F16.10 | Chốt mùa và trao thưởng tự động | Bộ hẹn giờ hệ thống | US-HG-05 |
+| F16.11 | Huy hiệu và thành tựu | Người học, Quản trị viên (kế thừa); Bộ hẹn giờ (phụ) | US-NH-91 |
+| F16.12 | Đeo huy hiệu | Người học, Quản trị viên (kế thừa) | US-NH-92 |
 
-##### F16.01 — Mini-game luyện bộ thủ yếu
+##### F16.01 — Mini-game Phi Kiếm Trảm Tự
 - **Actor:** Người học (chính), Quản trị viên (kế thừa)
 - **User story:** US-NH-81 [Đề xuất]
-- **Mô tả:** Thống kê bộ thủ (hoặc thành phần chữ) xuất hiện nhiều trong các thẻ Người học hay quên, rồi đề xuất mini-game "chữ Hán rơi": các chữ rơi xuống màn hình, Người học chạm hoặc vuốt để chọn những chữ có chứa bộ thủ mục tiêu trong 30 giây. Chức năng không dùng AI.
-- **Đầu vào:** Người học; (khi chơi) bộ thủ mục tiêu được chọn; kết quả ván chơi gồm danh sách chữ đã hiện kèm lựa chọn của Người học và thời gian chơi.
+- **Mô tả:** Game gõ pinyin (người dùng chốt 31/10/2026): chữ Hán thư pháp 3D rơi xuống, Người học gõ pinyin để phi kiếm chém đứt đôi chữ; nhân vật tự chạy tới chữ sắp chạm đáy; có combo, mạng, đợt, từ boss hai chữ. Chọn band HSK 1–6, HSK 7–9 hoặc bộ thủ hay quên. Giao diện tại `/phi-kiem-tram-tu`. Chức năng không dùng AI.
+- **Đầu vào:** Người học; chế độ (`hsk` kèm band hoặc `weak_radical` kèm bộ thủ); kết quả ván gồm chuỗi sự kiện chém/rơi kèm mốc thời gian, số lần gõ sai, thời gian chơi.
 - **Xử lý chính:**
   1. Tính bộ thủ yếu: lấy các lượt ôn gần đây (đề xuất 30 ngày) có mức Quên hoặc Khó từ `review_logs`, quy về từ của thẻ, tách thành các chữ, tra bộ thủ và thành phần ở dữ liệu `hanzi` (F06.05); đếm theo bộ thủ, xếp giảm dần và lấy tối đa 3 bộ thủ đầu có số lần xuất hiện từ ngưỡng tối thiểu (đề xuất 3).
   2. Hiển thị gợi ý "Bộ thủ bạn hay quên" kèm nút "Chơi ngay"; Người học có thể chọn một trong các bộ thủ đó.
-  3. Dựng bộ chữ cho ván: chữ **có** bộ thủ mục tiêu lấy từ Sổ tay của Người học và từ HSK có cấp không vượt quá trình độ + 1 (F02.01, F06.08); chữ nhiễu **không** chứa bộ thủ đó, cùng nguồn; xáo trộn tỉ lệ đúng/nhiễu.
-  4. Ván chơi giới hạn 30 giây; giao diện hiển thị chữ rơi, nhận chạm/vuốt, báo đúng/sai tức thì.
-  5. Nộp kết quả: máy chủ tính lại đúng/sai từng chữ từ dữ liệu `hanzi` (không tin điểm do trình duyệt gửi), kiểm tra thời gian chơi hợp lý, tính điểm, lưu ván chơi.
-  6. Gọi cơ chế XP/xu của M16 để cộng thưởng theo điểm (khi cơ chế này đã có); lượng thưởng và giới hạn số lần cộng mỗi ngày do đặc tả XP quy định.
-- **Đầu ra:** gợi ý bộ thủ yếu; ván chơi và điểm số; thưởng XP/xu (khi M16 có XP).
+  3. Dựng bộ mục cho ván (`POST /minigames/blade/rounds`, 100 mục): chế độ HSK ưu tiên chữ mới của đúng band rồi bù chữ band thấp hơn; chế độ bộ thủ lấy chữ có bộ thủ đó từ Sổ tay và HSK có cấp không vượt quá trình độ + 1 (F02.01, F06.08); khoảng 1/10 mục là từ boss hai chữ. Đáp án là pinyin không dấu, `ü` gõ là `u` và chấp nhận mọi âm của chữ đa âm.
+  4. Ván tối đa 120 giây, 3 mạng; giao diện canvas hiển thị chữ rơi, nhận gõ phím (hoặc bàn phím ảo trên điện thoại), hiệu ứng từng ký tự, chém chữ, combo.
+  5. Nộp kết quả theo `round_id` do máy chủ phát (`POST /minigames/blade/sessions`; bảng `minigame_rounds` giữ bộ mục đã phát; mỗi lượt nộp một lần): máy chủ kiểm chuỗi sự kiện (mục thuộc lượt, không lặp, thời gian tăng dần, nhịp gõ không nhanh quá sức người) rồi tự tính điểm: mỗi chữ 10, boss ×3, nhân combo 1 + 0,5 × (combo // 5) tối đa ×3; `GET /minigames/blade/best` trả kỷ lục theo band. Lỗi: 404 `MINIGAME_ROUND_NOT_FOUND`, 409 `MINIGAME_ROUND_USED`, 409 `MINIGAME_ROUND_EXPIRED`, 400 `INVALID_MINIGAME_RESULT`. Tác vụ nền `purge_minigame_rounds` dọn lượt cũ hơn 7 ngày.
+  6. Gọi F16.02 trong cùng giao dịch để cộng XP cho ván chơi (nguồn `minigame`, khóa là mã ván): XP = số chữ chém chia 2, làm tròn xuống, tối đa 10 XP mỗi ván; chỉ 5 ván đầu tiên mỗi ngày được tính XP. Ván chơi không cộng xu.
+- **Đầu ra:** gợi ý bộ thủ yếu; ván chơi và điểm số; XP được cộng (có thể bằng 0 khi chạm trần).
 - **Quy tắc nghiệp vụ:**
   - Chỉ dùng dữ liệu của chính người dùng; ván chơi không ảnh hưởng thẻ FSRS hay lịch ôn.
   - Điểm do máy chủ tính; đúng +1 điểm, sai trừ 1 điểm nhưng không xuống dưới 0 [Đề xuất].
@@ -2925,6 +3030,481 @@ wbsDiagram { node { FontSize 11 } }
   - Chưa đủ dữ liệu ôn tập (chưa có bộ thủ nào đạt ngưỡng): đề xuất chơi với bộ thủ phổ biến của cấp HSK hiện tại, kèm thông báo "Chưa có dữ liệu để gợi ý bộ thủ yếu".
   - Không đủ chữ để dựng ván (dưới số chữ tối thiểu): thông báo cần lưu thêm từ, không bắt đầu ván.
   - Mất kết nối khi nộp kết quả: giữ kết quả trên trình duyệt để gửi lại; ván chưa nộp không được thưởng.
+
+##### F16.02 — Ghi nhận XP từ hoạt động học (chức năng nội bộ)
+- **Actor:** Hệ thống, phục vụ Người học
+- **User story:** (chức năng nội bộ) hỗ trợ US-NH-84 TC1–TC5, US-NH-85, US-NH-86, US-NH-87, US-NH-81 TC5 [Đề xuất]
+- **Mô tả:** Sổ cái XP chỉ thêm. Mỗi hoạt động học do máy chủ ghi nhận sinh **một** sự kiện XP có khóa chống trùng; điểm XP của mọi chức năng khác (bảng xếp hạng, mùa, nhiệm vụ) đều tính từ sổ cái này. Trình duyệt **không có** API nào để gửi XP.
+- **Đầu vào:** người dùng, nguồn sự kiện, mã tham chiếu của nguồn, thời điểm (lấy từ `Clock` của máy chủ), số liệu kèm theo (số câu đúng của bài kiểm tra, điểm ván mini-game).
+- **Xử lý chính:**
+  1. Được gọi qua port `LearningEventPort` (đặt ở `core/`, M16 hiện thực) bởi use case của module nguồn, **trong cùng giao dịch** với hành động và sau khi bộ đếm `daily_activities` của ngày đã được cập nhật (dòng đó đã bị khóa, nên hai yêu cầu đồng thời của cùng người không vượt trần).
+  2. Xác định ngày hoạt động theo múi giờ Người học.
+  3. Nếu đã có sự kiện cùng (người dùng, nguồn, mã tham chiếu): không làm gì, trả 0 XP (chống trùng; không phải lỗi).
+  4. Tính XP gốc theo bảng dưới; áp trần của nguồn và trần chung của ngày; phần vượt trần bị cắt, sự kiện vẫn được ghi với số XP thực nhận (có thể bằng 0) và cờ `capped`.
+  5. Ghi sự kiện. Sau sự kiện nguồn `page_read`, `review`, `quiz`: đánh giá nhiệm vụ ngày (F16.04); sau `page_read`: mục tiêu tuần (F16.05); sau `page_read`, `review`: mốc chuỗi ngày (F16.06); sau `page_read`, `word_saved`, `quiz`: huy hiệu theo luật (F16.11). Mỗi phần thưởng phụ là một sự kiện XP riêng với khóa riêng.
+- **Đầu ra:** sự kiện XP; số XP được cộng (trả về cho use case gọi để hiện "+n XP" nếu cần).
+- **Bảng XP (hằng số có tên ở domain M16):**
+
+  | Nguồn (`source`) | Khi nào | XP | Trần riêng mỗi ngày | Mã tham chiếu |
+  |---|---|---|---|---|
+  | `page_read` | Đọc một trang **lần đầu** (bản ghi `page_reads` mới, F03.12) | 2 | 100 trang (200 XP) | mã trang |
+  | `review` | Một lượt chấm thẻ hợp lệ (bản ghi `review_logs` mới, F08.02) | 1 | 200 lượt | mã lượt ôn |
+  | `word_saved` | Tạo **mục từ mới** trong Sổ tay (F07.01; thêm ngữ cảnh cho từ đã có không tính) | 3 | 50 từ (150 XP) | từ (`term`) |
+  | `quiz` | Nộp bài kiểm tra (F09.02) đã trả lời ít nhất một nửa số câu | 10 + 1 mỗi câu đúng, tối đa 20 | 5 bài | mã bài |
+  | `minigame` | Nộp ván mini-game (F16.01) | điểm chia 2 (làm tròn xuống), tối đa 10 | 5 ván | mã ván |
+  | `quest` | Hoàn thành một nhiệm vụ ngày (F16.04) | 20 / 15 / 30 | không áp trần chung | mã nhiệm vụ + ngày |
+  | `weekly_goal` | Đạt mục tiêu tuần (F16.05) | 150 | không áp trần chung | ngày đầu tuần |
+  | `streak_milestone` | Chạm mốc chuỗi 7 / 30 / 100 ngày (F16.06) | 50 / 200 / 500 | không áp trần chung | mốc + ngày bắt đầu chuỗi |
+
+- **Quy tắc nghiệp vụ:**
+  - **Trần chung XP hoạt động: 300 XP mỗi ngày** (tổng các nguồn `page_read`, `review`, `word_saved`, `quiz`, `minigame`). XP thưởng của nhiệm vụ, mục tiêu tuần, mốc chuỗi không tính vào trần chung vì đã tự giới hạn số lần.
+  - Chỉ cộng từ sự kiện máy chủ ghi nhận; giá trị điểm do máy chủ tính (không nhận điểm từ trình duyệt). Thời điểm sự kiện là giờ máy chủ, nên đổi giờ máy tính của người dùng không ảnh hưởng.
+  - Khóa chống trùng là vĩnh viễn: đọc lại trang cũ, lưu lại một từ đã xóa, gửi lại cùng một lượt chấm (`presentation_id`) đều không được cộng thêm.
+  - Bài kiểm tra trả lời dưới một nửa số câu **không tạo sự kiện XP** (chống tạo rồi nộp bài trống để lấy thưởng).
+  - XP không bao giờ bị trừ: xóa từ, xóa thẻ hay xóa truyện không thu hồi XP đã cộng.
+  - Quản trị viên được ghi XP, xếp hạng và nhận thưởng mùa như Người học (người dùng chốt 30/10/2026: Quản trị viên cũng là người học).
+- **Ngoại lệ:**
+  - Trùng khóa: bỏ qua, trả 0 XP, hành động gốc vẫn thành công.
+  - Lỗi CSDL khi ghi: cả giao dịch của hành động bị hủy như mọi lỗi CSDL khác (không có trạng thái "đã lưu từ nhưng mất XP").
+
+##### F16.03 — Xem XP và hoạt động tuần
+- **Actor:** Người học (chính), Quản trị viên (kế thừa)
+- **User story:** US-NH-84 [Đề xuất]
+- **Mô tả:** Cho Người học thấy XP kiếm được hôm nay (viên "+n XP" cạnh chuỗi ngày trên thanh điều hướng và trang Catalog), XP của mùa hiện hành, tổng XP, và biểu đồ "Hoạt động tuần của bạn" (XP từng ngày Thứ Hai → Chủ Nhật kèm tổng).
+- **Đầu vào:** Người học (từ phiên).
+- **Xử lý chính:**
+  1. `GET /api/v1/gamification/me`: XP hôm nay (theo ngày hoạt động của Người học), XP mùa hiện hành, tổng XP, hạng hiện tại trong mùa (F16.07, hoặc rỗng nếu chưa có XP), mốc chuỗi kế tiếp và số ngày còn thiếu (F16.06), huy hiệu đang đeo (F16.12).
+  2. `GET /api/v1/gamification/me/weekly-activity`: 7 ô Thứ Hai … Chủ Nhật của tuần mùa hiện hành (giờ Việt Nam), mỗi ô là tổng XP của ngày đó, cùng tổng tuần.
+- **Đầu ra:** số liệu XP cá nhân; dữ liệu biểu đồ tuần.
+- **Quy tắc nghiệp vụ:**
+  - Chỉ dữ liệu của chính người dùng; giao diện đọc lại khi quay lại tab hoặc sau thao tác ở màn khác (`frontend-react.md` §3), không tự cộng số ở trình duyệt.
+  - Viên trên thanh điều hướng hiện "+0 XP" khi hôm nay chưa có XP, không ẩn.
+- **Ngoại lệ:**
+  - Người dùng mới: mọi số bằng 0, biểu đồ có 7 ô rỗng, không báo lỗi.
+  - Máy chủ tạm không phản hồi: giữ số đang hiện và thử lại, không coi là hết phiên.
+
+##### F16.04 — Nhiệm vụ ngày
+- **Actor:** Người học (chính), Quản trị viên (kế thừa)
+- **User story:** US-NH-85 [Đề xuất]
+- **Mô tả:** Khối "Nhiệm vụ kiếm EXP" có 3 nhiệm vụ cố định mỗi ngày; hoàn thành thì XP được cộng **tự động** (không có nút nhận), đủ 3 nhiệm vụ thì được thêm xu Sakura.
+- **Đầu vào:** Người học; ngày hiện tại theo múi giờ Người học.
+- **Xử lý chính:**
+  1. `GET /api/v1/gamification/quests/today` trả 3 nhiệm vụ, mỗi nhiệm vụ có mã, tên, tiến độ, mục tiêu, XP thưởng, đã hoàn thành chưa và thời điểm được thưởng:
+
+     | Mã | Nhiệm vụ | Tiến độ lấy từ | Mục tiêu | Thưởng |
+     |---|---|---|---|---|
+     | `read_pages` | Đọc 2 trang truyện mới | `daily_activities.pages_read` | 2 | +20 XP |
+     | `review_cards` | Lật 15 thẻ Flashcard | `daily_activities.reviews_count` | 15 | +15 XP |
+     | `take_quiz` | Làm 1 bài kiểm tra từ HSK | số sự kiện XP nguồn `quiz` trong ngày (kể cả sự kiện bị trần) | 1 | +30 XP |
+
+  2. Khi F16.02 ghi sự kiện liên quan, nhiệm vụ vừa đạt mục tiêu được thưởng ngay: sự kiện XP nguồn `quest`, khóa `<mã nhiệm vụ>:<ngày>`.
+  3. Khi đủ 3/3 nhiệm vụ trong ngày: gọi F17.01 cộng **20 xu Sakura** (lý do `quest_bonus`, khóa `quests_all:<ngày>`).
+  4. Nhiệm vụ `take_quiz` chưa xong có lối "Làm ngay (+30 XP)" dẫn tới màn tạo bài kiểm tra (F09.01).
+- **Đầu ra:** danh sách nhiệm vụ kèm tiến độ, số nhiệm vụ đã hoàn thành ("2/3 hoàn thành").
+- **Quy tắc nghiệp vụ:**
+  - Danh sách nhiệm vụ là hằng số trong domain (không có bảng định nghĩa, không cho quản trị cấu hình ở giai đoạn 6.5) [Đề xuất].
+  - Nhiệm vụ đặt lại lúc 00:00 theo múi giờ Người học; tiến độ và trạng thái thưởng tính khi gọi từ `daily_activities` và sổ cái XP, không lưu bảng riêng.
+  - Mỗi nhiệm vụ chỉ được thưởng một lần mỗi ngày (khóa chống trùng); XP thưởng nhiệm vụ không bị trần chung của F16.02.
+- **Ngoại lệ:**
+  - Dịch vụ LLM tắt hoặc hết hạn mức: bài kiểm tra dự phòng (F09.08) vẫn tính cho nhiệm vụ.
+  - Người học đổi múi giờ trong ngày: ngày mới tính theo múi giờ mới; nhiệm vụ đã thưởng của ngày cũ không bị thu hồi.
+
+##### F16.05 — Mục tiêu tuần
+- **Actor:** Người học (chính), Quản trị viên (kế thừa)
+- **User story:** US-NH-86 [Đề xuất]
+- **Mô tả:** Khối "Mục tiêu tuần này" ở Hồ sơ: đọc đủ số trang trong tuần, có thanh tiến độ, "Còn n trang nữa" và phần thưởng khi hoàn thành "+150 XP và Khung Avatar Hoa Anh Đào Vàng".
+- **Đầu vào:** Người học; `user_settings.weekly_page_goal` (đặt ở cài đặt, `PATCH /api/v1/settings`); số trang đọc lần đầu trong tuần.
+- **Xử lý chính:**
+  1. `GET /api/v1/gamification/weekly-goal`: mục tiêu (giá trị đã đặt; chưa đặt thì mặc định **20 trang**), số trang đã đọc từ Thứ Hai 00:00 tới nay theo múi giờ Người học (tổng `daily_activities.pages_read`), phần trăm, số trang còn thiếu, phần thưởng, trạng thái đã thưởng.
+  2. Khi F16.02 ghi sự kiện `page_read` làm số trang trong tuần đạt mục tiêu: cộng **150 XP** (nguồn `weekly_goal`, khóa là ngày đầu tuần) và gọi F17.01 cấp khung "Hoa Anh Đào Vàng" **dùng 7 ngày** kể từ lúc đạt.
+- **Đầu ra:** tiến độ mục tiêu tuần; thưởng khi đạt.
+- **Quy tắc nghiệp vụ:**
+  - Tuần bắt đầu Thứ Hai theo múi giờ Người học, khớp F12.04 (`weekly_goal`).
+  - Mục tiêu dùng để **thưởng** không thấp hơn 10 trang: đặt mục tiêu dưới 10 vẫn hiển thị đúng con số đã đặt, nhưng chỉ được thưởng khi đọc từ 10 trang trở lên trong tuần (chống đặt mục tiêu 1 trang để lấy thưởng).
+  - Mỗi tuần chỉ thưởng một lần, kể cả khi đổi mục tiêu sau khi đã thưởng.
+  - Khung từ mục tiêu tuần là khung tạm thời: đã sở hữu vĩnh viễn (từ thưởng mùa) thì bỏ qua; đang có bản tạm thì gia hạn tới mốc muộn hơn.
+  - Hạ mục tiêu xuống dưới số trang đã đọc: thưởng được trao ở trang mới kế tiếp trong tuần (chỉ đánh giá khi có sự kiện `page_read`).
+- **Ngoại lệ:**
+  - Người dùng mới: 0/20 trang, không báo lỗi.
+
+##### F16.06 — Thưởng mốc chuỗi ngày
+- **Actor:** Người học (chính), Quản trị viên (kế thừa)
+- **User story:** US-NH-87 [Đề xuất]
+- **Mô tả:** Khi chuỗi ngày học liên tiếp (F12.02) chạm các mốc 7, 30, 100 ngày, Người học được thưởng XP, xu và ngày VIP.
+- **Đầu vào:** chuỗi ngày hiện tại và ngày bắt đầu chuỗi (F12.02).
+- **Xử lý chính:**
+  1. Sau sự kiện `page_read` hoặc `review` (hai hoạt động tính chuỗi theo F12.02), tính chuỗi hiện tại qua cổng công khai của M12.
+  2. Với mỗi mốc ≤ chuỗi hiện tại chưa được thưởng trong **chuỗi này** (khóa `<mốc>:<ngày bắt đầu chuỗi>`): ghi sự kiện XP `streak_milestone` và gọi F17.01 cộng xu, ngày VIP theo bảng; gửi thông báo loại `streak_milestone` (F14.05).
+
+     | Mốc | XP | Xu Sakura | Ngày VIP |
+     |---|---|---|---|
+     | 7 ngày | +50 | +50 | — |
+     | 30 ngày | +200 | +200 | +3 |
+     | 100 ngày | +500 | +500 | +7 |
+
+- **Đầu ra:** phần thưởng mốc; thông báo.
+- **Quy tắc nghiệp vụ:**
+  - Mỗi mốc được thưởng một lần cho mỗi chuỗi; chuỗi đứt rồi bắt đầu lại thì có thể nhận lại từ mốc 7.
+  - Quy tắc tính chuỗi giữ nguyên F12.02 (hôm nay chưa học thì chuỗi vẫn giữ tới hết ngày).
+- **Ngoại lệ:**
+  - Lỗi khi gửi thông báo: chỉ ghi log, phần thưởng vẫn giữ (thông báo gửi sau khi giao dịch thưởng đã lưu, như F13.04).
+
+##### F16.07 — Bảng xếp hạng
+- **Actor:** Người học (chính), Quản trị viên (kế thừa, có tên trong bảng như Người học)
+- **User story:** US-NH-88 [Đề xuất]
+- **Mô tả:** "Bảng Vàng Danh Dự": xếp hạng Người học theo 4 chỉ số (EXP, Từ vựng, Trang đã đọc, Chuỗi streak) × 3 khoảng (Tuần này, Tháng này, Toàn thời gian); bục top 1–3, danh sách các hạng tiếp theo, dòng "Bạn" kèm khoảng cách tới mốc thưởng kế tiếp, và ba số tổng quan đầu trang.
+- **Đầu vào:** chỉ số (`exp`/`vocab`/`pages`/`streak`), khoảng (`week`/`month`/`all`), trang và cỡ trang (mặc định 50, tối đa 100).
+- **Xử lý chính:**
+  1. `GET /api/v1/gamification/leaderboard?metric=exp&period=week&page=1&size=50`.
+  2. Xác định khoảng thời gian theo giờ Việt Nam: `week` = mùa hiện hành (F16.09); `month` = từ ngày 1 của tháng hiện tại 00:00; `all` = mọi thời gian.
+  3. Tính điểm từng người: `exp` = tổng XP của sổ cái trong khoảng; `vocab` = tổng `daily_activities.words_saved`; `pages` = tổng `daily_activities.pages_read`; `streak` = chuỗi ngày hiện tại (F12.02), **không phụ thuộc khoảng** (giao diện làm mờ bộ lọc thời gian khi chọn chỉ số này).
+  4. Xếp mọi tài khoản đang hoạt động (kể cả Quản trị viên; tài khoản bị khóa bị loại), điểm lớn hơn 0. Hòa điểm: ai đạt điểm đó sớm hơn (hoạt động tính điểm cuối cùng sớm hơn) đứng trên; vẫn hòa thì tài khoản tạo sớm hơn đứng trên.
+  5. Mỗi dòng: hạng, tên hiển thị, ảnh đại diện (ảnh có sẵn hoặc ảnh tải lên, F01.10), cấp HSK đã khai báo, điểm và đơn vị, huy hiệu đang đeo (F16.12), khung avatar và dấu VIP (F17.08, đọc theo lô qua cổng công khai M17), cờ "là tôi". Người đã ẩn hiển thị theo F16.08.
+  6. Trả thêm: dòng của chính người gọi (kể cả khi ngoài trang đang xem hoặc chưa có điểm); với `exp` + `week`: mốc thưởng kế tiếp phía trên (hạng 50, 10, 3, rồi 1) và số XP còn thiếu để vượt người đang giữ mốc đó, cùng tỉ lệ cho thanh tiến độ; ba số tổng quan: tổng học viên (tài khoản đang hoạt động), tổng trang đã đọc trong khoảng, tổng XP của mùa hiện hành.
+- **Đầu ra:** `{ items, total, page, size, me, next_milestone, summary }`.
+- **Quy tắc nghiệp vụ:**
+  - **Không bao giờ trả email** hay mã người dùng của người khác; chỉ tên hiển thị, ảnh đại diện, cấp HSK, điểm, khung, huy hiệu.
+  - Tài khoản đang bị khóa không có trong bảng và không nhận thưởng mùa. Quản trị viên được xếp hạng và nhận thưởng như Người học (người dùng chốt 30/10/2026).
+  - Tính khi gọi từ sổ cái XP và `daily_activities` nhờ chỉ mục; không lưu bảng xếp hạng dựng sẵn. Nếu đo thấy chậm mới đề xuất bộ đệm (phải xin duyệt).
+  - Bảng tháng/toàn thời gian dùng ngày hoạt động `activity_date` theo múi giờ của từng Người học cho chỉ số `vocab`, `pages`; với người dùng ở múi giờ khác Việt Nam có thể lệch tối đa một ngày ở mép khoảng (chấp nhận cho đồ án).
+- **Ngoại lệ:**
+  - Tham số `metric`, `period` không hợp lệ hoặc `size` > 100: 422.
+  - Chưa ai có điểm: danh sách rỗng, bục trống, dòng "Bạn" hiện 0 điểm kèm lời mời học.
+  - Khách chưa đăng nhập: 401; giao diện mở hộp đăng nhập.
+
+##### F16.08 — Ẩn khỏi bảng xếp hạng
+- **Actor:** Người học (chính), Quản trị viên (kế thừa)
+- **User story:** US-NH-89 [Đề xuất]
+- **Mô tả:** Người học tắt việc hiện thông tin của mình trên bảng xếp hạng. Phương án đã chọn: **ẩn danh**, không loại khỏi bảng [Đề xuất, cần người dùng duyệt].
+- **Đầu vào:** cờ `show_on_leaderboard` (mặc định bật) qua `PATCH /api/v1/settings`.
+- **Xử lý chính:**
+  1. Lưu cờ vào Cài đặt cá nhân (M02).
+  2. Khi cờ tắt, F16.07 trả dòng của người này cho **người khác** với tên "Học viên ẩn danh", ảnh đại diện mặc định, không có cấp HSK, huy hiệu, khung hay dấu VIP; hạng và điểm vẫn giữ.
+  3. Với chính người đó, dòng "Bạn" vẫn hiện đầy đủ kèm ghi chú "Bạn đang ẩn tên trên bảng xếp hạng".
+- **Đầu ra:** cờ đã lưu; bảng xếp hạng phản ánh ngay ở lần gọi kế tiếp.
+- **Quy tắc nghiệp vụ:**
+  - Ẩn danh không ảnh hưởng hạng của người khác và **vẫn được nhận thưởng mùa** (F16.10); chọn ẩn danh thay vì loại khỏi bảng để thứ hạng và phần thưởng của mọi người không thay đổi khi một người bật/tắt.
+  - Thông báo thưởng mùa và kết quả mùa chỉ gửi cho chính người đó.
+- **Ngoại lệ:**
+  - Giá trị không phải boolean: 422.
+
+##### F16.09 — Mùa thi đua và phần thưởng mùa
+- **Actor:** Người học (chính), Quản trị viên (kế thừa)
+- **User story:** US-NH-90 [Đề xuất]
+- **Mô tả:** "Mùa Đua Top Hoa Anh Đào • Kỳ N" kéo dài một tuần, từ **Thứ Hai 00:00 đến Chủ Nhật 23:59:59 giờ Việt Nam**; đầu trang có đếm ngược "Còn x ngày y giờ" và khối "Phần thưởng mùa" theo ba bậc. Xếp hạng mùa là bảng `exp` + `week` của F16.07.
+- **Đầu vào:** Người học; thời điểm hiện tại của máy chủ.
+- **Xử lý chính:**
+  1. `GET /api/v1/gamification/seasons/current`: số kỳ, thời điểm bắt đầu, kết thúc (UTC, ISO 8601), giờ máy chủ hiện tại (để giao diện đếm ngược không phụ thuộc đồng hồ máy người dùng), ba bậc thưởng, hạng và XP mùa của người gọi, bậc thưởng người gọi sẽ nhận nếu mùa chốt lúc này.
+  2. Nếu chưa có mùa chứa thời điểm hiện tại: tạo mùa của tuần hiện tại với số kỳ = số kỳ lớn nhất + 1 (ràng buộc duy nhất trên thời điểm bắt đầu chống tạo trùng khi hai yêu cầu cùng lúc).
+  3. `GET /api/v1/gamification/seasons/me?page=1&size=20`: kết quả các mùa đã chốt của người gọi (kỳ, hạng, XP, bậc, phần thưởng đã nhận).
+- **Phần thưởng mùa (hằng số domain, khớp giao diện):**
+
+  | Bậc | Hạng | Phần thưởng |
+  |---|---|---|
+  | `top3` | 1–3 | Khung avatar "Hoa Anh Đào Vàng" (vĩnh viễn); **+30 ngày VIP** ("Mở khóa toàn bộ Manhua VIP 1 tháng"); danh hiệu "Đệ Nhất Học Giả" (F16.11) |
+  | `top10` | 4–10 | Khung avatar "Cánh Hoa Mùa Xuân" (vĩnh viễn); **3 vé đọc truyện VIP** |
+  | `top50` | 11–50 | **500 xu Sakura**; huy hiệu "Người Gieo Hạt" (cấp I nếu chưa có) |
+
+- **Đầu ra:** thông tin mùa hiện hành; lịch sử kết quả mùa của tôi.
+- **Quy tắc nghiệp vụ:**
+  - Điều kiện nhận thưởng: có ít nhất **50 XP** trong mùa (hằng số `SEASON_MIN_XP`), là tài khoản đang hoạt động lúc chốt (kể cả Quản trị viên).
+  - Số kỳ bắt đầu từ 1 khi phát hành và tăng dần; tuần không có ai có XP thì không tạo kỳ (không có kỳ rỗng).
+  - Sự kiện XP thuộc mùa theo thời điểm ghi của máy chủ; XP sau 23:59:59 Chủ Nhật thuộc mùa sau.
+- **Ngoại lệ:**
+  - Mùa đã hết giờ nhưng chưa chốt (F16.10 chưa chạy): giao diện hiện "Đang tổng kết mùa", mùa mới vẫn bắt đầu và nhận XP bình thường.
+
+##### F16.10 — Chốt mùa và trao thưởng tự động
+- **Actor:** Bộ hẹn giờ hệ thống (phụ, chủ động kích hoạt)
+- **User story:** US-HG-05 [Đề xuất]
+- **Mô tả:** Tác vụ nền `finalize_seasons` chốt bảng xếp hạng của mùa đã kết thúc, ghi kết quả top 50, trao thưởng qua M17 và gửi thông báo; chạy bù đúng khi máy chủ tắt đúng lúc hết mùa.
+- **Đầu vào:** các mùa đã quá thời điểm kết thúc mà chưa chốt; sổ cái XP.
+- **Xử lý chính:**
+  1. F15.03 kích hoạt mỗi **15 phút**.
+  2. Tạo bù mùa còn thiếu cho các tuần đã có sự kiện XP (trường hợp không ai mở bảng xếp hạng trong tuần).
+  3. Chọn một mùa đang `active` có thời điểm kết thúc ≤ hiện tại, khóa dòng (`FOR UPDATE SKIP LOCKED`), chuyển sang `finalizing`.
+  4. Tính xếp hạng XP trong khoảng của mùa theo quy tắc F16.07 (kể cả người đã ẩn danh), lọc theo điều kiện của F16.09, lấy 50 người đầu; ghi kết quả mùa (hạng, XP, bậc) trong một giao dịch.
+  5. Với từng người chưa được trao, trong **giao dịch riêng**: gọi F17.01 trao phần thưởng của bậc (khóa `season:<mã mùa>`), gọi F16.11 trao huy hiệu mùa, đặt thời điểm đã trao; sau khi lưu, gửi thông báo loại `season_reward` (F14.05) với `data` gồm mã mùa, số kỳ, hạng, bậc.
+  6. Khi mọi người đã được trao: chuyển mùa sang `finalized`, ghi thời điểm chốt; ghi tóm tắt vào nhật ký chạy tác vụ (số người được thưởng theo từng bậc).
+- **Đầu ra:** kết quả mùa; phần thưởng đã trao; thông báo.
+- **Quy tắc nghiệp vụ:**
+  - Chốt muộn (máy chủ tắt lúc nửa đêm Chủ Nhật) **không làm thay đổi kết quả**, vì xếp hạng tính theo thời điểm của sự kiện XP chứ không theo lúc chạy.
+  - Mỗi người nhận thưởng một mùa đúng một lần (khóa duy nhất ở kết quả mùa và khóa chống trùng của sổ phần thưởng); chạy lại tác vụ không trao lần hai.
+  - Kết quả mùa đã ghi không tính lại.
+  - Không thông báo cho người ngoài top 50.
+- **Ngoại lệ:**
+  - Lỗi khi trao cho một người: ghi log, giữ mùa ở `finalizing`, các người khác vẫn được trao; lần chạy kế tiếp trao tiếp phần còn thiếu.
+  - Hai worker cùng chạy: khóa của F15.03 và `SKIP LOCKED` bảo đảm chỉ một bên chốt một mùa.
+
+##### F16.11 — Huy hiệu và thành tựu
+- **Actor:** Người học (chính), Quản trị viên (kế thừa); Bộ hẹn giờ hệ thống (phụ)
+- **User story:** US-NH-91 [Đề xuất]
+- **Mô tả:** Tab "Huy hiệu" ở Hồ sơ: 7 huy hiệu tự mở khóa theo luật từ dữ liệu học thật, có cấp I–III và tiến độ ("Tiến độ 182/200", "Đạt Cấp III"); mỗi cấp mở khóa được thưởng xu.
+- **Đầu vào:** Người học; dữ liệu học của các module (đọc qua cổng công khai).
+- **Xử lý chính:**
+  1. `GET /api/v1/gamification/achievements`: mọi huy hiệu đang dùng, mỗi huy hiệu có mã, tên, mô tả, cấp đã đạt, ngưỡng của cấp kế tiếp, tiến độ hiện tại, thời điểm mở khóa, đang đeo hay không.
+  2. Đánh giá mở khóa: (a) sau sự kiện `page_read`, `review`, `word_saved`, `quiz` của F16.02, và sau commit khi mục từ chuyển sang đã thuộc hoặc khi tra một bong bóng mới (`hsk3_mastered`, `bubble_lookups`; lỗi đánh giá chỉ ghi log, không ảnh hưởng thao tác chính); (b) tác vụ nền `evaluate_achievements` mỗi **60 phút** cho người có hoạt động trong ngày (để bắt các chỉ số không sinh XP như số bong bóng đã tra); (c) huy hiệu mùa do F16.10 trao.
+  3. Đạt ngưỡng cấp mới: ghi cấp mới, gọi F17.01 cộng xu của cấp (khóa `achievement:<mã>:<cấp>`), gửi thông báo `achievement_unlocked`.
+- **Danh mục huy hiệu (dữ liệu khởi tạo trong migration, khớp `data/achievements.ts`):**
+
+  | Mã | Tên | Luật (chỉ số) | Ngưỡng cấp I / II / III | Xu mỗi cấp |
+  |---|---|---|---|---|
+  | `sakura_member` | Thành viên Hoa Anh Đào | Số ngày học (ngày có ôn hoặc đọc, như F12.02) | 30 / 100 / 365 | 50 / 100 / 200 |
+  | `top_scholar` | Đệ Nhất Học Giả | Vào top 1–3 một mùa (chỉ do F16.10 trao) | 1 cấp | 0 (đã có thưởng mùa) |
+  | `manhua_elite` | Tinh Anh Manhua | Số trang đã đọc (`page_reads`) | 100 / 500 / 2000 | 50 / 100 / 200 |
+  | `seed_sower` | Người Gieo Hạt | Số mục từ trong Sổ tay; **hoặc** vào hạng 11–50 một mùa (trao cấp I) | 300 / 1000 / 3000 | 50 / 100 / 200 |
+  | `hsk3_master` | Vua Từ Vựng HSK 3 | Số mục từ HSK 3 đã thành thạo: trạng thái "Đã thuộc" hoặc có thẻ ở trạng thái `review` với độ ổn định S ≥ 21 ngày | 300 (1 cấp) | 200 |
+  | `night_owl` | Cú Đêm Cày Truyện | Số trang đọc lần đầu trong khung 23:00–03:59 theo múi giờ Người học | 50 / 200 / 500 | 50 / 100 / 200 |
+  | `apprentice_translator` | Dịch Giả Tập Sự | Số bong bóng khác nhau đã tra (`lookup_events` hành động `hover`/`lookup` có `bubble_id`) | 150 / 500 / 1500 | 50 / 100 / 200 |
+
+- **Đầu ra:** danh sách huy hiệu kèm tiến độ; cấp mới; xu thưởng; thông báo.
+- **Quy tắc nghiệp vụ:**
+  - Huy hiệu đã mở khóa **không bao giờ bị thu hồi**, kể cả khi số liệu giảm (xóa từ, xóa truyện).
+  - Một lần đánh giá có thể vượt nhiều cấp cùng lúc: trao đủ các cấp, mỗi cấp một khóa chống trùng.
+  - Tiến độ hiển thị tính khi gọi; trạng thái mở khóa đọc từ bảng, cập nhật ngay sau hành động liên quan; tác vụ 60 phút chỉ là lưới dự phòng.
+  - Định nghĩa huy hiệu nằm trong bảng (tên, ngưỡng, xu) để chỉnh bằng migration; giai đoạn 6.5 chưa có màn quản trị huy hiệu [Đề xuất].
+- **Ngoại lệ:**
+  - Lỗi tính một chỉ số trong tác vụ nền: bỏ qua chỉ số đó cho người đó, ghi log, lần chạy sau tính lại.
+
+##### F16.12 — Đeo huy hiệu
+- **Actor:** Người học (chính), Quản trị viên (kế thừa)
+- **User story:** US-NH-92 [Đề xuất]
+- **Mô tả:** Người học chọn một huy hiệu đã mở khóa để hiện cạnh tên ở Hồ sơ, hộp "Sửa hồ sơ" và bảng xếp hạng.
+- **Đầu vào:** mã huy hiệu, hoặc `null` để tháo.
+- **Xử lý chính:**
+  1. `PUT /api/v1/gamification/achievements/equipped` với `{ "achievement_code": "night_owl" }`.
+  2. Kiểm tra huy hiệu thuộc người dùng và đã mở khóa.
+  3. Bỏ đeo huy hiệu cũ, đeo huy hiệu mới trong một giao dịch (mỗi người tối đa một huy hiệu đang đeo).
+- **Đầu ra:** huy hiệu đang đeo (mã, tên, cấp).
+- **Quy tắc nghiệp vụ:**
+  - Chưa đeo huy hiệu nào thì giao diện **không hiện** viên huy hiệu (không mặc định huy hiệu đầu danh sách như dữ liệu giả hiện tại).
+  - Hiển thị đọc từ máy chủ, đúng sau F5 (`frontend-react.md` §3).
+- **Ngoại lệ:**
+  - Huy hiệu chưa mở khóa hoặc mã không tồn tại: 409 `ACHIEVEMENT_LOCKED` hoặc 404, huy hiệu đang đeo giữ nguyên.
+
+### 4.17 M17 — VIP & Phần thưởng
+
+- **Mục đích & phạm vi:** Quản lý mọi phần thưởng có giá trị trao đổi mà Người học **kiếm bằng học tập** (người dùng chốt 30/10/2026: **không thanh toán tiền thật**, không cổng thanh toán, không lưu thẻ): xu Sakura, vé đọc truyện VIP, ngày VIP, khung avatar. Module gồm sổ phần thưởng chỉ thêm, ví, trạng thái VIP và quyền lợi VIP (hạn mức AI cao hơn, đọc truyện VIP, khung và dấu VIP), mở khóa truyện VIP bằng vé, cửa hàng đổi thưởng, cùng chức năng quản trị (đặt cờ VIP cho truyện, cấu hình danh mục đổi thưởng, cấp/thu VIP, xu, vé có nhật ký). Đặc tả bổ sung 30/10/2026 [Đề xuất].
+- **Actor sử dụng:** Khách (chỉ đọc chương đọc thử của truyện VIP, F17.05), Người học (chính), Quản trị viên (kế thừa và chức năng riêng F17.09, F17.10); Bộ hẹn giờ hệ thống (phụ: nhắc VIP sắp hết hạn, F17.03).
+- **Module phụ thuộc:** M03 (truyện, chương đọc thử `is_trial`; M17 hiện thực port `VipAccessPort` do M03 khai báo để M03 hỏi quyền đọc mà không phụ thuộc M17), M13 (cấu hình hệ thống F13.05 cho hạn mức AI VIP; nhật ký quản trị F13.06), M14 (thông báo F14.05), M15 (lập lịch F15.03), M01 (người dùng, vai trò). Được gọi bởi: M16 (trao thưởng qua F17.01; đọc khung/dấu VIP để hiển thị), M01 (quà chào mừng khi đăng ký, F17.03), M05, M08, M09 (qua port `AiPolicy` ở `core/`, F17.04). Không có vòng phụ thuộc: M17 không gọi M16.
+- **Dữ liệu chính:** Ví (số xu, số vé, hạn VIP, khung đang đeo), Sổ phần thưởng (chỉ thêm), Truyện VIP đã mở khóa, Danh mục đổi thưởng, Lượt đổi thưởng, Khung avatar, Khung đã sở hữu; cột `series.is_vip`.
+- **Gợi ý router FastAPI:** `rewards` (`/api/v1/rewards/...`, `/api/v1/vip/...`, tag `M17 VIP & Phần thưởng`); phần quản trị dưới `/api/v1/admin/...`.
+
+| Mã | Tên chức năng | Actor | User story |
+|---|---|---|---|
+| F17.01 | Ghi sổ phần thưởng (chức năng nội bộ) | Hệ thống (phục vụ M16, Quản trị viên, Bộ hẹn giờ) | hỗ trợ US-NH-87, US-NH-90, US-NH-91, US-NH-93, US-NH-98, US-QT-18, US-HG-05 |
+| F17.02 | Xem ví xu, vé và lịch sử | Người học, Quản trị viên (kế thừa) | US-NH-93 |
+| F17.03 | Trạng thái VIP: cộng dồn, hết hạn, quà chào mừng, nhắc hết hạn | Người học, Quản trị viên (kế thừa); Bộ hẹn giờ (phụ) | US-NH-94, US-HG-06 |
+| F17.04 | Hạn mức AI theo VIP (chức năng nội bộ) | Hệ thống (phục vụ Người học) | hỗ trợ US-NH-95 |
+| F17.05 | Đọc truyện VIP | Khách (đọc thử), Người học, Quản trị viên | US-NH-96 |
+| F17.06 | Mở khóa truyện VIP bằng vé | Người học, Quản trị viên (kế thừa) | US-NH-97 |
+| F17.07 | Cửa hàng đổi thưởng | Người học, Quản trị viên (kế thừa) | US-NH-98 |
+| F17.08 | Khung avatar và dấu VIP | Người học, Quản trị viên (kế thừa) | US-NH-99 |
+| F17.09 | Quản lý truyện VIP và danh mục đổi thưởng | Quản trị viên | US-QT-17 |
+| F17.10 | Xem, cấp và thu VIP, xu, vé của người dùng | Quản trị viên | US-QT-18 |
+
+##### F17.01 — Ghi sổ phần thưởng (chức năng nội bộ)
+- **Actor:** Hệ thống, phục vụ M16, Quản trị viên và Bộ hẹn giờ hệ thống
+- **User story:** (chức năng nội bộ) hỗ trợ US-NH-87 TC2, US-NH-90 TC4, US-NH-91 TC3, US-NH-93, US-NH-98 TC2, US-QT-18 TC1–TC3, US-HG-05 TC2
+- **Mô tả:** Cổng duy nhất làm thay đổi số xu, số vé, hạn VIP và khung sở hữu của một người. Mọi thay đổi ghi một dòng sổ không sửa, không xóa; có khóa chống trùng nên gọi lại không cộng hai lần.
+- **Đầu vào:** người nhận; gói thưởng hoặc khoản trừ (số xu, số vé, số ngày VIP, khung và hạn dùng của khung); lý do; khóa chống trùng; người thực hiện (khi là Quản trị viên) và ghi chú.
+- **Xử lý chính:**
+  1. Tạo ví nếu chưa có, khóa dòng ví (`SELECT … FOR UPDATE`).
+  2. Với từng loại (xu, vé, ngày VIP): nếu khóa chống trùng đã có cho loại đó thì bỏ qua loại đó; nếu là khoản trừ thì kiểm số dư đủ.
+  3. Cập nhật ví; ghi dòng sổ kèm số dư sau (xu, vé) hoặc hạn VIP sau (ngày VIP, cộng dồn theo F17.03).
+  4. Khung: ghi hoặc gia hạn khung sở hữu (vĩnh viễn hoặc có hạn).
+  5. Trả kết quả cho chức năng gọi; chức năng gọi tự gửi thông báo sau khi giao dịch lưu.
+- **Đầu ra:** số dư và hạn VIP mới; các dòng sổ.
+- **Quy tắc nghiệp vụ:**
+  - Số xu và số vé **không bao giờ âm** (kiểm ở use case và ràng buộc CHECK ở CSDL).
+  - Lý do thuộc danh sách cố định: `season_reward`, `quest_bonus`, `streak_milestone`, `achievement`, `welcome`, `redemption`, `vip_unlock`, `admin_adjust`.
+  - Giới hạn mỗi lần: xu tối đa 100.000, vé tối đa 10, ngày VIP tối đa 365; số vé trong ví tối đa 99.
+  - Không có API nào để trình duyệt tự cộng phần thưởng; chỉ M16, cửa hàng (F17.07), mở khóa (F17.06), quà chào mừng (F17.03) và quản trị (F17.10) gọi được.
+- **Ngoại lệ:**
+  - Khoản trừ vượt số dư: lỗi `NOT_ENOUGH_COINS` hoặc `NOT_ENOUGH_TICKETS` (409), không ghi gì.
+  - Trùng khóa: bỏ qua, trả số dư hiện tại, không phải lỗi.
+
+##### F17.02 — Xem ví xu, vé và lịch sử
+- **Actor:** Người học (chính), Quản trị viên (kế thừa)
+- **User story:** US-NH-93 [Đề xuất]
+- **Mô tả:** Người học xem số xu Sakura, số vé đọc truyện VIP, hạn VIP và lịch sử nhận/tiêu.
+- **Đầu vào:** bộ lọc loại (xu, vé, ngày VIP), trang, cỡ trang (tối đa 100).
+- **Xử lý chính:**
+  1. `GET /api/v1/rewards/wallet`: số xu, số vé, trạng thái VIP (F17.03), khung đang đeo.
+  2. `GET /api/v1/rewards/wallet/ledger?currency=coin&page=1&size=20`: các dòng sổ mới nhất trước, mỗi dòng có loại, số lượng (dương là nhận, âm là tiêu), số dư sau, lý do (nhãn tiếng Việt), thời điểm.
+- **Đầu ra:** ví và lịch sử có phân trang.
+- **Quy tắc nghiệp vụ:**
+  - Chỉ dữ liệu của chính người dùng; Quản trị viên xem của người khác qua F17.10. Ví chưa tạo thì trả số 0, không tạo dòng.
+  - Không hiện mã người thực hiện là Quản trị viên cho Người học; lý do điều chỉnh của quản trị hiện dạng "Điều chỉnh bởi quản trị viên" kèm ghi chú.
+- **Ngoại lệ:**
+  - Tham số lọc sai: 422.
+
+##### F17.03 — Trạng thái VIP: cộng dồn, hết hạn, quà chào mừng, nhắc hết hạn
+- **Actor:** Người học (chính), Quản trị viên (kế thừa); Bộ hẹn giờ hệ thống (phụ, nhắc hết hạn)
+- **User story:** US-NH-94, US-HG-06 [Đề xuất]
+- **Mô tả:** VIP là một khoảng thời gian có hạn, chỉ được cấp theo ngày từ phần thưởng học tập, cửa hàng, quà chào mừng hoặc Quản trị viên; hết hạn tự động mà không cần tác vụ nền.
+- **Đầu vào:** số ngày VIP được cấp (qua F17.01); thời điểm hiện tại.
+- **Xử lý chính:**
+  1. Cấp VIP: hạn mới = max(hiện tại, hạn hiện có) + số ngày (**cộng dồn**, không mất phần còn lại).
+  2. Trạng thái VIP = hạn VIP > hiện tại, **tính ở mỗi yêu cầu**; quá hạn thì tự hết, không có job đổi trạng thái.
+  3. `GET /api/v1/vip/me`: đang VIP hay không, hạn VIP, số ngày còn lại, các quyền lợi (hạn mức AI hiệu lực của từng tính năng theo F17.04, đọc truyện VIP, khung VIP), số truyện đã mở khóa bằng vé. Hồ sơ hiện "Hạn VIP: dd/mm/yyyy" hoặc "Chưa có VIP".
+  4. **Quà chào mừng:** khi tài khoản mới được tạo (F01.01), M01 gọi cổng công khai của M17 cấp **3 ngày VIP** (lý do `welcome`, khóa `welcome`), khớp dòng "Nhận ngay 3 ngày mở khóa VIP & Flashcard AI" ở form đăng ký; gửi thông báo `vip_granted`.
+  5. **Nhắc hết hạn:** tác vụ nền `remind_vip_expiry` mỗi 60 phút (F15.03) chọn người có hạn VIP trong vòng 24 giờ tới mà chưa được nhắc cho đúng hạn đó, gửi thông báo `vip_expiring` và ghi lại hạn đã nhắc.
+- **Đầu ra:** trạng thái VIP; thông báo.
+- **Quy tắc nghiệp vụ:**
+  - Nguồn ngày VIP: thưởng mùa top 1–3 (+30), mốc chuỗi 30 ngày (+3) và 100 ngày (+7), cửa hàng (1 hoặc 7 ngày), quà chào mừng (+3, một lần mỗi tài khoản), Quản trị viên (F17.10).
+  - Quà chào mừng chỉ cho tài khoản đăng ký **sau khi** M17 phát hành, không cấp bù cho tài khoản cũ [Đề xuất]; nếu cấp lỗi thì đăng ký vẫn thành công, ghi log mức cảnh báo.
+  - VIP hết hạn giữa phiên: yêu cầu kế tiếp được xử lý như không VIP (F17.04, F17.05); dữ liệu đã lưu (từ, ngữ cảnh, thẻ, tiến độ đọc) không bị ảnh hưởng.
+  - Hạn VIP thay đổi (được cộng thêm) thì được nhắc lại cho hạn mới; mỗi hạn chỉ nhắc một lần.
+  - Quản trị viên luôn có quyền đọc mọi truyện (F17.05) dù không VIP.
+- **Ngoại lệ:**
+  - Máy chủ tắt đúng lúc VIP hết hạn: không ảnh hưởng, vì trạng thái tính khi hỏi.
+  - Gửi nhắc lỗi: ghi log, không ghi "đã nhắc", lần chạy sau thử lại.
+
+##### F17.04 — Hạn mức AI theo VIP (chức năng nội bộ)
+- **Actor:** Hệ thống, phục vụ Người học
+- **User story:** (chức năng nội bộ) hỗ trợ US-NH-95, US-NH-75, US-NH-78, US-NH-79, US-NH-45 [Đề xuất]
+- **Mô tả:** Cho Người học đang VIP hạn mức mỗi ngày cao hơn ở bốn tính năng dùng LLM, dùng lại cơ chế hạn mức hiện có (cấu hình F13.05 + port `AiPolicy`), không đổi cách đếm lượt.
+- **Đầu vào:** người dùng; tính năng (đề kiểm tra LLM F09.01/F09.06, Thẻ mở rộng AI F08.11, phân tích ngữ pháp F05.09, giải thích lỗi sai F09.10).
+- **Xử lý chính:**
+  1. M17 cung cấp hiện thực `VipAwareAiPolicy` của port `AiPolicy` (ở `core/`), bọc chính sách đọc cấu hình của M13; `container.py` lắp cho M05, M08, M09.
+  2. `daily_limit(user_id)`: không VIP → khóa thường (`quiz_daily_llm_limit`, `ai_note_daily_limit`, `grammar_daily_limit`, `mistake_review_daily_limit`); đang VIP → max(khóa `vip_*` tương ứng, khóa thường).
+  3. `llm_enabled()` giữ nguyên: tắt LLM áp dụng cho mọi người.
+- **Đầu ra:** hạn mức hiệu lực của người dùng cho tính năng.
+- **Quy tắc nghiệp vụ:**
+  - Hạn mức VIP mặc định (F13.05): đề kiểm tra LLM **10**/ngày (thường 5), Thẻ mở rộng AI **40** (thường 20), phân tích ngữ pháp **60** (thường 30), giải thích lỗi sai **40** (thường 20).
+  - Lượt đã dùng trong ngày tính chung, không tách theo trạng thái VIP; hết hạn mức thì dùng dự phòng như cũ (F09.08, F08.11, F05.09, F09.10).
+  - Port `AiPolicy` đổi chữ ký `daily_limit()` thành `daily_limit(user_id)`; đề kiểm tra và Thẻ mở rộng AI (đang đọc hạn mức trực tiếp từ cấu hình) chuyển sang cùng port [Đề xuất, đổi mã đang chạy].
+- **Ngoại lệ:**
+  - Không đọc được trạng thái VIP: dùng hạn mức thường, ghi log mức cảnh báo (không chặn tính năng).
+
+##### F17.05 — Đọc truyện VIP
+- **Actor:** Khách (chỉ chương đọc thử), Người học (chính), Quản trị viên
+- **User story:** US-NH-96 [Đề xuất]
+- **Mô tả:** Truyện công khai được Quản trị viên đánh dấu VIP (F17.09) chỉ cho đọc **chương đọc thử** (`chapters.is_trial`) với người không VIP; các chương còn lại cần VIP còn hạn hoặc vé đã mở khóa truyện đó (F17.06).
+- **Đầu vào:** người dùng (hoặc Khách), chương/trang/tệp ảnh cần đọc.
+- **Xử lý chính:**
+  1. M03 hỏi quyền qua port `VipAccessPort` (M17 hiện thực) mỗi khi trả chi tiết chương, trang, bong bóng hoặc tệp ảnh trang của truyện VIP.
+  2. Cho phép khi: chương là chương đọc thử; hoặc người dùng là Quản trị viên; hoặc đang VIP; hoặc đã mở khóa truyện bằng vé.
+  3. Không thỏa: trả 403 `VIP_REQUIRED` kèm `details` gồm mã truyện và cờ còn vé hay không; Khách mở chương không phải đọc thử nhận 401 như F03.03.
+  4. Danh sách và chi tiết truyện (F03.02) trả thêm cờ `is_vip` của truyện, trạng thái truy cập của người gọi (`open`, `trial_only`, `unlocked`, `vip`) và cờ khóa của từng chương, để giao diện hiện nhãn "VIP" và ổ khóa.
+- **Đầu ra:** nội dung chương hoặc lỗi kèm lối mở khóa (dùng vé, đổi thưởng, xem cách kiếm VIP).
+- **Quy tắc nghiệp vụ:**
+  - Truyện riêng tư **không** có khái niệm VIP (ràng buộc CHECK: chỉ truyện công khai đặt được `is_vip`).
+  - Áp dụng cho cả tệp ảnh trang (quy tắc xem tệp F03.10), để không đọc được ảnh chương bị khóa bằng đường dẫn tệp trực tiếp.
+  - Từ, câu thoại, ngữ cảnh (ảnh cắt là bản sao độc lập) và tiến độ đọc đã lưu từ chương VIP vẫn còn khi hết VIP; chỉ việc mở lại chương bị chặn.
+  - Truyện bị bỏ cờ VIP thì mọi người đọc như truyện thường; vé đã dùng không hoàn lại.
+- **Ngoại lệ:**
+  - Truyện VIP chưa có chương đọc thử: người không VIP chỉ xem được trang giới thiệu truyện (F03.02), giao diện ghi "Truyện chưa có chương đọc thử".
+
+##### F17.06 — Mở khóa truyện VIP bằng vé
+- **Actor:** Người học (chính), Quản trị viên (kế thừa)
+- **User story:** US-NH-97 [Đề xuất]
+- **Mô tả:** Dùng một vé đọc truyện VIP để mở khóa **vĩnh viễn** một truyện VIP cho chính mình.
+- **Đầu vào:** mã truyện; mã yêu cầu (UUID do trình duyệt sinh, chống bấm đúp).
+- **Xử lý chính:**
+  1. `POST /api/v1/vip/unlocks` với `{ "series_id": 12, "request_id": "<uuid>" }`.
+  2. Kiểm tra truyện tồn tại và người dùng được thấy (truyện công khai), truyện đang có cờ VIP, chưa mở khóa.
+  3. Trong một giao dịch: trừ 1 vé qua F17.01 (lý do `vip_unlock`, khóa là mã yêu cầu) và ghi bản ghi mở khóa.
+  4. Trả 201 kèm thời điểm mở khóa và số vé còn lại. `GET /api/v1/vip/unlocks` liệt kê các truyện đã mở khóa.
+- **Đầu ra:** truyện đã mở khóa; số vé còn lại.
+- **Quy tắc nghiệp vụ:**
+  - Mở khóa không hết hạn và không phụ thuộc trạng thái VIP.
+  - Đang VIP vẫn mở khóa được (để giữ quyền đọc sau khi hết VIP); giao diện hỏi xác nhận vì hiện đã đọc được.
+  - Gửi lại cùng mã yêu cầu trả lại kết quả cũ, không trừ vé lần hai.
+- **Ngoại lệ:**
+  - Hết vé: 409 `NOT_ENOUGH_TICKETS`, giao diện gợi ý đổi vé ở cửa hàng (F17.07).
+  - Truyện không phải VIP: 409 `SERIES_NOT_VIP`; đã mở khóa: 409 `SERIES_ALREADY_UNLOCKED`; cả hai trường hợp không trừ vé.
+  - Truyện không tồn tại hoặc riêng tư của người khác: 404.
+
+##### F17.07 — Cửa hàng đổi thưởng
+- **Actor:** Người học (chính), Quản trị viên (kế thừa)
+- **User story:** US-NH-98 [Đề xuất]
+- **Mô tả:** Người học tiêu xu Sakura để đổi ngày VIP, vé đọc truyện VIP hoặc khung avatar theo danh mục do Quản trị viên cấu hình (F17.09).
+- **Đầu vào:** mã món đổi; mã yêu cầu (UUID).
+- **Xử lý chính:**
+  1. `GET /api/v1/rewards/shop/items`: các món đang bán, mỗi món có tên, mô tả, loại, giá xu, số lượt đổi còn lại của người gọi (nếu có giới hạn), cờ đã sở hữu (khung), cờ đủ xu.
+  2. `POST /api/v1/rewards/redemptions` với `{ "item_id": 3, "request_id": "<uuid>" }`.
+  3. Trong một giao dịch: khóa ví; kiểm món đang bán, chưa vượt giới hạn mỗi người, khung chưa sở hữu vĩnh viễn, đủ xu; trừ xu qua F17.01 (lý do `redemption`); trao món: ngày VIP (F17.03), vé (+n), khung (sở hữu vĩnh viễn); ghi lượt đổi kèm **giá tại thời điểm đổi**.
+  4. Trả 201 kèm lượt đổi và ví mới.
+- **Danh mục khởi tạo (giá mặc định, Quản trị viên sửa được):**
+
+  | Mã | Món | Giá |
+  |---|---|---|
+  | `vip_1d` | 1 ngày VIP | 120 xu |
+  | `vip_7d` | 7 ngày VIP | 700 xu |
+  | `vip_ticket` | 1 vé đọc truyện VIP | 300 xu |
+  | `frame_bamboo` | Khung avatar "Lá Trúc Xanh" | 800 xu |
+  | `frame_ink` | Khung avatar "Mây Mực" | 800 xu |
+
+- **Đầu ra:** lượt đổi; ví sau khi đổi.
+- **Quy tắc nghiệp vụ:**
+  - Không có thanh toán bằng tiền; xu chỉ có từ học tập (nhiệm vụ ngày +20 xu khi đủ 3/3, mốc chuỗi, huy hiệu, thưởng mùa top 11–50) và điều chỉnh của Quản trị viên. Ước tính Người học chăm chỉ kiếm khoảng 140 xu/tuần chỉ từ nhiệm vụ ngày.
+  - Khung thưởng mùa ("Hoa Anh Đào Vàng", "Cánh Hoa Mùa Xuân") và khung VIP **không bán**.
+  - Đổi giá không ảnh hưởng lượt đã đổi; không hoàn xu sau khi đổi.
+  - Gửi lại cùng mã yêu cầu trả lại lượt đổi cũ, không trừ xu lần hai.
+- **Ngoại lệ:**
+  - Không đủ xu: 409 `NOT_ENOUGH_COINS`, số dư không đổi, giao diện hiện số xu còn thiếu.
+  - Món ngừng bán hoặc không tồn tại: 404 `REWARD_ITEM_UNAVAILABLE`.
+  - Đã sở hữu khung: 409 `FRAME_ALREADY_OWNED`; vượt giới hạn lượt đổi: 409 `REWARD_LIMIT_REACHED`; số vé trong ví đạt 99: 409 `TICKET_LIMIT_REACHED`.
+
+##### F17.08 — Khung avatar và dấu VIP
+- **Actor:** Người học (chính), Quản trị viên (kế thừa)
+- **User story:** US-NH-99 [Đề xuất]
+- **Mô tả:** Người học xem các khung avatar (đã có, cách kiếm), chọn khung đeo; khung và dấu "VIP" hiện ở Hồ sơ, thanh điều hướng và bảng xếp hạng.
+- **Đầu vào:** mã khung, hoặc `null` để tháo.
+- **Xử lý chính:**
+  1. `GET /api/v1/rewards/frames`: mọi khung đang dùng, mỗi khung có tên, cách kiếm (thưởng mùa, mục tiêu tuần, cửa hàng, VIP), đã sở hữu, hạn dùng, đeo được hay không, đang đeo.
+  2. `PUT /api/v1/rewards/frames/equipped` với `{ "frame_code": "spring_petal" }`: đeo được khi đã sở hữu và còn hạn, hoặc là khung VIP và người dùng đang VIP.
+  3. M17 cung cấp cổng công khai đọc **theo lô** khung đang hiệu lực và dấu VIP của nhiều người (cho bảng xếp hạng F16.07, tránh truy vấn N+1).
+- **Danh mục khung khởi tạo:** `sakura_gold` "Hoa Anh Đào Vàng" (thưởng mùa top 1–3 vĩnh viễn; mục tiêu tuần 7 ngày), `spring_petal` "Cánh Hoa Mùa Xuân" (thưởng mùa top 4–10), `vip_sakura` "Khung VIP Hoa Anh Đào" (dùng được khi đang VIP, không cần sở hữu), `bamboo_leaf` "Lá Trúc Xanh" và `ink_cloud` "Mây Mực" (cửa hàng). Khung là kiểu hiển thị viết sẵn ở giao diện (mã `style_key`), không phải ảnh tải lên.
+- **Đầu ra:** danh sách khung; khung đang đeo.
+- **Quy tắc nghiệp vụ:**
+  - Khi hiển thị, khung chỉ hiện nếu **còn hiệu lực lúc đó** (khung tạm hết hạn, hoặc khung VIP khi hết VIP, tự không hiện; không cần tác vụ nền).
+  - Dấu VIP hiện khi đang VIP; người đã ẩn trên bảng xếp hạng (F16.08) không lộ khung, dấu VIP cho người khác.
+- **Ngoại lệ:**
+  - Khung chưa sở hữu, hết hạn, hoặc khung VIP khi không VIP: 409 `FRAME_NOT_AVAILABLE`, khung đang đeo giữ nguyên.
+
+##### F17.09 — Quản lý truyện VIP và danh mục đổi thưởng
+- **Actor:** Quản trị viên (chính)
+- **User story:** US-QT-17 [Đề xuất]
+- **Mô tả:** Quản trị viên đặt hoặc bỏ cờ VIP cho truyện công khai và cấu hình các món trong cửa hàng đổi thưởng.
+- **Đầu vào:** mã truyện và cờ VIP; thông tin món đổi (mã, tên, mô tả, loại, giá xu, số ngày VIP hoặc số vé hoặc khung, giới hạn mỗi người, đang bán, thứ tự).
+- **Xử lý chính:**
+  1. Kiểm tra vai trò Quản trị viên (F01.09).
+  2. `PUT /api/v1/admin/series/{series_id}/vip` với `{ "is_vip": true }`: chỉ truyện công khai; trả kèm cảnh báo khi truyện chưa có chương đọc thử.
+  3. `GET /api/v1/admin/reward-items`, `POST /api/v1/admin/reward-items` (201), `PATCH /api/v1/admin/reward-items/{item_id}`: tạo, sửa giá, tên, giới hạn, bật/tắt bán; không đổi loại và đối tượng của món đã có lượt đổi. PATCH gửi `null` tường minh để xóa `description` hoặc `per_user_limit`; trường không gửi giữ nguyên. `GET /api/v1/admin/avatar-frames` liệt kê khung đang dùng cho form món.
+  4. Ghi nhật ký quản trị trong cùng giao dịch (F13.06): `series.vip_changed`, `reward_item.created`, `reward_item.updated`.
+- **Đầu ra:** truyện đã đổi cờ; danh mục mới.
+- **Quy tắc nghiệp vụ:**
+  - Giá từ 1 đến 100.000 xu; ngày VIP 1–365; số vé 1–10; khung phải tồn tại và không phải khung thưởng mùa hay khung VIP.
+  - Không xóa món đã có lượt đổi, chỉ ngừng bán (giữ lịch sử).
+- **Ngoại lệ:**
+  - Đặt cờ VIP cho truyện riêng tư: 409 `SERIES_NOT_PUBLIC`.
+  - Giá trị ngoài khoảng, mã món trùng: 422 hoặc 409.
+  - Người học truy cập: 403.
+
+##### F17.10 — Xem, cấp và thu VIP, xu, vé của người dùng
+- **Actor:** Quản trị viên (chính)
+- **User story:** US-QT-18 [Đề xuất]
+- **Mô tả:** Quản trị viên xem ví và lịch sử phần thưởng của một người dùng, cấp hoặc thu VIP, điều chỉnh xu và vé để hỗ trợ hoặc xử lý gian lận; mọi thao tác có nhật ký.
+- **Đầu vào:** người dùng đích; số ngày VIP (1–365) hoặc yêu cầu thu hồi VIP; loại (xu/vé) và số lượng điều chỉnh (dương hoặc âm, khác 0); lý do bắt buộc (tối đa 500 ký tự).
+- **Xử lý chính:**
+  1. Kiểm tra vai trò Quản trị viên và người dùng đích tồn tại.
+  2. `GET /api/v1/admin/users/{user_id}/rewards`: ví, trạng thái VIP, truyện đã mở khóa, khung sở hữu, lịch sử sổ có phân trang.
+  3. `POST /api/v1/admin/users/{user_id}/vip-grants` với `{ "days": 7, "reason": "..." }` hoặc `{ "revoke": true, "reason": "..." }`: cấp thì cộng dồn theo F17.03; thu hồi thì đặt hạn VIP về hiện tại và ghi dòng sổ âm số ngày còn lại.
+  4. `POST /api/v1/admin/users/{user_id}/wallet-adjustments` với `{ "currency": "coin", "amount": -200, "reason": "..." }`: qua F17.01 (lý do `admin_adjust`).
+  5. Ghi nhật ký quản trị trong cùng giao dịch (F13.06): `rewards.vip_granted`, `rewards.vip_revoked`, `rewards.wallet_adjusted`, `details` gồm người dùng đích, loại, số lượng, không chép dữ liệu học tập.
+  6. Sau khi lưu, gửi thông báo cho người dùng (`vip_granted` hoặc `wallet_adjusted`, kèm lý do).
+- **Đầu ra:** ví và hạn VIP mới của người dùng đích.
+- **Quy tắc nghiệp vụ:**
+  - Kết quả điều chỉnh không được âm.
+  - `vip-grants` và `wallet-adjustments` bắt buộc `request_id` (UUID, khóa sổ `admin:<request_id>`): gửi lại cùng mã trả kết quả cũ, không cộng, không ghi nhật ký và không gửi thông báo lần hai.
+  - Quản trị viên **được** cấp/thu cho chính mình (người dùng chốt 30/10/2026); mọi thao tác, kể cả cho chính mình, đều ghi nhật ký quản trị (F13.06) với người thực hiện và người nhận để truy vết.
+  - Không ghi được nhật ký thì hủy thao tác (F13.06).
+- **Ngoại lệ:**
+  - Kết quả âm: 409 `WALLET_NEGATIVE`; thu hồi khi người dùng không VIP: 409 `VIP_NOT_ACTIVE`.
+  - Thiếu lý do, số lượng bằng 0 hoặc vượt giới hạn F17.01: 422.
+  - Người dùng không tồn tại: 404 "Không tìm thấy người dùng". Người học truy cập: 403.
 
 ## 5. Ma trận Actor × Module
 
@@ -2947,9 +3527,10 @@ Ký hiệu: ✔ sử dụng trực tiếp; ◐ tham gia như actor phụ/hệ th
 | M13 Quản trị hệ thống | | | ✔ | | | | |
 | M14 Phản hồi & Thông báo | | ✔ | ✔ | | | | ◐ |
 | M15 Tác vụ nền & Lập lịch | | | | | | | ◐ |
-| M16 Gamification | | ✔ | ✔ | | | | |
+| M16 Gamification | | ✔ | ✔ | | | | ◐ |
+| M17 VIP & Phần thưởng | ✔ | ✔ | ✔ | | | | ◐ |
 
-Ghi chú: Khách ở M06 chỉ dùng phần thông tin cơ bản của F06.01 thông qua F05.04 (US-KH-05 TC4). Khách cũng xem được trang nội dung pháp lý của F13.08 (chỉ xem công khai); việc soạn và sửa chỉ dành cho Quản trị viên. Dịch vụ LLM ở M08 phục vụ F08.11 (Flashcard AI); ở M05 phục vụ F05.09 (phân tích ngữ pháp); ở M09 còn phục vụ F09.10 (giải thích lỗi sai); ở M12 chỉ là tùy chọn viết lại câu nhắc của F12.04. Ở F12.04, Khách chỉ thấy khối giới thiệu hiện có (F03.01) nên không đánh dấu riêng ở M12.
+Ghi chú: Khách ở M17 chỉ đọc chương đọc thử của truyện VIP (F17.05); mọi chức năng ví, VIP, cửa hàng cần đăng nhập. Bộ hẹn giờ ở M16 chạy chốt mùa (F16.10) và quét huy hiệu (F16.11); ở M17 chạy nhắc VIP sắp hết hạn (F17.03). Quản trị viên dùng M16 như Người học nhưng không có tên trên bảng xếp hạng (F16.07). Khách ở M06 chỉ dùng phần thông tin cơ bản của F06.01 thông qua F05.04 (US-KH-05 TC4). Khách cũng xem được trang nội dung pháp lý của F13.08 (chỉ xem công khai); việc soạn và sửa chỉ dành cho Quản trị viên. Dịch vụ LLM ở M08 phục vụ F08.11 (Flashcard AI); ở M05 phục vụ F05.09 (phân tích ngữ pháp); ở M09 còn phục vụ F09.10 (giải thích lỗi sai); ở M12 chỉ là tùy chọn viết lại câu nhắc của F12.04. Ở F12.04, Khách chỉ thấy khối giới thiệu hiện có (F03.01) nên không đánh dấu riêng ở M12.
 
 ## 6. Ma trận truy vết User story → Chức năng
 
@@ -3043,6 +3624,23 @@ Ghi chú: Khách ở M06 chỉ dùng phần thông tin cơ bản của F06.01 th
 | US-NH-80 | Trang chủ "Hôm nay nên học gì" | F12.04, F08.01, F03.12, F09.01, F10.01 |
 | US-NH-81 | Mini-game luyện bộ thủ yếu | F16.01, F06.05 |
 | US-NH-82 | Hộp thông báo trong ứng dụng | F14.06, F14.05 |
+| US-NH-83 | Chọn truyện riêng tư, ảnh tải lên và chương ngay trong trình đọc | F05.10, F05.01, F03.08, F03.12, F03.13 |
+| US-NH-84 | Kiếm XP từ hoạt động học và xem XP | F16.02, F16.03 |
+| US-NH-85 | Nhiệm vụ ngày | F16.04, F16.02, F17.01 |
+| US-NH-86 | Mục tiêu tuần | F16.05, F16.02, F17.01 |
+| US-NH-87 | Thưởng mốc chuỗi ngày | F16.06, F12.02, F17.01 |
+| US-NH-88 | Bảng xếp hạng | F16.07, F17.08 |
+| US-NH-89 | Ẩn khỏi bảng xếp hạng | F16.08, F16.07 |
+| US-NH-90 | Mùa thi đua và phần thưởng mùa | F16.09, F16.07 |
+| US-NH-91 | Huy hiệu tự mở khóa | F16.11, F17.01 |
+| US-NH-92 | Đeo huy hiệu | F16.12 |
+| US-NH-93 | Ví xu Sakura và lịch sử | F17.02, F17.01 |
+| US-NH-94 | Trạng thái VIP và quà chào mừng | F17.03, F17.01 |
+| US-NH-95 | Hạn mức AI cao hơn khi VIP | F17.04, F13.05, F08.11, F05.09, F09.10, F09.01 |
+| US-NH-96 | Đọc truyện VIP | F17.05, F03.03 |
+| US-NH-97 | Mở khóa truyện VIP bằng vé | F17.06, F17.01 |
+| US-NH-98 | Cửa hàng đổi thưởng | F17.07, F17.01, F17.03 |
+| US-NH-99 | Khung avatar và dấu VIP | F17.08 |
 | US-QT-01 | Xem và tìm người dùng | F13.01 |
 | US-QT-02 | Đổi vai trò người dùng | F13.02, F13.06 |
 | US-QT-03 | Khóa và mở khóa tài khoản | F13.03, F13.06 |
@@ -3059,6 +3657,8 @@ Ghi chú: Khách ở M06 chỉ dùng phần thông tin cơ bản của F06.01 th
 | US-QT-14 | Xem và quản lý dữ liệu học tập của người dùng | F13.07, F13.06 |
 | US-QT-15 | Trang nội dung pháp lý | F13.08, F13.06 |
 | US-QT-16 | Xuất báo cáo vi phạm | F13.09 |
+| US-QT-17 | Quản lý truyện VIP và danh mục đổi thưởng | F17.09, F13.06 |
+| US-QT-18 | Cấp và thu VIP, xu, vé của người dùng | F17.10, F17.01, F13.06 |
 | US-XL-01 | Nhận việc từ hàng đợi, xử lý tuần tự | F04.07 |
 | US-XL-02 | Phát hiện bong bóng chữ | F04.08 |
 | US-XL-03 | Nhận dạng ký tự (OCR) | F04.09 |
@@ -3078,10 +3678,12 @@ Ghi chú: Khách ở M06 chỉ dùng phần thông tin cơ bản của F06.01 th
 | US-HG-02 | Đưa thẻ đến hạn theo lịch FSRS | F08.01 |
 | US-HG-03 | Tối ưu tham số FSRS | F08.08, F15.03 |
 | US-HG-04 | Gửi nhắc ôn tập hằng ngày | F14.04, F14.05, F15.03 |
+| US-HG-05 | Chốt mùa thi đua và trao thưởng | F16.10, F17.01, F16.11, F14.05, F15.03 |
+| US-HG-06 | Nhắc VIP sắp hết hạn | F17.03, F14.05, F15.03 |
 
-**Tổng hợp độ phủ:** 123/123 user story (KH 6, NH 82, QT 16, XL 9, TTS 3, LLM 3, HG 4) được gán cho ít nhất một chức năng; 129 chức năng, trong đó 6 chức năng nội bộ (F01.09, F06.08, F08.09, F13.06, F14.05, F15.03) đều chỉ ra story được hỗ trợ, không có chức năng nào không gắn user story.
+**Tổng hợp độ phủ:** 146/146 user story (KH 6, NH 101, QT 18, XL 9, TTS 3, LLM 3, HG 6) được gán cho ít nhất một chức năng; 151 chức năng, trong đó 9 chức năng nội bộ (F01.09, F06.08, F08.09, F13.06, F14.05, F15.03, F16.02, F17.01, F17.04) đều chỉ ra story được hỗ trợ, không có chức năng nào không gắn user story.
 
-## 7. Hướng phát triển (sau giai đoạn 6.6; ngoài phạm vi 129 chức năng)
+## 7. Hướng phát triển (sau giai đoạn 6.6; ngoài phạm vi 151 chức năng)
 
 Hai ý tưởng dưới đây đã được duyệt (25/10/2026) để ghi nhận ở mức mô tả. Chúng **chưa có mã F**, **không tính** vào tổng chức năng và tổng user story, chưa nằm trong kế hoạch giai đoạn; khi quyết định làm phải viết đặc tả đầy đủ (theo mẫu F09.01), xin duyệt và cập nhật các tài liệu liên quan. User story tương ứng ở `docs/user-stories.md` mục 11 (US-HP-01, US-HP-02).
 
