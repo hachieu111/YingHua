@@ -146,7 +146,7 @@ export const QuizSection: React.FC<QuizSectionProps> = ({ onNavigateToReader, on
   const pageCount = Math.max(1, Math.ceil(historyTotal / HISTORY_SIZE));
 
   return (
-    <div ref={rootRef} className="scroll-mt-24 rounded-3xl border border-pink-100 bg-white p-5 shadow-soft sm:p-8">
+    <div ref={rootRef} className="scroll-mt-24 rounded-3xl border border-pink-100 bg-white p-5 shadow-soft transition-colors duration-300 dark:border-slate-700 dark:bg-[#0f172a] dark:shadow-none sm:p-8">
       {view.kind === 'taking' && <QuizRoom key={view.quiz.id} quiz={view.quiz} onSubmitted={handleSubmitted} onExit={backHome} />}
       {view.kind === 'result' && (
         <QuizResult
@@ -166,27 +166,27 @@ export const QuizSection: React.FC<QuizSectionProps> = ({ onNavigateToReader, on
         <div className="flex flex-col gap-6">
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-start">
             <div className="flex max-w-xl flex-col gap-1.5">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#a43073]">Kiểm tra cá nhân hóa</span>
-              <h3 className="font-['Plus_Jakarta_Sans'] text-2xl font-bold text-slate-800">Thử sức với từ trong Sổ tay của bạn</h3>
-              <p className="text-xs leading-relaxed text-slate-600 sm:text-sm">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#a43073] dark:text-pink-400">Kiểm tra cá nhân hóa</span>
+              <h3 className="font-['Plus_Jakarta_Sans'] text-2xl font-bold text-slate-800 dark:text-white">Thử sức với từ trong Sổ tay của bạn</h3>
+              <p className="text-xs leading-relaxed text-slate-600 dark:text-slate-300 sm:text-sm">
                 Đề được ra từ chính những từ bạn đã lưu, ưu tiên từ bạn dễ quên. Từ làm sai sẽ được đưa về ôn sớm, kèm vài từ mới liên quan để bạn đoán.
               </p>
             </div>
 
-            <div className="flex min-w-[260px] flex-col gap-3 rounded-2xl border border-pink-100 bg-gradient-to-br from-[#eff4ff] to-white p-4">
-              {!summary && !summaryError && <span className="text-xs text-slate-500">Đang kiểm tra Sổ tay...</span>}
+            <div className="flex min-w-[260px] flex-col gap-3 rounded-2xl border border-pink-100 bg-gradient-to-br from-[#eff4ff] to-white p-4 dark:border-slate-700 dark:from-slate-800 dark:to-[#0f172a]">
+              {!summary && !summaryError && <span className="text-xs text-slate-500 dark:text-slate-400">Đang kiểm tra Sổ tay...</span>}
               {summaryError && (
-                <div className="flex items-center justify-between gap-2 text-xs text-rose-700">
+                <div className="flex items-center justify-between gap-2 text-xs text-rose-700 dark:text-rose-400">
                   <span>{summaryError}</span>
-                  <button onClick={reload} className="font-bold text-[#a43073] hover:underline">Thử lại</button>
+                  <button onClick={reload} className="font-bold text-[#a43073] hover:underline dark:text-pink-400">Thử lại</button>
                 </div>
               )}
               {summary && notEnough && (
                 <div className="flex flex-col gap-2">
-                  <span className="text-sm font-bold text-slate-800">
+                  <span className="text-sm font-bold text-slate-800 dark:text-slate-100">
                     Cần tối thiểu {summary.min_words} từ trong Sổ tay (hiện có {summary.eligible_words})
                   </span>
-                  <span className="text-xs text-slate-500">Đọc truyện và lưu thêm từ để mở khóa bài kiểm tra.</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">Đọc truyện và lưu thêm từ để mở khóa bài kiểm tra.</span>
                   <button onClick={onNavigateToReader} className="self-start rounded-full bg-[#a43073] px-4 py-2 text-xs font-bold text-white hover:bg-[#85145a]">
                     Đi đọc truyện
                   </button>
@@ -194,10 +194,10 @@ export const QuizSection: React.FC<QuizSectionProps> = ({ onNavigateToReader, on
               )}
               {summary && !notEnough && (
                 <>
-                  <span className="text-xs text-slate-600">
-                    Có <b className="text-[#a43073]">{summary.eligible_words}</b> từ đủ điều kiện ra đề
+                  <span className="text-xs text-slate-600 dark:text-slate-300">
+                    Có <b className="text-[#a43073] dark:text-pink-400">{summary.eligible_words}</b> từ đủ điều kiện ra đề
                   </span>
-                  <label className="flex items-center justify-between gap-3 text-xs font-semibold text-slate-700">
+                  <label className="flex items-center justify-between gap-3 text-xs font-semibold text-slate-700 dark:text-slate-100">
                     Số câu
                     <input
                       type="number"
@@ -209,7 +209,7 @@ export const QuizSection: React.FC<QuizSectionProps> = ({ onNavigateToReader, on
                         const value = Number(event.target.value);
                         setQuestionCount(Number.isFinite(value) ? Math.min(QUIZ_MAX_QUESTIONS, Math.max(QUIZ_MIN_QUESTIONS, Math.round(value))) : null);
                       }}
-                      className="w-20 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-center text-xs outline-none focus:ring-2 focus:ring-[#f472b6]"
+                      className="w-20 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-center text-xs outline-none focus:ring-2 focus:ring-[#f472b6] dark:border-slate-700 dark:bg-slate-800"
                     />
                   </label>
                   <button
@@ -229,20 +229,20 @@ export const QuizSection: React.FC<QuizSectionProps> = ({ onNavigateToReader, on
                       </>
                     )}
                   </button>
-                  {creating && <span className="text-[11px] text-slate-500">Việc này có thể mất vài giây, vui lòng chờ.</span>}
+                  {creating && <span className="text-[11px] text-slate-500 dark:text-slate-400">Việc này có thể mất vài giây, vui lòng chờ.</span>}
                 </>
               )}
-              {createError && <span className="text-xs font-semibold text-rose-600">{createError}</span>}
+              {createError && <span className="text-xs font-semibold text-rose-600 dark:text-rose-400">{createError}</span>}
             </div>
           </div>
 
           {inProgress && (
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-              <span className="text-sm font-semibold text-amber-900">Bạn có một bài đang làm dở (tạo lúc {formatDateTime(inProgress.created_at)}).</span>
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/40 dark:bg-amber-900/30">
+              <span className="text-sm font-semibold text-amber-900 dark:text-amber-300">Bạn có một bài đang làm dở (tạo lúc {formatDateTime(inProgress.created_at)}).</span>
               <button
                 onClick={() => void handleOpen(inProgress)}
                 disabled={openingId === inProgress.id}
-                className="rounded-full bg-amber-500 px-4 py-1.5 text-xs font-bold text-white hover:bg-amber-600 disabled:opacity-60"
+                className="rounded-full bg-amber-500 dark:bg-amber-700 px-4 py-1.5 text-xs font-bold text-white hover:bg-amber-600 disabled:opacity-60"
               >
                 Làm tiếp
               </button>
@@ -250,16 +250,16 @@ export const QuizSection: React.FC<QuizSectionProps> = ({ onNavigateToReader, on
           )}
 
           <div className="flex flex-col gap-3">
-            <h4 className="text-sm font-bold text-slate-800">Lịch sử bài kiểm tra</h4>
+            <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100">Lịch sử bài kiểm tra</h4>
             {historyError && (
-              <div className="flex items-center justify-between gap-3 rounded-2xl bg-rose-50 p-3 text-xs text-rose-700">
+              <div className="flex items-center justify-between gap-3 rounded-2xl bg-rose-50 p-3 text-xs text-rose-700 dark:bg-rose-900/30 dark:text-rose-400">
                 <span>{historyError}</span>
                 <button onClick={reload} className="rounded-full bg-[#a43073] px-3 py-1 font-bold text-white">Thử lại</button>
               </div>
             )}
-            {!historyError && historyLoading && history.length === 0 && <p className="py-4 text-center text-xs text-slate-500">Đang tải lịch sử...</p>}
+            {!historyError && historyLoading && history.length === 0 && <p className="py-4 text-center text-xs text-slate-500 dark:text-slate-400">Đang tải lịch sử...</p>}
             {!historyError && !historyLoading && history.length === 0 && (
-              <p className="py-4 text-center text-xs text-slate-500">Bạn chưa làm bài kiểm tra nào.</p>
+              <p className="py-4 text-center text-xs text-slate-500 dark:text-slate-400">Bạn chưa làm bài kiểm tra nào.</p>
             )}
             {history.length > 0 && (
               <ul className="flex flex-col gap-2">
@@ -270,23 +270,23 @@ export const QuizSection: React.FC<QuizSectionProps> = ({ onNavigateToReader, on
                       <button
                         onClick={() => void handleOpen(item)}
                         disabled={openingId === item.id}
-                        className="flex w-full items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-left transition-colors hover:border-pink-200 hover:bg-pink-50/50 disabled:opacity-60"
+                        className="flex w-full items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-left transition-colors hover:border-pink-200 hover:bg-pink-50/50 disabled:opacity-60 dark:border-slate-700 dark:bg-[#1e293b]"
                       >
                         <div className="flex flex-col">
-                          <span className="text-xs font-bold text-slate-800">{formatDateTime(item.submitted_at ?? item.created_at)}</span>
-                          <span className="text-[11px] text-slate-500">{quizSourceLabel(item.source)}</span>
+                          <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{formatDateTime(item.submitted_at ?? item.created_at)}</span>
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400">{quizSourceLabel(item.source)}</span>
                         </div>
                         {done ? (
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-extrabold text-[#a43073]">{item.score ?? 0}/{item.question_count}</span>
+                            <span className="text-sm font-extrabold text-[#a43073] dark:text-pink-400">{item.score ?? 0}/{item.question_count}</span>
                             {item.related_count > 0 && (
-                              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-900">
+                              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-900 dark:bg-amber-900/30 dark:text-amber-300">
                                 Từ mới {item.related_score ?? 0}/{item.related_count}
                               </span>
                             )}
                           </div>
                         ) : (
-                          <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold text-amber-900">Đang làm dở</span>
+                          <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold text-amber-900 dark:bg-amber-900/30 dark:text-amber-300">Đang làm dở</span>
                         )}
                       </button>
                     </li>
@@ -295,10 +295,10 @@ export const QuizSection: React.FC<QuizSectionProps> = ({ onNavigateToReader, on
               </ul>
             )}
             {pageCount > 1 && (
-              <div className="flex items-center justify-center gap-3 pt-1 text-xs font-semibold text-slate-600">
-                <button disabled={historyPage <= 1} onClick={() => setHistoryPage(historyPage - 1)} className="rounded-full bg-slate-100 px-4 py-1.5 hover:bg-slate-200 disabled:opacity-40">Trước</button>
+              <div className="flex items-center justify-center gap-3 pt-1 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                <button disabled={historyPage <= 1} onClick={() => setHistoryPage(historyPage - 1)} className="rounded-full bg-slate-100 px-4 py-1.5 hover:bg-slate-200 disabled:opacity-40 dark:bg-[#1e293b] dark:hover:bg-slate-700">Trước</button>
                 <span>{historyPage} / {pageCount}</span>
-                <button disabled={historyPage >= pageCount} onClick={() => setHistoryPage(historyPage + 1)} className="rounded-full bg-slate-100 px-4 py-1.5 hover:bg-slate-200 disabled:opacity-40">Sau</button>
+                <button disabled={historyPage >= pageCount} onClick={() => setHistoryPage(historyPage + 1)} className="rounded-full bg-slate-100 px-4 py-1.5 hover:bg-slate-200 disabled:opacity-40 dark:bg-[#1e293b] dark:hover:bg-slate-700">Sau</button>
               </div>
             )}
           </div>

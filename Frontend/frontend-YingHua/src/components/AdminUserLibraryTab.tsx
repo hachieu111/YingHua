@@ -24,7 +24,7 @@ interface TabProps {
   notify: (message: string) => void;
 }
 
-const FIELD = 'rounded-xl border border-slate-200 px-3 py-2 text-sm font-normal';
+const FIELD = 'rounded-xl border border-slate-200 px-3 py-2 text-sm font-normal dark:border-slate-700';
 
 /** Tải một danh sách theo `fetcher`; tải lại khi `fetcher` đổi hoặc gọi `reload`. */
 function useList<T>(fetcher: () => Promise<T>, fallback: string) {
@@ -73,20 +73,20 @@ const SeriesRow: React.FC<{ series: ApiSeries; userId: number; notify: (m: strin
   };
 
   return (
-    <div className="rounded-xl border border-slate-100 p-3 flex flex-col gap-2">
+    <div className="rounded-xl border border-slate-100 p-3 flex flex-col gap-2 dark:border-slate-700">
       <div className="flex gap-3">
         <AuthImage src={series.cover_url} alt="Bìa truyện" className="w-12 h-16 rounded-lg object-cover shrink-0" />
         <div className="min-w-0 flex-1">
-          <div className="text-sm font-bold text-slate-800 truncate">{series.title_vi}</div>
-          <div className="text-[11px] text-slate-500">
+          <div className="text-sm font-bold text-slate-800 truncate dark:text-slate-100">{series.title_vi}</div>
+          <div className="text-[11px] text-slate-500 dark:text-slate-400">
             {series.visibility === 'private' ? 'Riêng tư' : 'Công khai'} · {series.chapter_count} chương
             {series.progress ? ` · đã đọc ${series.progress.percent}%` : ''}{series.is_favorite ? ' · yêu thích' : ''}
           </div>
         </div>
         {manageable && !editing && (
           <div className="flex gap-2 self-start text-[11px] font-bold">
-            <button onClick={() => setEditing(true)} className="px-3 py-1 rounded-full bg-blue-50 text-blue-700">Sửa</button>
-            <button onClick={() => setConfirming(true)} className="px-3 py-1 rounded-full bg-rose-50 text-rose-700">Xóa</button>
+            <button onClick={() => setEditing(true)} className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">Sửa</button>
+            <button onClick={() => setConfirming(true)} className="px-3 py-1 rounded-full bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400">Xóa</button>
           </div>
         )}
       </div>
@@ -97,7 +97,7 @@ const SeriesRow: React.FC<{ series: ApiSeries; userId: number; notify: (m: strin
           <textarea value={description} maxLength={5000} rows={3} onChange={e => setDescription(e.target.value)} placeholder="Mô tả" aria-label="Mô tả" className={FIELD} />
           <div className="flex gap-2">
             <button disabled={busy} onClick={save} className="px-4 py-1.5 rounded-full bg-[#a43073] text-white text-xs font-bold disabled:opacity-50">Lưu</button>
-            <button disabled={busy} onClick={() => setEditing(false)} className="px-4 py-1.5 rounded-full bg-slate-100 text-slate-600 text-xs font-bold">Hủy</button>
+            <button disabled={busy} onClick={() => setEditing(false)} className="px-4 py-1.5 rounded-full bg-slate-100 text-slate-600 text-xs font-bold dark:bg-[#1e293b] dark:text-slate-300">Hủy</button>
           </div>
         </div>
       )}
@@ -130,8 +130,8 @@ const ProgressSection: React.FC<{ userId: number }> = ({ userId }) => {
     <div className="flex flex-col gap-2">
       <LoadState loading={loading && !data} error={error} empty={!loading && !error && data?.length === 0} emptyText="Chưa có truyện đọc dở" onRetry={reload} />
       {data?.map(item => (
-        <div key={item.series_id} className="rounded-xl border border-slate-100 p-3 text-xs text-slate-600">
-          <div className="text-sm font-bold text-slate-800">{item.series_title}</div>
+        <div key={item.series_id} className="rounded-xl border border-slate-100 p-3 text-xs text-slate-600 dark:border-slate-700 dark:text-slate-300">
+          <div className="text-sm font-bold text-slate-800 dark:text-slate-100">{item.series_title}</div>
           Chương {item.chapter_number}{item.chapter_title ? ` — ${item.chapter_title}` : ''} · trang {item.page_no}/{item.total_pages} · {item.mode === 'learn' ? 'chế độ học' : 'chế độ đọc'} · {formatDateTime(item.updated_at)}
         </div>
       ))}
@@ -147,13 +147,13 @@ const QuickUploadSection: React.FC<{ userId: number }> = ({ userId }) => {
       <LoadState loading={loading && !data} error={error} empty={!loading && !error && data?.items.length === 0} emptyText="Chưa có ảnh tải nhanh" onRetry={reload} />
       <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
         {data?.items.map(page => (
-          <div key={page.id} className="rounded-lg border border-slate-100 overflow-hidden">
+          <div key={page.id} className="rounded-lg border border-slate-100 overflow-hidden dark:border-slate-700">
             <AuthImage src={page.rendered_url ?? page.original_url} alt={`Ảnh tải nhanh ${page.id}`} className="w-full h-28 object-cover" />
-            <div className="px-2 py-1 text-[10px] text-slate-500">{formatDateTime(page.created_at)}</div>
+            <div className="px-2 py-1 text-[10px] text-slate-500 dark:text-slate-400">{formatDateTime(page.created_at)}</div>
           </div>
         ))}
       </div>
-      {data && data.total > data.items.length && <div className="text-[11px] text-slate-500">Hiển thị {data.items.length}/{data.total} ảnh mới nhất.</div>}
+      {data && data.total > data.items.length && <div className="text-[11px] text-slate-500 dark:text-slate-400">Hiển thị {data.items.length}/{data.total} ảnh mới nhất.</div>}
     </div>
   );
 };
@@ -189,15 +189,15 @@ const PageNotes: React.FC<{ userId: number; pageId: number; notify: (m: string) 
   const highlights = annotation ? Object.keys(annotation.highlights).length : 0;
   const strokes = annotation?.strokes.length ?? 0;
   return (
-    <div className="rounded-lg bg-slate-50 p-3 flex flex-col gap-2 text-xs text-slate-600">
+    <div className="rounded-lg bg-slate-50 p-3 flex flex-col gap-2 text-xs text-slate-600 dark:bg-[#1e293b] dark:text-slate-300">
       <div className="flex items-center justify-between gap-2">
         <span>Tô sáng: <b>{highlights}</b> · Nét vẽ: <b>{strokes}</b></span>
-        {(highlights > 0 || strokes > 0) && <button disabled={busy} onClick={() => setConfirmClear(true)} className="font-bold text-rose-600 disabled:opacity-50">Xóa ghi chú trang</button>}
+        {(highlights > 0 || strokes > 0) && <button disabled={busy} onClick={() => setConfirmClear(true)} className="font-bold text-rose-600 disabled:opacity-50 dark:text-rose-400">Xóa ghi chú trang</button>}
       </div>
       {edits.length === 0 ? <div>Không có bản sửa dịch.</div> : edits.map(edit => (
-        <div key={edit.bubble_id} className="flex items-start justify-between gap-2 border-t border-slate-200 pt-2">
+        <div key={edit.bubble_id} className="flex items-start justify-between gap-2 border-t border-slate-200 pt-2 dark:border-slate-700">
           <span>Bóng thoại #{edit.bubble_id}: “{edit.text_vi_effective}”</span>
-          <button disabled={busy} onClick={() => void run(() => deleteUserBubbleEdit(userId, edit.bubble_id), 'Đã xóa bản sửa dịch.')} className="shrink-0 font-bold text-rose-600 disabled:opacity-50">Xóa bản sửa</button>
+          <button disabled={busy} onClick={() => void run(() => deleteUserBubbleEdit(userId, edit.bubble_id), 'Đã xóa bản sửa dịch.')} className="shrink-0 font-bold text-rose-600 disabled:opacity-50 dark:text-rose-400">Xóa bản sửa</button>
         </div>
       ))}
       {confirmClear && (
@@ -216,13 +216,13 @@ const BookmarkSection: React.FC<TabProps> = ({ userId, notify }) => {
     <div className="flex flex-col gap-2">
       <LoadState loading={loading && !data} error={error} empty={!loading && !error && data?.items.length === 0} emptyText="Chưa có dấu trang" onRetry={reload} />
       {data?.items.map(item => (
-        <div key={item.page_id} className="rounded-xl border border-slate-100 p-3 flex flex-col gap-2">
+        <div key={item.page_id} className="rounded-xl border border-slate-100 p-3 flex flex-col gap-2 dark:border-slate-700">
           <div className="flex items-center justify-between gap-2">
-            <div className="text-xs text-slate-600 min-w-0">
-              <div className="text-sm font-bold text-slate-800 truncate">{item.series_title ?? 'Ảnh tải nhanh'}</div>
+            <div className="text-xs text-slate-600 min-w-0 dark:text-slate-300">
+              <div className="text-sm font-bold text-slate-800 truncate dark:text-slate-100">{item.series_title ?? 'Ảnh tải nhanh'}</div>
               {item.chapter_number !== null ? `Chương ${item.chapter_number} · ` : ''}trang {item.page_no} · {formatDateTime(item.bookmarked_at)}
             </div>
-            <button onClick={() => setOpenPage(openPage === item.page_id ? null : item.page_id)} className="shrink-0 px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-[11px] font-bold">
+            <button onClick={() => setOpenPage(openPage === item.page_id ? null : item.page_id)} className="shrink-0 px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-[11px] font-bold dark:bg-[#1e293b] dark:text-slate-300">
               {openPage === item.page_id ? 'Ẩn ghi chú' : 'Xem ghi chú'}
             </button>
           </div>

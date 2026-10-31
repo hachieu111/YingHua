@@ -1,3 +1,4 @@
+import { useTourPage } from '../tour/TourProvider';
 import React, { useMemo, useState } from 'react';
 import { AdminUsersPanel } from './AdminUsersPanel';
 import { AdminImagingPanel } from './AdminImagingPanel';
@@ -8,10 +9,11 @@ import { AdminSettingsPanel } from './AdminSettingsPanel';
 import { AdminModerationPanel } from './AdminModerationPanel';
 import { AdminAuditPanel } from './AdminAuditPanel';
 import { AdminLibraryPanel } from './AdminLibraryPanel';
+import { AdminRewardsPanel } from './AdminRewardsPanel';
 import {
   AlertCircle, ArrowDownToLine, ArrowLeft, ArrowRight, BadgeCheck, BookOpen,
   Check, CheckCheck, ChevronDown, CircleHelp, Clock3, Eye, FileSearch, Flag,
-  GraduationCap, LayoutDashboard, LifeBuoy, Menu,
+  Gift, GraduationCap, LayoutDashboard, LifeBuoy, Menu,
   MoreHorizontal, ScrollText, Search, Settings, ShieldCheck, Sparkles, UserRound, Users,
   X
 } from 'lucide-react';
@@ -21,7 +23,7 @@ interface AdminDashboardProps {
   currentUserEmail: string;
 }
 
-type AdminSection = 'overview' | 'moderation' | 'users' | 'authors' | 'complaints' | 'library' | 'imaging' | 'jobs' | 'settings' | 'audit';
+type AdminSection = 'overview' | 'moderation' | 'users' | 'authors' | 'complaints' | 'library' | 'rewards' | 'imaging' | 'jobs' | 'settings' | 'audit';
 type QueueStatus = 'Chờ duyệt' | 'Đang xử lý' | 'Đã duyệt';
 type QueueItem = {
   id: number;
@@ -50,6 +52,7 @@ const sections: { id: AdminSection; label: string; icon: React.ElementType; grou
   { id: 'authors', label: 'Duyệt tác giả', icon: ShieldCheck, group: 'main' },
   { id: 'complaints', label: 'CSKH & Khiếu nại', icon: LifeBuoy, group: 'main' },
   { id: 'library', label: 'Kho truyện Manhua', icon: BookOpen, group: 'main' },
+  { id: 'rewards', label: 'Đổi thưởng & VIP', icon: Gift, group: 'main' },
   { id: 'imaging', label: 'Xử lý ảnh', icon: FileSearch, group: 'main' },
   { id: 'jobs', label: 'Tác vụ nền', icon: Clock3, group: 'main' },
   { id: 'settings', label: 'Cài đặt hệ thống', icon: Settings, group: 'main' },
@@ -57,12 +60,13 @@ const sections: { id: AdminSection; label: string; icon: React.ElementType; grou
 ];
 
 const statusClass: Record<QueueStatus, string> = {
-  'Chờ duyệt': 'bg-rose-100 text-rose-700',
-  'Đang xử lý': 'bg-blue-100 text-blue-700',
-  'Đã duyệt': 'bg-emerald-100 text-emerald-700'
+  'Chờ duyệt': 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400',
+  'Đang xử lý': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
+  'Đã duyệt': 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
 };
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenLearnerView, currentUserEmail }) => {
+  useTourPage('admin');
   const [activeSection, setActiveSection] = useState<AdminSection>('overview');
   const [queue, setQueue] = useState<QueueItem[]>(initialQueue);
   const [queueFilter, setQueueFilter] = useState<'Tất cả' | 'Chờ duyệt' | 'Đang xử lý' | 'Đã duyệt'>('Tất cả');
@@ -111,101 +115,101 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenLearnerVie
 
   const renderQueue = (compact = false) => (
     <>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 border-b border-slate-100">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 border-b border-slate-100 dark:border-slate-700">
         <div className="flex items-center gap-1.5 overflow-x-auto">
           {(['Tất cả', 'Chờ duyệt', 'Đang xử lý', 'Đã duyệt'] as const).map(filter => (
-            <button key={filter} onClick={() => { setQueueFilter(filter); setPage(1); }} className={`px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap transition ${queueFilter === filter ? 'bg-pink-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+            <button key={filter} onClick={() => { setQueueFilter(filter); setPage(1); }} className={`px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap transition ${queueFilter === filter ? 'bg-pink-500 dark:bg-[#a43073] text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'}`}>
               {filter}{filter === 'Tất cả' ? ` (${queue.length})` : filter === 'Chờ duyệt' ? ` (${queueCount})` : ''}
             </button>
           ))}
         </div>
-        <label className="flex items-center gap-2 text-[11px] text-slate-500 whitespace-nowrap">
+        <label className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 whitespace-nowrap">
           Sắp xếp:
-          <select value={sortOrder} onChange={event => setSortOrder(event.target.value)} className="rounded-full bg-blue-50 px-3 py-1.5 text-slate-700 outline-none">
+          <select value={sortOrder} onChange={event => setSortOrder(event.target.value)} className="rounded-full bg-blue-50 dark:bg-[#1e293b] px-3 py-1.5 text-slate-700 dark:text-slate-200 outline-none">
             <option>Mới nhất trước</option><option>Cũ nhất trước</option>
           </select>
         </label>
       </div>
-      <div className="divide-y divide-slate-100">
+      <div className="divide-y divide-slate-100 dark:divide-slate-700">
         {visibleItems.length ? visibleItems.map(item => (
-          <article key={item.id} className="grid grid-cols-[76px_minmax(0,1fr)] sm:grid-cols-[96px_minmax(0,1fr)_auto] gap-3 p-3 sm:p-4 hover:bg-slate-50/70">
-            <div className="h-[82px] w-[76px] sm:w-[96px] rounded-lg overflow-hidden bg-blue-50 flex items-center justify-center">
-              {item.image ? <img src={item.image} alt="Ảnh bìa nội dung" className="h-full w-full object-cover" /> : <div className="text-center text-blue-700"><GraduationCap size={22} className="mx-auto"/><span className="text-[10px] font-bold">{item.hsk} · Tài liệu</span></div>}
+          <article key={item.id} className="grid grid-cols-[76px_minmax(0,1fr)] sm:grid-cols-[96px_minmax(0,1fr)_auto] gap-3 p-3 sm:p-4 hover:bg-slate-50/70 dark:hover:bg-slate-800/60">
+            <div className="h-[82px] w-[76px] sm:w-[96px] rounded-lg overflow-hidden bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+              {item.image ? <img src={item.image} alt="Ảnh bìa nội dung" className="h-full w-full object-cover" /> : <div className="text-center text-blue-700 dark:text-blue-300"><GraduationCap size={22} className="mx-auto"/><span className="text-[10px] font-bold">{item.hsk} · Tài liệu</span></div>}
             </div>
             <div className="min-w-0 flex flex-col justify-center gap-1">
               <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-[9px] text-slate-400">{item.category}</span>
+                <span className="text-[9px] text-slate-400 dark:text-slate-500">{item.category}</span>
                 <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${statusClass[item.status]}`}>{item.status}</span>
               </div>
-              <h3 className="text-xs sm:text-sm font-bold text-slate-800 line-clamp-2">{item.title}</h3>
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-slate-500">
+              <h3 className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 line-clamp-2">{item.title}</h3>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-slate-500 dark:text-slate-400">
                 <span className="inline-flex items-center gap-1"><UserRound size={11}/>{item.author}</span>
                 <span className="inline-flex items-center gap-1"><Clock3 size={11}/>{item.submitted}</span>
                 <span className="inline-flex items-center gap-1"><GraduationCap size={11}/>{item.hsk}</span>
               </div>
             </div>
             <div className={`${compact ? 'col-span-2 sm:col-span-1' : 'col-span-2 sm:col-span-1'} flex sm:flex-col justify-end sm:justify-center items-center gap-1.5`}>
-              <button onClick={() => setSelectedItem(item)} className="px-2.5 py-1.5 rounded-full bg-blue-100 text-blue-800 text-[10px] font-bold inline-flex items-center gap-1 hover:bg-blue-200"><Eye size={12}/>Xem{!compact && ' & Soạn OCR'}</button>
-              {item.status !== 'Đã duyệt' && <button onClick={() => setItemStatus(item.id, 'Đã duyệt')} className="px-2.5 py-1.5 rounded-full bg-pink-500 text-white text-[10px] font-bold inline-flex items-center gap-1 hover:bg-pink-600"><Check size={12}/>Phê duyệt ngay</button>}
-              {item.status === 'Đã duyệt' && <span className="px-2.5 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold inline-flex items-center gap-1"><BadgeCheck size={12}/>Đã xuất bản</span>}
+              <button onClick={() => setSelectedItem(item)} className="px-2.5 py-1.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-[10px] font-bold inline-flex items-center gap-1 hover:bg-blue-200 dark:hover:bg-blue-900/50"><Eye size={12}/>Xem{!compact && ' & Soạn OCR'}</button>
+              {item.status !== 'Đã duyệt' && <button onClick={() => setItemStatus(item.id, 'Đã duyệt')} className="px-2.5 py-1.5 rounded-full bg-pink-500 dark:bg-[#a43073] text-white text-[10px] font-bold inline-flex items-center gap-1 hover:bg-pink-600 dark:hover:bg-[#85145a]"><Check size={12}/>Phê duyệt ngay</button>}
+              {item.status === 'Đã duyệt' && <span className="px-2.5 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold inline-flex items-center gap-1"><BadgeCheck size={12}/>Đã xuất bản</span>}
             </div>
           </article>
-        )) : <div className="py-12 text-center text-sm text-slate-500">Không tìm thấy nội dung phù hợp.</div>}
+        )) : <div className="py-12 text-center text-sm text-slate-500 dark:text-slate-400">Không tìm thấy nội dung phù hợp.</div>}
       </div>
-      <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 text-[11px] text-slate-500">
+      <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 dark:border-slate-700 text-[11px] text-slate-500 dark:text-slate-400">
         <span>Hiển thị {filteredQueue.length ? (page - 1) * 3 + 1 : 0}–{Math.min(page * 3, filteredQueue.length)} trong {filteredQueue.length} nội dung</span>
         <div className="flex items-center gap-1">
-          <button aria-label="Trang trước" disabled={page <= 1} onClick={() => setPage(value => Math.max(1, value - 1))} className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center disabled:opacity-40"><ArrowLeft size={13}/></button>
-          {Array.from({ length: totalPages }, (_, index) => index + 1).map(number => <button key={number} onClick={() => setPage(number)} className={`w-7 h-7 rounded-full text-[10px] font-bold ${page === number ? 'bg-pink-500 text-white' : 'hover:bg-slate-100'}`}>{number}</button>)}
-          <button aria-label="Trang sau" disabled={page >= totalPages} onClick={() => setPage(value => Math.min(totalPages, value + 1))} className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center disabled:opacity-40"><ArrowRight size={13}/></button>
+          <button aria-label="Trang trước" disabled={page <= 1} onClick={() => setPage(value => Math.max(1, value - 1))} className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center disabled:opacity-40"><ArrowLeft size={13}/></button>
+          {Array.from({ length: totalPages }, (_, index) => index + 1).map(number => <button key={number} onClick={() => setPage(number)} className={`w-7 h-7 rounded-full text-[10px] font-bold ${page === number ? 'bg-pink-500 dark:bg-[#a43073] text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-700'}`}>{number}</button>)}
+          <button aria-label="Trang sau" disabled={page >= totalPages} onClick={() => setPage(value => Math.min(totalPages, value + 1))} className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center disabled:opacity-40"><ArrowRight size={13}/></button>
         </div>
       </div>
     </>
   );
 
   return (
-    <div className="min-h-screen bg-[#f7f8fd] text-slate-800 font-['Inter']">
-      <header className="h-[62px] bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-6 sticky top-0 z-30">
+    <div className="min-h-screen bg-[#f7f8fd] dark:bg-[#020617] text-slate-800 dark:text-slate-200 font-['Inter'] transition-colors duration-300">
+      <header className="h-[62px] bg-white dark:bg-[#0f172a] border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 lg:px-6 sticky top-0 z-30">
         <div className="flex items-center gap-3">
-          <button className="lg:hidden p-2 rounded-lg hover:bg-slate-100" onClick={() => setSidebarOpen(open => !open)} aria-label="Mở menu"><Menu size={19}/></button>
-          <div className="w-9 h-9 rounded-xl bg-pink-100 text-pink-600 flex items-center justify-center"><Sparkles size={19}/></div>
-          <div className="leading-tight"><div className="text-sm font-extrabold text-slate-900">Yinghua Admin</div><div className="text-[10px] text-slate-500">樱花 · 管理中心</div></div>
+          <button className="lg:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700" onClick={() => setSidebarOpen(open => !open)} aria-label="Mở menu"><Menu size={19}/></button>
+          <div className="w-9 h-9 rounded-xl bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 flex items-center justify-center"><Sparkles size={19}/></div>
+          <div className="leading-tight"><div className="text-sm font-extrabold text-slate-900 dark:text-white">Yinghua Admin</div><div className="text-[10px] text-slate-500 dark:text-slate-400">樱花 · 管理中心</div></div>
         </div>
         <div className="hidden md:flex items-center gap-2">
-          <div className="relative"><Search size={14} className="absolute left-3 top-2.5 text-slate-400"/><input value={searchQuery} onChange={event => { setSearchQuery(event.target.value); setPage(1); }} placeholder="Tìm truyện, từ vựng, tài khoản" className="w-56 rounded-full bg-slate-100 py-2 pl-9 pr-3 text-[10px] outline-none focus:ring-2 focus:ring-pink-200" /></div>
-          <span className="px-2.5 py-1.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-semibold inline-flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-blue-500"/>Kiểm duyệt viên: Đang hoạt động</span>
-          <button onClick={onOpenLearnerView} className="px-3 py-1.5 rounded-full bg-pink-100 text-pink-700 text-[10px] font-bold">Xem giao diện Học viên</button>
+          <div className="relative"><Search size={14} className="absolute left-3 top-2.5 text-slate-400"/><input value={searchQuery} onChange={event => { setSearchQuery(event.target.value); setPage(1); }} placeholder="Tìm truyện, từ vựng, tài khoản" className="w-56 rounded-full bg-slate-100 dark:bg-[#1e293b] dark:text-slate-100 dark:placeholder:text-slate-500 py-2 pl-9 pr-3 text-[10px] outline-none focus:ring-2 focus:ring-pink-200 dark:focus:ring-pink-900/50" /></div>
+          <span className="px-2.5 py-1.5 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-[10px] font-semibold inline-flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-blue-500"/>Kiểm duyệt viên: Đang hoạt động</span>
+          <button onClick={onOpenLearnerView} className="px-3 py-1.5 rounded-full bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 text-[10px] font-bold">Xem giao diện Học viên</button>
         </div>
-        <div className="flex items-center gap-2"><button onClick={() => notify('Bạn đã xem tất cả thông báo mới.')} className="relative w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center"><AlertCircle size={16}/><span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-pink-500"/></button><div className="hidden sm:block text-right leading-tight"><div className="text-[11px] font-bold">Admin Yinghua</div><div className="text-[9px] text-slate-500">Quản trị viên cấp cao</div></div><div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-100 to-pink-100 flex items-center justify-center text-xs font-extrabold text-[#a43073]">A</div></div>
+        <div className="flex items-center gap-2"><button onClick={() => notify('Bạn đã xem tất cả thông báo mới.')} className="relative w-8 h-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center"><AlertCircle size={16}/><span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-pink-500"/></button><div className="hidden sm:block text-right leading-tight"><div className="text-[11px] font-bold">Admin Yinghua</div><div className="text-[9px] text-slate-500 dark:text-slate-400">Quản trị viên cấp cao</div></div><div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-100 to-pink-100 dark:from-blue-900/40 dark:to-pink-900/40 flex items-center justify-center text-xs font-extrabold text-[#a43073] dark:text-pink-400">A</div></div>
       </header>
 
       <div className="flex min-h-[calc(100vh-62px)]">
-        <aside className={`${sidebarOpen ? 'block' : 'hidden'} lg:block fixed lg:sticky top-[62px] left-0 z-20 w-[230px] h-[calc(100vh-62px)] overflow-y-auto bg-white border-r border-slate-200 p-3`}>
-          <p className="px-2 py-3 text-[9px] font-bold tracking-wider text-slate-400">ĐIỀU HƯỚNG CHÍNH</p>
-          <nav className="flex flex-col gap-1">{sections.filter(section => section.group === 'main').map(({ id, label, icon: Icon }) => <button key={id} onClick={() => changeSection(id)} className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-[11px] font-semibold ${activeSection === id ? 'bg-pink-500 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'}`}><Icon size={15}/>{label}</button>)}</nav>
-          <p className="px-2 pt-6 pb-2 text-[9px] font-bold tracking-wider text-slate-400">GIAO DIỆN HỌC VIÊN</p>
-          <button onClick={onOpenLearnerView} className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-[11px] font-semibold text-slate-600 hover:bg-pink-50"><GraduationCap size={15}/>Mở trang học viên</button>
-          <div className="mt-8 rounded-xl bg-blue-50 p-3"><div className="flex justify-between text-[9px] font-semibold"><span>Máy chủ hệ thống</span><span className="text-emerald-600">Ổn định</span></div><div className="mt-2 h-1 rounded-full bg-blue-200"><div className="h-full w-[92%] rounded-full bg-blue-600"/></div><div className="mt-1 text-[9px] text-slate-500">HSK 1–6 · Dữ liệu v2.4.0</div></div>
+        <aside className={`${sidebarOpen ? 'block' : 'hidden'} lg:block fixed lg:sticky top-[62px] left-0 z-20 w-[230px] h-[calc(100vh-62px)] overflow-y-auto bg-white dark:bg-[#0f172a] border-r border-slate-200 dark:border-slate-800 p-3 transition-colors duration-300`}>
+          <p className="px-2 py-3 text-[9px] font-bold tracking-wider text-slate-400 dark:text-slate-500">ĐIỀU HƯỚNG CHÍNH</p>
+          <nav data-tour="admin-nav" className="flex flex-col gap-1">{sections.filter(section => section.group === 'main').map(({ id, label, icon: Icon }) => <button key={id} onClick={() => changeSection(id)} className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-[11px] font-semibold ${activeSection === id ? 'bg-pink-500 dark:bg-[#a43073] text-white shadow-sm dark:shadow-none' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'}`}><Icon size={15}/>{label}</button>)}</nav>
+          <p className="px-2 pt-6 pb-2 text-[9px] font-bold tracking-wider text-slate-400 dark:text-slate-500">GIAO DIỆN HỌC VIÊN</p>
+          <button onClick={onOpenLearnerView} className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-[11px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-pink-50 dark:hover:bg-slate-700"><GraduationCap size={15}/>Mở trang học viên</button>
+          <div className="mt-8 rounded-xl bg-blue-50 dark:bg-blue-900/20 p-3"><div className="flex justify-between text-[9px] font-semibold"><span>Máy chủ hệ thống</span><span className="text-emerald-600 dark:text-emerald-400">Ổn định</span></div><div className="mt-2 h-1 rounded-full bg-blue-200 dark:bg-slate-700"><div className="h-full w-[92%] rounded-full bg-blue-600"/></div><div className="mt-1 text-[9px] text-slate-500 dark:text-slate-400">HSK 1–6 · Dữ liệu v2.4.0</div></div>
         </aside>
 
         <main className="min-w-0 flex-1 p-4 md:p-6 lg:p-7">
           <div className="mx-auto max-w-[1300px]">
-            <div className="mb-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 rounded-3xl bg-gradient-to-r from-white via-white to-pink-50 p-5 md:p-6 shadow-sm border border-slate-100">
-              <div><div className="mb-1 inline-flex items-center gap-1 rounded-full bg-pink-100 px-2.5 py-1 text-[9px] font-bold text-pink-700"><Sparkles size={11}/>Phiên bản Yinghua Admin 2.4</div><h1 className="text-2xl md:text-[28px] font-extrabold tracking-tight text-slate-900">{activeSection === 'overview' ? 'Trung Tâm Quản trị Yinghua' : title}</h1><p className="mt-1 max-w-2xl text-xs text-slate-500">Giám sát phê duyệt bản thảo manhua, thẩm định tác giả và bảo vệ cộng đồng học tiếng Trung.</p></div>
-              <div className="flex flex-wrap gap-2"><button onClick={() => { changeSection('moderation'); setQueueFilter('Chờ duyệt'); }} className="inline-flex items-center gap-1.5 rounded-full bg-sky-700 px-3.5 py-2 text-[10px] font-bold text-white hover:bg-sky-800"><ShieldCheck size={13}/>Duyệt nhanh theo AI</button><button onClick={() => notify('Đã tạo báo cáo kiểm duyệt mẫu.')} className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-3.5 py-2 text-[10px] font-bold text-blue-800 hover:bg-blue-200"><ArrowDownToLine size={13}/>Xuất báo cáo vi phạm</button></div>
+            <div data-tour="admin-header" className="mb-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 rounded-3xl bg-gradient-to-r from-white via-white to-pink-50 dark:from-[#0f172a] dark:via-[#0f172a] dark:to-[#1e293b] p-5 md:p-6 shadow-sm dark:shadow-none border border-slate-100 dark:border-slate-800 transition-colors duration-300">
+              <div><div className="mb-1 inline-flex items-center gap-1 rounded-full bg-pink-100 dark:bg-pink-900/30 px-2.5 py-1 text-[9px] font-bold text-pink-700 dark:text-pink-300"><Sparkles size={11}/>Phiên bản Yinghua Admin 2.4</div><h1 className="text-2xl md:text-[28px] font-extrabold tracking-tight text-slate-900 dark:text-white">{activeSection === 'overview' ? 'Trung Tâm Quản trị Yinghua' : title}</h1><p className="mt-1 max-w-2xl text-xs text-slate-500 dark:text-slate-400">Giám sát phê duyệt bản thảo manhua, thẩm định tác giả và bảo vệ cộng đồng học tiếng Trung.</p></div>
+              <div className="flex flex-wrap gap-2"><button onClick={() => { changeSection('moderation'); setQueueFilter('Chờ duyệt'); }} className="inline-flex items-center gap-1.5 rounded-full bg-sky-700 px-3.5 py-2 text-[10px] font-bold text-white hover:bg-sky-800"><ShieldCheck size={13}/>Duyệt nhanh theo AI</button><button onClick={() => notify('Đã tạo báo cáo kiểm duyệt mẫu.')} className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 dark:bg-blue-900/30 px-3.5 py-2 text-[10px] font-bold text-blue-800 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50"><ArrowDownToLine size={13}/>Xuất báo cáo vi phạm</button></div>
             </div>
 
             {activeSection === 'overview' && <>
               <AdminOverviewStats />
               <div className="grid grid-cols-1 xl:grid-cols-4 gap-3 mb-5">
-                <div className="xl:col-span-4 rounded-2xl bg-white border border-slate-100 p-2 flex flex-wrap items-center justify-around gap-1">{([
+                <div className="xl:col-span-4 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-100 dark:border-slate-800 p-2 flex flex-wrap items-center justify-around gap-1">{([
                   { id: 'moderation', label: 'Duyệt bài công khai', icon: CheckCheck },
                   { id: 'users', label: 'Quản lý người dùng', icon: Users },
                   { id: 'authors', label: 'Duyệt tác giả truyện', icon: ShieldCheck },
                   { id: 'complaints', label: 'Trung tâm CSKH & Khiếu nại', icon: LifeBuoy }
-                ] as const).map(({ id, label, icon: Icon }) => <button key={id} onClick={() => changeSection(id)} className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-3 text-center text-[10px] font-semibold transition ${activeQuickTab === id ? 'bg-blue-50 text-[#a43073]' : 'text-slate-600 hover:bg-slate-50'}`}><Icon size={14}/><span>{label}</span></button>)}</div>
+                ] as const).map(({ id, label, icon: Icon }) => <button key={id} onClick={() => changeSection(id)} className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-3 text-center text-[10px] font-semibold transition ${activeQuickTab === id ? 'bg-blue-50 dark:bg-blue-900/20 text-[#a43073] dark:text-pink-400' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'}`}><Icon size={14}/><span>{label}</span></button>)}</div>
               </div>
-              <Panel title="Hàng chờ kiểm duyệt" action={<button onClick={() => changeSection('moderation')} className="text-[10px] font-bold text-pink-600">Xem tất cả →</button>}>{renderQueue(true)}</Panel>
+              <Panel title="Hàng chờ kiểm duyệt" action={<button onClick={() => changeSection('moderation')} className="text-[10px] font-bold text-pink-600 dark:text-pink-400">Xem tất cả →</button>}>{renderQueue(true)}</Panel>
             </>}
 
             {activeSection === 'moderation' && <Panel title="Kiểm duyệt ảnh tải lên"><AdminModerationPanel notify={notify} /></Panel>}
@@ -213,6 +217,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenLearnerVie
             {activeSection === 'users' && <Panel title="Quản lý người dùng"><AdminUsersPanel currentUserEmail={currentUserEmail} searchQuery={searchQuery} notify={notify} /></Panel>}
             {activeSection === 'complaints' && <Panel title="CSKH & Báo lỗi"><AdminErrorReportsPanel notify={notify} /></Panel>}
             {activeSection === 'library' && <AdminLibraryPanel notify={notify} />}
+            {activeSection === 'rewards' && <AdminRewardsPanel notify={notify} />}
             {activeSection === 'imaging' && <Panel title="Xử lý ảnh (hàng đợi dịch)"><AdminImagingPanel notify={notify} /></Panel>}
             {activeSection === 'jobs' && <Panel title="Tác vụ nền định kỳ"><AdminJobsPanel notify={notify} /></Panel>}
             {activeSection === 'settings' && <Panel title="Cài đặt hệ thống"><AdminSettingsPanel notify={notify} /></Panel>}
@@ -221,11 +226,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onOpenLearnerVie
         </main>
       </div>
 
-      {notice && <div className="fixed bottom-5 right-5 z-50 rounded-xl bg-slate-900 px-4 py-3 text-xs font-semibold text-white shadow-lg">{notice}</div>}
+      {notice && <div className="fixed bottom-5 right-5 z-50 rounded-xl bg-slate-900 dark:bg-slate-700 px-4 py-3 text-xs font-semibold text-white shadow-lg">{notice}</div>}
 
-      {selectedItem && <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4" onClick={() => setSelectedItem(null)}><section className="w-full max-w-lg rounded-2xl bg-white shadow-2xl" onClick={event => event.stopPropagation()}><div className="flex items-center justify-between border-b border-slate-100 p-4"><div><div className="text-[10px] font-bold uppercase text-pink-600">Xem nội dung · {selectedItem.category}</div><h2 className="mt-1 text-base font-bold">{selectedItem.title}</h2></div><button onClick={() => setSelectedItem(null)} aria-label="Đóng" className="rounded-full p-2 hover:bg-slate-100"><X size={17}/></button></div><div className="p-4"><div className="rounded-xl bg-blue-50 p-4 text-xs leading-relaxed text-slate-600"><div className="font-bold text-slate-800">Bản xem trước / OCR</div><p className="mt-2">识别文本：欢迎来到樱花中文学习平台。<br/>Pinyin: Huānyíng láidào Yīnghuā Zhōngwén xuéxí píngtái.<br/>Bản dịch: Chào mừng bạn đến với nền tảng học tiếng Trung Yinghua.</p></div><div className="mt-4 flex justify-end gap-2"><button onClick={() => setItemStatus(selectedItem.id, 'Đang xử lý')} className="rounded-full bg-blue-100 px-4 py-2 text-xs font-bold text-blue-800">Chuyển xử lý</button><button onClick={() => setItemStatus(selectedItem.id, 'Đã duyệt')} className="rounded-full bg-pink-500 px-4 py-2 text-xs font-bold text-white">Phê duyệt</button></div></div></section></div>}
+      {selectedItem && <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 dark:bg-black/70 p-4" onClick={() => setSelectedItem(null)}><section className="w-full max-w-lg rounded-2xl bg-white dark:bg-[#0f172a] text-slate-800 dark:text-slate-200 shadow-2xl dark:shadow-none dark:border dark:border-slate-700" onClick={event => event.stopPropagation()}><div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 p-4"><div><div className="text-[10px] font-bold uppercase text-pink-600 dark:text-pink-400">Xem nội dung · {selectedItem.category}</div><h2 className="mt-1 text-base font-bold">{selectedItem.title}</h2></div><button onClick={() => setSelectedItem(null)} aria-label="Đóng" className="rounded-full p-2 hover:bg-slate-100 dark:hover:bg-slate-700"><X size={17}/></button></div><div className="p-4"><div className="rounded-xl bg-blue-50 dark:bg-blue-900/20 p-4 text-xs leading-relaxed text-slate-600 dark:text-slate-300"><div className="font-bold text-slate-800 dark:text-slate-100">Bản xem trước / OCR</div><p className="mt-2">识别文本：欢迎来到樱花中文学习平台。<br/>Pinyin: Huānyíng láidào Yīnghuā Zhōngwén xuéxí píngtái.<br/>Bản dịch: Chào mừng bạn đến với nền tảng học tiếng Trung Yinghua.</p></div><div className="mt-4 flex justify-end gap-2"><button onClick={() => setItemStatus(selectedItem.id, 'Đang xử lý')} className="rounded-full bg-blue-100 dark:bg-blue-900/30 px-4 py-2 text-xs font-bold text-blue-800 dark:text-blue-300">Chuyển xử lý</button><button onClick={() => setItemStatus(selectedItem.id, 'Đã duyệt')} className="rounded-full bg-pink-500 dark:bg-[#a43073] px-4 py-2 text-xs font-bold text-white">Phê duyệt</button></div></div></section></div>}
     </div>
   );
 };
 
-const Panel: React.FC<{ title: string; action?: React.ReactNode; children: React.ReactNode }> = ({ title, action, children }) => <section className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm"><div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3"><h2 className="text-sm font-extrabold text-slate-800">{title}</h2>{action}</div>{children}</section>;
+const Panel: React.FC<{ title: string; action?: React.ReactNode; children: React.ReactNode }> = ({ title, action, children }) => <section className="overflow-hidden rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-[#0f172a] shadow-sm dark:shadow-none transition-colors duration-300"><div className="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-700 px-4 py-3"><h2 className="text-sm font-extrabold text-slate-800 dark:text-slate-100">{title}</h2>{action}</div>{children}</section>;

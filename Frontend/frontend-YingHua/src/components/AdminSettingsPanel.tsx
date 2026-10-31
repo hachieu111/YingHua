@@ -102,39 +102,39 @@ export const AdminSettingsPanel: React.FC<AdminSettingsPanelProps> = ({ notify }
     <div className="p-4">
       <div className="grid gap-3 sm:grid-cols-2">
         {SWITCHES.map(({ key, label, description, note }) => (
-          <div key={key} className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 p-4">
+          <div key={key} className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 dark:border-slate-700 p-4">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-1.5 text-xs font-bold">
                 {label}
-                {note && <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-semibold text-slate-500">{note}</span>}
-                {saved.overridden.includes(key) && <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[9px] font-semibold text-blue-600">Đã tùy chỉnh</span>}
+                {note && <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[9px] font-semibold text-slate-500 dark:text-slate-400">{note}</span>}
+                {saved.overridden.includes(key) && <span className="rounded-full bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 text-[9px] font-semibold text-blue-600 dark:text-blue-300">Đã tùy chỉnh</span>}
               </div>
-              <div className="mt-1 text-[10px] text-slate-500">{description}</div>
+              <div className="mt-1 text-[10px] text-slate-500 dark:text-slate-400">{description}</div>
             </div>
             <button
               role="switch"
               aria-checked={draft[key]}
               aria-label={label}
               onClick={() => setDraft({ ...draft, [key]: !draft[key] })}
-              className={`relative h-5 w-9 shrink-0 rounded-full ${draft[key] ? 'bg-blue-600' : 'bg-slate-300'}`}
+              className={`relative h-5 w-9 shrink-0 rounded-full ${draft[key] ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-600'}`}
             >
-              <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${draft[key] ? 'left-[18px]' : 'left-0.5'}`} />
+              <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${draft[key] ? 'left-[18px]' : 'left-0.5'} dark:bg-slate-800`} />
             </button>
           </div>
         ))}
       </div>
 
-      <h3 className="mb-2 mt-5 text-xs font-bold text-slate-700">Hạn mức dùng AI mỗi ngày</h3>
+      <h3 className="mb-2 mt-5 text-xs font-bold text-slate-700 dark:text-slate-200">Hạn mức dùng AI mỗi ngày</h3>
       <div className="grid gap-3 sm:grid-cols-2">
         {LIMITS.map(({ key, label }) => (
-          <label key={key} className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 p-4 text-xs font-semibold text-slate-700">
+          <label key={key} className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 dark:border-slate-700 p-4 text-xs font-semibold text-slate-700 dark:text-slate-200">
             <span>{label}</span>
             <input
               type="number"
               min={0}
               value={draft[key]}
               onChange={event => setDraft({ ...draft, [key]: event.target.value === '' ? 0 : Number(event.target.value) })}
-              className="w-20 rounded-lg border border-slate-200 px-2 py-1 text-right outline-none focus:ring-2 focus:ring-pink-200"
+              className="w-20 rounded-lg border border-slate-200 dark:border-slate-700 dark:bg-[#1e293b] dark:text-slate-100 px-2 py-1 text-right outline-none focus:ring-2 focus:ring-pink-200 dark:focus:ring-pink-900/50"
             />
           </label>
         ))}
@@ -146,9 +146,9 @@ export const AdminSettingsPanel: React.FC<AdminSettingsPanelProps> = ({ notify }
         />
       </div>
 
-      {saveError && <div role="alert" className="mt-4 rounded-xl bg-rose-50 p-3 text-xs font-semibold text-rose-700">{saveError}</div>}
+      {saveError && <div role="alert" className="mt-4 rounded-xl bg-rose-50 dark:bg-rose-900/20 p-3 text-xs font-semibold text-rose-700 dark:text-rose-400">{saveError}</div>}
       <div className="mt-4 flex justify-end gap-2">
-        <button disabled={!dirty || saving} onClick={() => adopt(saved)} className="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-600 disabled:opacity-40">Hoàn tác</button>
+        <button disabled={!dirty || saving} onClick={() => adopt(saved)} className="rounded-full bg-slate-100 dark:bg-slate-800 px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 disabled:opacity-40">Hoàn tác</button>
         <button disabled={!dirty || saving} onClick={() => void save()} className="rounded-full bg-[#a43073] px-5 py-2 text-xs font-bold text-white hover:bg-[#85145a] disabled:opacity-40">
           {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
         </button>

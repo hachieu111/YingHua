@@ -8,6 +8,7 @@ import { TAB_PATHS } from '../routes';
 import { speakChinese } from '../utils/speech';
 import { useSystemStatus } from '../utils/useSystemStatus';
 import { AuthImage } from './AuthImage';
+import { useTourPage } from '../tour/TourProvider';
 
 type Variant = 'original' | 'inpainted' | 'rendered';
 
@@ -31,6 +32,7 @@ interface SamplePageProps {
 
 /** Trang mẫu đã xử lý thật để người mới thử Hover & Dịch trước khi tải truyện của mình (F04.16). */
 export const SamplePage: React.FC<SamplePageProps> = ({ onLookupWord }) => {
+  useTourPage('sample');
   const { tts_enabled } = useSystemStatus();
   const [sample, setSample] = useState<SamplePageData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -82,8 +84,8 @@ export const SamplePage: React.FC<SamplePageProps> = ({ onLookupWord }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center gap-2 py-24 text-sm text-slate-500">
-        <span className="w-5 h-5 border-2 border-pink-300 border-t-transparent rounded-full animate-spin"></span>
+      <div className="flex items-center justify-center gap-2 py-24 text-sm text-slate-500 dark:text-slate-400">
+        <span className="w-5 h-5 border-2 border-pink-300 border-t-transparent rounded-full animate-spin dark:border-pink-900/40"></span>
         Đang tải trang mẫu...
       </div>
     );
@@ -93,10 +95,10 @@ export const SamplePage: React.FC<SamplePageProps> = ({ onLookupWord }) => {
     return (
       <div className="w-full max-w-[600px] mx-auto px-4 py-20 flex flex-col items-center text-center gap-4">
         <span className="material-symbols-outlined text-[48px] text-pink-300">image_search</span>
-        <h2 className="text-xl font-extrabold text-slate-800 font-['Plus_Jakarta_Sans']">
+        <h2 className="text-xl font-extrabold text-slate-800 dark:text-white font-['Plus_Jakarta_Sans']">
           {missing ? 'Chưa có trang mẫu' : 'Không tải được trang mẫu'}
         </h2>
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-slate-600 dark:text-slate-300">
           {missing ? 'Quản trị viên chưa chọn trang mẫu. Bạn có thể thử ngay với truyện trong Thư viện.' : error}
         </p>
         <div className="flex gap-2">
@@ -105,7 +107,7 @@ export const SamplePage: React.FC<SamplePageProps> = ({ onLookupWord }) => {
               Thử lại
             </button>
           )}
-          <Link to={TAB_PATHS.library} className="px-5 py-2.5 rounded-full bg-white border border-pink-200 text-[#a43073] text-xs font-bold hover:bg-pink-50">
+          <Link to={TAB_PATHS.library} className="px-5 py-2.5 rounded-full bg-white border border-pink-200 text-[#a43073] text-xs font-bold hover:bg-pink-50 dark:bg-slate-800 dark:border-pink-900/40 dark:text-pink-400 dark:hover:bg-pink-900/40">
             Mở Thư viện
           </Link>
         </div>
@@ -120,28 +122,28 @@ export const SamplePage: React.FC<SamplePageProps> = ({ onLookupWord }) => {
   return (
     <div className="w-full max-w-[1100px] mx-auto px-4 sm:px-6 py-8 flex flex-col gap-5">
       <div className="flex flex-col gap-1">
-        <span className="text-xs font-bold uppercase tracking-wider text-[#a43073]">Dành cho người mới</span>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-800 font-['Plus_Jakarta_Sans']">Thử Hover & Dịch với trang mẫu</h1>
-        <p className="text-sm text-slate-500">Chạm vào khung thoại để xem Pinyin và bản dịch, rồi bấm từng từ để tra nghĩa như khi đọc truyện thật.</p>
+        <span className="text-xs font-bold uppercase tracking-wider text-[#a43073] dark:text-pink-400">Dành cho người mới</span>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-800 font-['Plus_Jakarta_Sans'] dark:text-slate-100">Thử Hover & Dịch với trang mẫu</h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400">Chạm vào khung thoại để xem Pinyin và bản dịch, rồi bấm từng từ để tra nghĩa như khi đọc truyện thật.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] gap-5 items-start">
-        <section className="rounded-3xl bg-white border border-pink-100 shadow-soft p-3 sm:p-4 flex flex-col gap-3">
+        <section data-tour="sample-page" className="rounded-3xl bg-white border border-pink-100 shadow-soft p-3 sm:p-4 flex flex-col gap-3 dark:bg-slate-800 dark:border-pink-900/40">
           {variantKeys.length > 1 && (
-            <div className="flex flex-wrap gap-2">
+            <div data-tour="sample-variants" className="flex flex-wrap gap-2">
               {variantKeys.map(key => (
                 <button
                   key={key}
                   onClick={() => setVariant(key)}
                   aria-pressed={variant === key}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold ${variant === key ? 'bg-[#a43073] text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold ${variant === key ? 'bg-[#a43073] text-white' : 'bg-slate-100 dark:bg-[#1e293b] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'} dark:text-slate-300`}
                 >
                   {VARIANT_LABELS[key]}
                 </button>
               ))}
             </div>
           )}
-          <div className="relative w-full overflow-hidden rounded-2xl bg-slate-50" style={{ aspectRatio: aspect }}>
+          <div className="relative w-full overflow-hidden rounded-2xl bg-slate-50 dark:bg-[#1e293b]" style={{ aspectRatio: aspect }}>
             <AuthImage src={imageUrl} alt="Trang truyện mẫu" className="w-full h-full object-contain" />
             {sample.bubbles.map((bubble, index) => {
               if (bubble.x_pct === null || bubble.y_pct === null || bubble.w_pct === null || bubble.h_pct === null) return null;
@@ -163,19 +165,19 @@ export const SamplePage: React.FC<SamplePageProps> = ({ onLookupWord }) => {
           </div>
         </section>
 
-        <aside className="rounded-3xl bg-white border border-pink-100 shadow-soft p-5 flex flex-col gap-3 lg:sticky lg:top-24">
+        <aside data-tour="sample-panel" className="rounded-3xl bg-white border border-pink-100 shadow-soft p-5 flex flex-col gap-3 lg:sticky lg:top-24 dark:bg-slate-800 dark:border-pink-900/40">
           {!activeBubble ? (
-            <div className="text-sm text-slate-500 flex flex-col items-center text-center gap-2 py-6">
+            <div className="text-sm text-slate-500 flex flex-col items-center text-center gap-2 py-6 dark:text-slate-400">
               <span className="material-symbols-outlined text-[36px] text-pink-300">touch_app</span>
               Chọn một khung thoại trên trang để bắt đầu.
             </div>
           ) : (
             <>
               <div>
-                {activeBubble.pinyin && <div className="text-xs font-mono text-slate-500">{activeBubble.pinyin}</div>}
-                <div className="text-lg font-['Noto_Serif_SC'] font-bold text-slate-800 mt-0.5">{activeBubble.text_zh}</div>
+                {activeBubble.pinyin && <div className="text-xs font-mono text-slate-500 dark:text-slate-400">{activeBubble.pinyin}</div>}
+                <div className="text-lg font-['Noto_Serif_SC'] font-bold text-slate-800 mt-0.5 dark:text-slate-100">{activeBubble.text_zh}</div>
               </div>
-              <div className="p-3 rounded-xl bg-pink-50/80 border border-pink-200 text-pink-900 text-xs font-semibold leading-relaxed">
+              <div className="p-3 rounded-xl bg-pink-50/80 border border-pink-200 text-pink-900 text-xs font-semibold leading-relaxed dark:bg-pink-900/30 dark:border-pink-900/40 dark:text-pink-300">
                 {activeBubble.text_vi ? activeBubble.text_vi : 'Chưa có bản dịch'}
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -183,28 +185,28 @@ export const SamplePage: React.FC<SamplePageProps> = ({ onLookupWord }) => {
                   <button
                     key={`${token.word}-${index}`}
                     onClick={() => void lookupToken(activeBubble.id, token.word)}
-                    className="bg-slate-100 hover:bg-pink-100 hover:text-pink-600 px-2 py-1 rounded-md text-xs text-slate-600 font-medium transition-colors"
+                    className="bg-slate-100 hover:bg-pink-100 hover:text-pink-600 px-2 py-1 rounded-md text-xs text-slate-600 font-medium transition-colors dark:bg-[#1e293b] dark:hover:bg-pink-900/40 dark:text-slate-300"
                     title="Bấm để tra nghĩa"
                   >
                     {token.word}{token.pinyin ? ` (${token.pinyin})` : ''}
                   </button>
                 ))}
               </div>
-              {lookup.status === 'loading' && <p className="text-xs text-slate-500">Đang tra từ...</p>}
-              {lookup.status === 'error' && <p role="alert" className="text-xs text-red-600">{lookup.message}</p>}
+              {lookup.status === 'loading' && <p className="text-xs text-slate-500 dark:text-slate-400">Đang tra từ...</p>}
+              {lookup.status === 'error' && <p role="alert" className="text-xs text-red-600 dark:text-red-400">{lookup.message}</p>}
               {lookup.status === 'ok' && (
-                <div className="text-xs text-slate-600 space-y-1.5 border-t border-slate-100 pt-3">
+                <div className="text-xs text-slate-600 space-y-1.5 border-t border-slate-100 pt-3 dark:text-slate-300 dark:border-slate-700">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-base font-bold text-slate-800 font-['Noto_Serif_SC']">{lookup.word}</span>
-                    {lookup.data.pinyin && <span className="font-mono text-blue-600">{lookup.data.pinyin}</span>}
-                    {lookup.data.han_viet && <span className="text-slate-500">· {lookup.data.han_viet}</span>}
-                    <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold">{hskLabel(lookup.data.hsk.level)}</span>
+                    <span className="text-base font-bold text-slate-800 font-['Noto_Serif_SC'] dark:text-slate-100">{lookup.word}</span>
+                    {lookup.data.pinyin && <span className="font-mono text-blue-600 dark:text-blue-400">{lookup.data.pinyin}</span>}
+                    {lookup.data.han_viet && <span className="text-slate-500 dark:text-slate-400">· {lookup.data.han_viet}</span>}
+                    <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold dark:bg-amber-900/30 dark:text-amber-300">{hskLabel(lookup.data.hsk.level)}</span>
                   </div>
                   {!lookup.data.found && <p>Chưa có trong từ điển.</p>}
                   {lookup.data.readings.slice(0, 1).flatMap(reading => reading.definitions.slice(0, 3)).map((definition, index) => (
                     <p key={index}>• {definition.gloss}</p>
                   ))}
-                  <button onClick={() => onLookupWord(lookup.word)} className="text-[11px] font-bold text-[#a43073] hover:underline">Xem chi tiết đầy đủ</button>
+                  <button onClick={() => onLookupWord(lookup.word)} className="text-[11px] font-bold text-[#a43073] hover:underline dark:text-pink-400">Xem chi tiết đầy đủ</button>
                 </div>
               )}
             </>

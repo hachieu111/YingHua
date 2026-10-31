@@ -17,7 +17,7 @@ const ACTION_LABEL: Record<string, string> = {
   'content.removed': 'Gỡ nội dung vi phạm'
 };
 
-const inputClass = 'rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs outline-none focus:ring-2 focus:ring-pink-200';
+const inputClass = 'rounded-lg border border-slate-200 dark:border-slate-700 dark:bg-[#1e293b] dark:text-slate-100 dark:[color-scheme:dark] px-2.5 py-1.5 text-xs outline-none focus:ring-2 focus:ring-pink-200 dark:focus:ring-pink-900/50';
 
 /** Nhật ký thao tác của quản trị viên (F13.06): lọc theo người làm, loại thao tác, đối tượng, khoảng ngày. */
 export const AdminAuditPanel: React.FC = () => {
@@ -62,7 +62,7 @@ export const AdminAuditPanel: React.FC = () => {
   return (
     <div className="p-4">
       <form onSubmit={submit} className="mb-3 flex flex-wrap items-end gap-2">
-        <label className="flex flex-col gap-1 text-[10px] font-semibold text-slate-500">
+        <label className="flex flex-col gap-1 text-[10px] font-semibold text-slate-500 dark:text-slate-400">
           Mã người thực hiện
           <input
             type="number"
@@ -72,40 +72,40 @@ export const AdminAuditPanel: React.FC = () => {
             className={`${inputClass} w-28`}
           />
         </label>
-        <label className="flex flex-col gap-1 text-[10px] font-semibold text-slate-500">
+        <label className="flex flex-col gap-1 text-[10px] font-semibold text-slate-500 dark:text-slate-400">
           Thao tác
           <input list="audit-actions" maxLength={48} value={form.action} onChange={event => setForm({ ...form, action: event.target.value })} className={`${inputClass} w-44`} />
           <datalist id="audit-actions">{KNOWN_ACTIONS.map(action => <option key={action} value={action} />)}</datalist>
         </label>
-        <label className="flex flex-col gap-1 text-[10px] font-semibold text-slate-500">
+        <label className="flex flex-col gap-1 text-[10px] font-semibold text-slate-500 dark:text-slate-400">
           Đối tượng
           <input maxLength={32} value={form.targetType} onChange={event => setForm({ ...form, targetType: event.target.value })} className={`${inputClass} w-32`} />
         </label>
-        <label className="flex flex-col gap-1 text-[10px] font-semibold text-slate-500">
+        <label className="flex flex-col gap-1 text-[10px] font-semibold text-slate-500 dark:text-slate-400">
           Từ ngày
           <input type="date" value={form.since} onChange={event => setForm({ ...form, since: event.target.value })} className={inputClass} />
         </label>
-        <label className="flex flex-col gap-1 text-[10px] font-semibold text-slate-500">
+        <label className="flex flex-col gap-1 text-[10px] font-semibold text-slate-500 dark:text-slate-400">
           Đến ngày
           <input type="date" value={form.until} onChange={event => setForm({ ...form, until: event.target.value })} className={inputClass} />
         </label>
         <button type="submit" className="rounded-full bg-[#a43073] px-4 py-2 text-xs font-bold text-white hover:bg-[#85145a]">Lọc</button>
-        <button type="button" onClick={clear} className="rounded-full bg-slate-100 px-4 py-2 text-xs font-bold text-slate-600">Xóa lọc</button>
+        <button type="button" onClick={clear} className="rounded-full bg-slate-100 dark:bg-slate-800 px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300">Xóa lọc</button>
       </form>
 
       <LoadState loading={loading && !data} error={error} empty={!!data && data.items.length === 0} emptyText="Không có bản ghi nào khớp bộ lọc." onRetry={reload} />
-      <div className="divide-y divide-slate-100">
+      <div className="divide-y divide-slate-100 dark:divide-slate-700">
         {data?.items.map(log => (
           <article key={log.id} className="py-3 text-xs">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <span className="font-bold text-slate-800">{ACTION_LABEL[log.action] ?? log.action}</span>
-              <span className="text-[10px] text-slate-400">{log.action}</span>
-              <span className="text-[11px] text-slate-500">{log.admin ? `${log.admin.display_name} (#${log.admin.id})` : 'Quản trị viên đã xóa'}</span>
-              <span className="text-[11px] text-slate-500">{log.target_type}{log.target_id !== null ? ` #${log.target_id}` : ''}</span>
-              <span className="ml-auto text-[11px] text-slate-400">{formatDateTime(log.created_at)}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-100">{ACTION_LABEL[log.action] ?? log.action}</span>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500">{log.action}</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">{log.admin ? `${log.admin.display_name} (#${log.admin.id})` : 'Quản trị viên đã xóa'}</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">{log.target_type}{log.target_id !== null ? ` #${log.target_id}` : ''}</span>
+              <span className="ml-auto text-[11px] text-slate-400 dark:text-slate-500">{formatDateTime(log.created_at)}</span>
             </div>
             {Object.keys(log.details).length > 0 && (
-              <p className="mt-1 break-words rounded-lg bg-slate-50 p-2 font-mono text-[10px] text-slate-600">
+              <p className="mt-1 break-words rounded-lg bg-slate-50 dark:bg-slate-800 p-2 font-mono text-[10px] text-slate-600 dark:text-slate-300">
                 {Object.entries(log.details).map(([key, value]) => `${key}: ${typeof value === 'object' ? JSON.stringify(value) : String(value)}`).join(' · ')}
               </p>
             )}

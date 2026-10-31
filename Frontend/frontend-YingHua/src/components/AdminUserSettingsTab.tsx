@@ -7,8 +7,8 @@ interface TabProps {
   notify: (message: string) => void;
 }
 
-const FIELD = 'rounded-xl border border-slate-200 px-3 py-2 text-sm font-normal';
-const LABEL = 'text-xs font-semibold text-slate-600 flex flex-col gap-1';
+const FIELD = 'rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-[#1e293b] dark:text-slate-100 dark:placeholder:text-slate-500 px-3 py-2 text-sm font-normal';
+const LABEL = 'text-xs font-semibold text-slate-600 dark:text-slate-300 flex flex-col gap-1';
 
 /** Xem và sửa cài đặt của người dùng (cùng các trường với trang cài đặt cá nhân). */
 export const AdminUserSettingsTab: React.FC<TabProps> = ({ userId, notify }) => {
@@ -80,7 +80,7 @@ export const AdminUserSettingsTab: React.FC<TabProps> = ({ userId, notify }) => 
         <input value={form.tts_voice ?? ''} maxLength={64} placeholder="Mặc định, ví dụ zh-CN-XiaoxiaoNeural"
           onChange={e => set('tts_voice', e.target.value.trim() === '' ? null : e.target.value.trim())} className={FIELD} />
       </label>
-      <label className="text-xs font-semibold text-slate-600 flex items-center gap-2 self-end pb-2">
+      <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-2 self-end pb-2">
         <input type="checkbox" checked={form.show_xianxia} onChange={e => set('show_xianxia', e.target.checked)} />
         Hiện truyện tiên hiệp
       </label>

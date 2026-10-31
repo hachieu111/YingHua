@@ -142,14 +142,14 @@ export const ChapterSuggestions: React.FC<ChapterSuggestionsProps> = ({
   }, [undo]);
 
   return (
-    <div className="rounded-3xl border border-blue-100/70 bg-white p-5 shadow-soft">
+    <div className="rounded-3xl border border-blue-100/70 bg-white p-5 shadow-soft dark:border-slate-700 dark:bg-[#0f172a] dark:shadow-none transition-colors duration-300">
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-[18px] text-[#a43073]">tips_and_updates</span>
-          <span className="text-xs font-bold uppercase tracking-wide text-[#a43073]">Từ nên học</span>
+          <span className="material-symbols-outlined text-[18px] text-[#a43073] dark:text-pink-400">tips_and_updates</span>
+          <span className="text-xs font-bold uppercase tracking-wide text-[#a43073] dark:text-pink-400">Từ nên học</span>
         </div>
         {isLoggedIn && chapterId !== null && (
-          <button onClick={() => setTick(value => value + 1)} disabled={loading} className="text-[11px] font-bold text-slate-400 hover:text-[#a43073] disabled:opacity-50" title="Tải lại gợi ý">
+          <button onClick={() => setTick(value => value + 1)} disabled={loading} className="text-[11px] font-bold text-slate-400 hover:text-[#a43073] dark:text-slate-500 dark:hover:text-pink-300 disabled:opacity-50" title="Tải lại gợi ý">
             Làm mới
           </button>
         )}
@@ -157,37 +157,37 @@ export const ChapterSuggestions: React.FC<ChapterSuggestionsProps> = ({
 
       {!isLoggedIn ? (
         <div className="flex flex-col gap-2">
-          <p className="text-xs leading-relaxed text-slate-600">Đăng nhập để nhận gợi ý những từ đáng học nhất trong chương này.</p>
+          <p className="text-xs leading-relaxed text-slate-600 dark:text-slate-300">Đăng nhập để nhận gợi ý những từ đáng học nhất trong chương này.</p>
           <button onClick={() => onRequireLogin('Vui lòng đăng nhập để xem gợi ý từ nên học!')} className="self-start rounded-full bg-[#a43073] px-4 py-1.5 text-xs font-bold text-white hover:bg-[#85145a]">
             Đăng nhập
           </button>
         </div>
       ) : chapterId === null ? (
-        <p className="text-xs leading-relaxed text-slate-500">Gợi ý từ chỉ có khi bạn đọc một chương của truyện.</p>
+        <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">Gợi ý từ chỉ có khi bạn đọc một chương của truyện.</p>
       ) : (
         <div className="flex flex-col gap-2.5">
           {data?.status === 'processing' && (
-            <div className="rounded-xl bg-amber-50 px-3 py-2 text-[11px] font-semibold text-amber-800">Chương đang được xử lý, gợi ý có thể chưa đủ.</div>
+            <div className="rounded-xl bg-amber-50 px-3 py-2 text-[11px] font-semibold text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">Chương đang được xử lý, gợi ý có thể chưa đủ.</div>
           )}
           {data && data.hsk_level === null && (
-            <div className="rounded-xl bg-blue-50 px-3 py-2 text-[11px] text-blue-900">
+            <div className="rounded-xl bg-blue-50 px-3 py-2 text-[11px] text-blue-900 dark:bg-blue-900/20 dark:text-blue-300">
               Bạn chưa khai báo trình độ nên gợi ý xếp theo tần suất và số lần tra.{' '}
               {onOpenLearningSettings && (
                 <button onClick={onOpenLearningSettings} className="font-bold underline">Khai báo trình độ</button>
               )}
             </div>
           )}
-          {notice && <div className="rounded-xl bg-emerald-50 px-3 py-2 text-[11px] font-semibold text-emerald-800">{notice}</div>}
+          {notice && <div className="rounded-xl bg-emerald-50 px-3 py-2 text-[11px] font-semibold text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">{notice}</div>}
 
-          {loading && <p className="py-3 text-center text-xs text-slate-500">Đang tìm từ nên học...</p>}
+          {loading && <p className="py-3 text-center text-xs text-slate-500 dark:text-slate-400">Đang tìm từ nên học...</p>}
           {error && (
-            <div className="flex items-center justify-between gap-2 rounded-xl bg-rose-50 px-3 py-2 text-xs text-rose-700">
+            <div className="flex items-center justify-between gap-2 rounded-xl bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:bg-rose-900/30 dark:text-rose-300">
               <span>{error}</span>
-              <button onClick={() => setTick(value => value + 1)} className="font-bold text-[#a43073] hover:underline">Thử lại</button>
+              <button onClick={() => setTick(value => value + 1)} className="font-bold text-[#a43073] dark:text-pink-400 hover:underline">Thử lại</button>
             </div>
           )}
           {!loading && !error && data && items.length === 0 && (
-            <p className="py-3 text-center text-xs leading-relaxed text-slate-500">
+            <p className="py-3 text-center text-xs leading-relaxed text-slate-500 dark:text-slate-400">
               {data.status === 'processing'
                 ? 'Chưa có gợi ý nào, hãy quay lại khi chương xử lý xong.'
                 : 'Không còn từ nào để gợi ý trong chương này. Bạn có thể xem lại từ đã bỏ qua trong Sổ tay.'}
@@ -197,25 +197,25 @@ export const ChapterSuggestions: React.FC<ChapterSuggestionsProps> = ({
           {items.map(item => {
             const busy = busyTerms.has(item.term);
             return (
-              <div key={item.term} className="rounded-2xl border border-slate-100 bg-slate-50 p-2.5">
+              <div key={item.term} className="rounded-2xl border border-slate-100 bg-slate-50 p-2.5 dark:border-slate-700 dark:bg-slate-800">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="font-['Noto_Serif_SC'] text-base font-bold text-slate-800">{item.term}</span>
-                      {item.pinyin && <span className="font-mono text-[11px] text-slate-500">{item.pinyin}</span>}
-                      <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-900">{hskLabel(item.hsk_level)}</span>
+                      <span className="font-['Noto_Serif_SC'] text-base font-bold text-slate-800 dark:text-slate-100">{item.term}</span>
+                      {item.pinyin && <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400">{item.pinyin}</span>}
+                      <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-900 dark:bg-blue-900/30 dark:text-blue-300">{hskLabel(item.hsk_level)}</span>
                     </div>
-                    {item.meaning_vi && <div className="text-xs font-medium text-slate-600">{item.meaning_vi}</div>}
-                    <div className="mt-0.5 text-[10px] text-slate-400">
+                    {item.meaning_vi && <div className="text-xs font-medium text-slate-600 dark:text-slate-300">{item.meaning_vi}</div>}
+                    <div className="mt-0.5 text-[10px] text-slate-400 dark:text-slate-500">
                       Xuất hiện {item.occurrences} lần •{' '}
-                      <button onClick={() => onGoToPage(item.page_no)} className="font-semibold text-[#a43073] hover:underline" title="Nhảy tới trang này">
+                      <button onClick={() => onGoToPage(item.page_no)} className="font-semibold text-[#a43073] dark:text-pink-400 hover:underline" title="Nhảy tới trang này">
                         trang {item.page_no}
                       </button>
                     </div>
                   </div>
                   <button
                     onClick={() => void speakChinese(item.term)}
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white text-slate-400 hover:bg-pink-100 hover:text-pink-600"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white text-slate-400 hover:bg-pink-100 hover:text-pink-600 dark:bg-[#1e293b] dark:text-slate-400 dark:hover:bg-pink-900/30 dark:hover:text-pink-300"
                     title="Phát âm"
                     aria-label={`Phát âm ${item.term}`}
                   >
@@ -233,7 +233,7 @@ export const ChapterSuggestions: React.FC<ChapterSuggestionsProps> = ({
                   <button
                     onClick={() => void handleDismiss(item)}
                     disabled={busy}
-                    className="flex-1 rounded-full bg-white py-1.5 text-[11px] font-bold text-slate-600 hover:bg-slate-200 disabled:opacity-60"
+                    className="flex-1 rounded-full bg-white py-1.5 text-[11px] font-bold text-slate-600 hover:bg-slate-200 dark:bg-[#1e293b] dark:text-slate-300 dark:hover:bg-slate-700 disabled:opacity-60"
                   >
                     Bỏ qua
                   </button>
@@ -243,7 +243,7 @@ export const ChapterSuggestions: React.FC<ChapterSuggestionsProps> = ({
           })}
 
           {undo && (
-            <div className="flex items-center justify-between gap-2 rounded-xl bg-slate-800 px-3 py-2 text-[11px] text-white">
+            <div className="flex items-center justify-between gap-2 rounded-xl bg-slate-800 px-3 py-2 text-[11px] text-white dark:bg-slate-700">
               <span>Đã bỏ qua “{undo.item.term}”</span>
               <button onClick={() => void handleUndo()} className="font-bold text-pink-300 hover:underline">Hoàn tác</button>
             </div>

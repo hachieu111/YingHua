@@ -6,12 +6,12 @@ interface NotFoundPageProps {
 
 export const NotFoundPage: React.FC<NotFoundPageProps> = ({ onGoHome }) => (
   <div className="w-full max-w-[700px] mx-auto px-4 py-16 flex flex-col items-center text-center gap-6">
-    <div className="w-20 h-20 rounded-3xl bg-pink-100 flex items-center justify-center text-[#a43073] shadow-md border border-pink-200">
+    <div className="w-20 h-20 rounded-3xl bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center text-[#a43073] dark:text-pink-400 shadow-md dark:shadow-none border border-pink-200 dark:border-pink-900/50">
       <span className="material-symbols-outlined text-[42px]">explore_off</span>
     </div>
     <div className="flex flex-col gap-2">
-      <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-800 font-['Plus_Jakarta_Sans']">Không tìm thấy trang</h2>
-      <p className="text-sm text-slate-600 max-w-lg leading-relaxed">
+      <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-800 dark:text-white font-['Plus_Jakarta_Sans']">Không tìm thấy trang</h2>
+      <p className="text-sm text-slate-600 dark:text-slate-300 max-w-lg leading-relaxed">
         Đường dẫn bạn mở không tồn tại hoặc đã bị thay đổi. Hãy quay về Trang Chủ để tiếp tục khám phá truyện tranh.
       </p>
     </div>

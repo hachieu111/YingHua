@@ -95,8 +95,9 @@ export const TodayPanel: React.FC<TodayPanelProps> = ({ isLoggedIn, onRequireLog
 
   const samplePrompt = sample_page_available ? (
     <button
+      data-tour="home-sample"
       onClick={() => (isLoggedIn ? navigate(SAMPLE_PAGE_PATH) : onRequireLogin('Vui lòng đăng nhập để thử trang mẫu Hover & Dịch!'))}
-      className="inline-flex items-center gap-1.5 rounded-full bg-white border border-pink-200 px-4 py-2 text-xs font-bold text-[#a43073] hover:bg-pink-50 transition-colors"
+      className="inline-flex items-center gap-1.5 rounded-full bg-white dark:bg-[#1e293b] border border-pink-200 dark:border-pink-900/40 px-4 py-2 text-xs font-bold text-[#a43073] dark:text-pink-400 hover:bg-pink-50 dark:hover:bg-pink-900/20 transition-colors"
     >
       <span className="material-symbols-outlined text-[16px]">touch_app</span>
       Thử Hover & Dịch với trang mẫu
@@ -115,24 +116,24 @@ export const TodayPanel: React.FC<TodayPanelProps> = ({ isLoggedIn, onRequireLog
     return (
       <article
         key={`${item.kind}-${item.priority}`}
-        className={`rounded-2xl border p-4 flex flex-col gap-2 ${item.urgent ? 'border-[#a43073] bg-pink-50 shadow-soft' : 'border-slate-100 bg-white'}`}
+        className={`rounded-2xl border p-4 flex flex-col gap-2 ${item.urgent ? 'border-[#a43073] dark:border-pink-400/60 bg-pink-50 dark:bg-pink-900/20 shadow-soft' : 'border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800'}`}
       >
         <div className="flex items-start gap-3">
-          <span className={`w-9 h-9 shrink-0 rounded-full flex items-center justify-center ${item.urgent ? 'bg-[#a43073] text-white' : 'bg-blue-50 text-blue-600'}`}>
+          <span className={`w-9 h-9 shrink-0 rounded-full flex items-center justify-center ${item.urgent ? 'bg-[#a43073] text-white' : 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'}`}>
             <span className="material-symbols-outlined text-[20px]">{KIND_ICONS[item.kind] ?? 'task_alt'}</span>
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h3 className="text-sm font-bold text-slate-800">{item.title}</h3>
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">{item.title}</h3>
               {item.urgent && <span className="rounded-full bg-[#a43073] px-2 py-0.5 text-[10px] font-bold text-white">Cần làm ngay</span>}
             </div>
-            <p className="mt-0.5 text-xs text-slate-600 leading-relaxed">{item.message}</p>
+            <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">{item.message}</p>
           </div>
         </div>
         {path && (
           <button
             onClick={() => navigate(path)}
-            className={`self-end rounded-full px-4 py-1.5 text-xs font-bold transition-colors ${item.urgent ? 'bg-[#a43073] text-white hover:bg-[#85145a]' : 'bg-blue-50 text-blue-700 hover:bg-blue-100'}`}
+            className={`self-end rounded-full px-4 py-1.5 text-xs font-bold transition-colors ${item.urgent ? 'bg-[#a43073] text-white hover:bg-[#85145a]' : 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50'}`}
           >
             {ACTION_LABELS[item.action.type] ?? 'Mở'}
           </button>
@@ -142,30 +143,30 @@ export const TodayPanel: React.FC<TodayPanelProps> = ({ isLoggedIn, onRequireLog
   };
 
   return (
-    <section aria-label="Hôm nay nên học gì" className="mb-8 rounded-3xl border border-pink-100 bg-white p-5 sm:p-6 shadow-soft">
+    <section aria-label="Hôm nay nên học gì" className="mb-8 rounded-3xl border border-pink-100 dark:border-slate-800 bg-white dark:bg-[#0f172a] p-5 sm:p-6 shadow-soft dark:shadow-none transition-colors duration-300">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-[#a43073]">Hôm nay</span>
-          <h2 className="text-xl font-bold text-slate-800 font-['Plus_Jakarta_Sans']">Hôm nay nên học gì?</h2>
+          <span className="text-xs font-bold uppercase tracking-wider text-[#a43073] dark:text-pink-400">Hôm nay</span>
+          <h2 className="text-xl font-bold text-slate-800 dark:text-white font-['Plus_Jakarta_Sans']">Hôm nay nên học gì?</h2>
         </div>
         {samplePrompt}
       </div>
 
       {loading && !plan && (
-        <div className="flex items-center gap-2 py-4 text-xs text-slate-400">
-          <span className="w-4 h-4 border-2 border-pink-300 border-t-transparent rounded-full animate-spin"></span>Đang tải...
+        <div className="flex items-center gap-2 py-4 text-xs text-slate-400 dark:text-slate-500">
+          <span className="w-4 h-4 border-2 border-pink-300 border-t-transparent rounded-full animate-spin dark:border-pink-900/40"></span>Đang tải...
         </div>
       )}
       {error && (
-        <div role="alert" className="flex items-center justify-between gap-3 rounded-xl bg-rose-50 p-3 text-xs font-semibold text-rose-700">
+        <div role="alert" className="flex items-center justify-between gap-3 rounded-xl bg-rose-50 dark:bg-rose-900/20 p-3 text-xs font-semibold text-rose-700 dark:text-rose-400">
           <span>{error}</span>
-          <button onClick={reload} className="rounded-full bg-white px-3 py-1 font-bold">Thử lại</button>
+          <button onClick={reload} className="rounded-full bg-white dark:bg-slate-800 px-3 py-1 font-bold">Thử lại</button>
         </div>
       )}
       {plan && !error && (plan.all_done || items.length === 0) && (
-        <div className="flex flex-col items-start gap-2 rounded-2xl bg-emerald-50 p-4 text-sm text-emerald-800 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col items-start gap-2 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 p-4 text-sm text-emerald-800 dark:text-emerald-400 sm:flex-row sm:items-center sm:justify-between">
           <span className="font-semibold">{plan.message ?? 'Bạn đã hoàn thành hết việc hôm nay. Tuyệt vời!'}</span>
-          <button onClick={() => navigate(TAB_PATHS.library)} className="rounded-full bg-white px-4 py-1.5 text-xs font-bold text-emerald-700 hover:bg-emerald-100">
+          <button onClick={() => navigate(TAB_PATHS.library)} className="rounded-full bg-white dark:bg-slate-800 px-4 py-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40">
             Mở Thư viện
           </button>
         </div>

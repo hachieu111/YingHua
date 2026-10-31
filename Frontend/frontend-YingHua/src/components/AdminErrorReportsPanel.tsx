@@ -7,9 +7,9 @@ import { Chip, LoadState, Pager, errorMessage, formatDateTime } from './AdminDat
 const PAGE_SIZE = 10;
 
 const STATUS_STYLE: Record<ReportStatus, { label: string; className: string }> = {
-  new: { label: 'Mới', className: 'bg-rose-100 text-rose-700' },
-  resolved: { label: 'Đã xử lý', className: 'bg-emerald-100 text-emerald-700' },
-  rejected: { label: 'Từ chối', className: 'bg-slate-200 text-slate-600' }
+  new: { label: 'Mới', className: 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400' },
+  resolved: { label: 'Đã xử lý', className: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' },
+  rejected: { label: 'Từ chối', className: 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300' }
 };
 
 const TYPE_LABEL: Record<string, string> = { ocr: 'Nhận diện chữ', translation: 'Bản dịch', other: 'Khác' };
@@ -84,7 +84,7 @@ export const AdminErrorReportsPanel: React.FC<AdminErrorReportsPanelProps> = ({ 
         ))}
       </div>
       <LoadState loading={loading && !data} error={error} empty={!!data && data.items.length === 0} emptyText="Không có báo lỗi nào." onRetry={reload} />
-      <div className="divide-y divide-slate-100">
+      <div className="divide-y divide-slate-100 dark:divide-slate-700">
         {data?.items.map(report => {
           const style = STATUS_STYLE[report.status];
           const isOpen = openId === report.id;
@@ -94,46 +94,46 @@ export const AdminErrorReportsPanel: React.FC<AdminErrorReportsPanelProps> = ({ 
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2 text-[10px]">
                     <span className={`rounded-full px-2 py-0.5 font-bold ${style.className}`}>{style.label}</span>
-                    <span className="font-semibold text-slate-500">{TYPE_LABEL[report.report_type] ?? report.report_type}</span>
-                    <span className="text-slate-400">#{report.id} · {formatDateTime(report.created_at)}</span>
+                    <span className="font-semibold text-slate-500 dark:text-slate-400">{TYPE_LABEL[report.report_type] ?? report.report_type}</span>
+                    <span className="text-slate-400 dark:text-slate-500">#{report.id} · {formatDateTime(report.created_at)}</span>
                   </div>
-                  <p className="mt-1 text-sm font-semibold text-slate-800">{report.description || 'Không có mô tả'}</p>
-                  <p className="mt-0.5 text-[11px] text-slate-500">
+                  <p className="mt-1 text-sm font-semibold text-slate-800 dark:text-slate-100">{report.description || 'Không có mô tả'}</p>
+                  <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
                     {report.series_title ?? 'Truyện đã xóa'}
                     {report.chapter_number !== null && ` · Chương ${report.chapter_number}`}
                     {report.page_no !== null && ` · Trang ${report.page_no}`}
                     {report.reporter && ` · ${report.reporter.display_name}`}
                   </p>
                   {(report.bubble_text_zh || report.bubble_text_vi) && (
-                    <p className="mt-1 rounded-lg bg-slate-50 p-2 text-[11px] text-slate-600">
+                    <p className="mt-1 rounded-lg bg-slate-50 dark:bg-slate-800 p-2 text-[11px] text-slate-600 dark:text-slate-300">
                       {report.bubble_text_zh && <span className="font-['Noto_Serif_SC']">{report.bubble_text_zh}</span>}
                       {report.bubble_text_vi && <span> → {report.bubble_text_vi}</span>}
                     </p>
                   )}
-                  {report.resolution_note && <p className="mt-1 text-[11px] text-emerald-700">Ghi chú xử lý: {report.resolution_note}</p>}
+                  {report.resolution_note && <p className="mt-1 text-[11px] text-emerald-700 dark:text-emerald-400">Ghi chú xử lý: {report.resolution_note}</p>}
                 </div>
                 {report.status === 'new' && (
                   <button
                     onClick={() => { setOpenId(isOpen ? null : report.id); setNote(''); }}
-                    className="rounded-full bg-pink-100 px-3 py-1.5 text-[10px] font-bold text-pink-700"
+                    className="rounded-full bg-pink-100 dark:bg-pink-900/30 px-3 py-1.5 text-[10px] font-bold text-pink-700 dark:text-pink-300"
                   >
                     {isOpen ? 'Đóng' : 'Xử lý'}
                   </button>
                 )}
               </div>
               {isOpen && (
-                <div className="mt-3 flex flex-col gap-2 rounded-xl bg-blue-50 p-3">
-                  <label className="text-[11px] font-semibold text-slate-600" htmlFor={`note-${report.id}`}>Ghi chú xử lý (người báo sẽ thấy)</label>
+                <div className="mt-3 flex flex-col gap-2 rounded-xl bg-blue-50 dark:bg-blue-900/20 p-3">
+                  <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300" htmlFor={`note-${report.id}`}>Ghi chú xử lý (người báo sẽ thấy)</label>
                   <textarea
                     id={`note-${report.id}`}
                     value={note}
                     maxLength={1000}
                     onChange={event => setNote(event.target.value)}
                     rows={2}
-                    className="rounded-lg border border-blue-100 p-2 text-xs outline-none focus:ring-2 focus:ring-pink-200"
+                    className="rounded-lg border border-blue-100 dark:border-slate-700 dark:bg-[#1e293b] dark:text-slate-100 p-2 text-xs outline-none focus:ring-2 focus:ring-pink-200 dark:focus:ring-pink-900/50"
                   />
                   <div className="flex justify-end gap-2">
-                    <button disabled={busy} onClick={() => void resolve(report, 'rejected')} className="rounded-full bg-white px-4 py-1.5 text-xs font-bold text-slate-600 disabled:opacity-50">Từ chối</button>
+                    <button disabled={busy} onClick={() => void resolve(report, 'rejected')} className="rounded-full bg-white dark:bg-slate-800 px-4 py-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 disabled:opacity-50">Từ chối</button>
                     <button disabled={busy} onClick={() => void resolve(report, 'resolved')} className="rounded-full bg-[#a43073] px-4 py-1.5 text-xs font-bold text-white disabled:opacity-50">Đã xử lý</button>
                   </div>
                 </div>

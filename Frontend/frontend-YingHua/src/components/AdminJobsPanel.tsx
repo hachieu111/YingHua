@@ -10,9 +10,9 @@ const JOB_LABELS: Record<string, string> = {
 };
 
 const STATUS_STYLE: Record<string, { label: string; className: string }> = {
-  ok: { label: 'Thành công', className: 'bg-emerald-100 text-emerald-700' },
-  running: { label: 'Đang chạy', className: 'bg-blue-100 text-blue-700' },
-  failed: { label: 'Lỗi', className: 'bg-rose-100 text-rose-700' }
+  ok: { label: 'Thành công', className: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' },
+  running: { label: 'Đang chạy', className: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' },
+  failed: { label: 'Lỗi', className: 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400' }
 };
 
 const formatInterval = (seconds: number): string => {
@@ -62,49 +62,49 @@ export const AdminJobsPanel: React.FC<AdminJobsPanelProps> = ({ notify }) => {
 
   return (
     <div className="p-4 space-y-3">
-      <div className="flex items-center justify-between text-[11px] text-slate-500">
+      <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
         <span>{jobs.length} tác vụ định kỳ do worker chạy; thời gian hiển thị theo múi giờ của trình duyệt.</span>
-        <button onClick={load} disabled={loading} className="text-xs text-blue-700 font-semibold disabled:opacity-50">Làm mới</button>
+        <button onClick={load} disabled={loading} className="text-xs text-blue-700 dark:text-blue-300 font-semibold disabled:opacity-50">Làm mới</button>
       </div>
       {error && <LoadState loading={false} error={error} onRetry={load} />}
       {jobs.length === 0 ? (
-        <div className="p-6 text-center text-sm text-slate-500">Chưa có tác vụ nền nào được đăng ký.</div>
+        <div className="p-6 text-center text-sm text-slate-500 dark:text-slate-400">Chưa có tác vụ nền nào được đăng ký.</div>
       ) : (
         <div className="grid gap-3 lg:grid-cols-2">
           {jobs.map(job => {
-            const status = job.last_status ? (STATUS_STYLE[job.last_status] ?? { label: job.last_status, className: 'bg-slate-100 text-slate-600' }) : null;
+            const status = job.last_status ? (STATUS_STYLE[job.last_status] ?? { label: job.last_status, className: 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300' }) : null;
             return (
-              <article key={job.name} className="rounded-xl border border-slate-100 p-4 space-y-2">
+              <article key={job.name} className="rounded-xl border border-slate-100 dark:border-slate-700 p-4 space-y-2">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <div className="text-xs font-bold text-slate-800">{JOB_LABELS[job.name] ?? job.name}</div>
-                    <div className="text-[10px] text-slate-400">{job.name} · chạy mỗi {formatInterval(job.interval_seconds)}</div>
+                    <div className="text-xs font-bold text-slate-800 dark:text-slate-100">{JOB_LABELS[job.name] ?? job.name}</div>
+                    <div className="text-[10px] text-slate-400 dark:text-slate-500">{job.name} · chạy mỗi {formatInterval(job.interval_seconds)}</div>
                   </div>
-                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${status?.className ?? 'bg-slate-100 text-slate-600'}`}>
+                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${status?.className ?? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'}`}>
                     {status?.label ?? 'Chưa chạy'}
                   </span>
                 </div>
                 <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
-                  <dt className="text-slate-500">Bật</dt>
-                  <dd className="font-semibold text-slate-700">{job.enabled ? 'Có' : 'Đã tắt'}</dd>
-                  <dt className="text-slate-500">Lần chạy gần nhất</dt>
-                  <dd className="font-semibold text-slate-700">{formatDateTime(job.last_started_at)}</dd>
-                  <dt className="text-slate-500">Kết thúc</dt>
-                  <dd className="font-semibold text-slate-700">{formatDateTime(job.last_finished_at)}</dd>
-                  <dt className="text-slate-500">Lần chạy kế tiếp</dt>
-                  <dd className="font-semibold text-slate-700">{formatDateTime(job.next_run_at)}</dd>
+                  <dt className="text-slate-500 dark:text-slate-400">Bật</dt>
+                  <dd className="font-semibold text-slate-700 dark:text-slate-200">{job.enabled ? 'Có' : 'Đã tắt'}</dd>
+                  <dt className="text-slate-500 dark:text-slate-400">Lần chạy gần nhất</dt>
+                  <dd className="font-semibold text-slate-700 dark:text-slate-200">{formatDateTime(job.last_started_at)}</dd>
+                  <dt className="text-slate-500 dark:text-slate-400">Kết thúc</dt>
+                  <dd className="font-semibold text-slate-700 dark:text-slate-200">{formatDateTime(job.last_finished_at)}</dd>
+                  <dt className="text-slate-500 dark:text-slate-400">Lần chạy kế tiếp</dt>
+                  <dd className="font-semibold text-slate-700 dark:text-slate-200">{formatDateTime(job.next_run_at)}</dd>
                   {job.locked_by && (
                     <>
-                      <dt className="text-slate-500">Đang giữ bởi</dt>
-                      <dd className="font-semibold text-slate-700">{job.locked_by}</dd>
+                      <dt className="text-slate-500 dark:text-slate-400">Đang giữ bởi</dt>
+                      <dd className="font-semibold text-slate-700 dark:text-slate-200">{job.locked_by}</dd>
                     </>
                   )}
                 </dl>
                 {job.last_run?.summary && (
-                  <div className="rounded-lg bg-slate-50 px-2.5 py-1.5 text-[10px] text-slate-600">Kết quả: {summaryText(job.last_run.summary)}</div>
+                  <div className="rounded-lg bg-slate-50 dark:bg-slate-800 px-2.5 py-1.5 text-[10px] text-slate-600 dark:text-slate-300">Kết quả: {summaryText(job.last_run.summary)}</div>
                 )}
                 {job.last_run?.error_message && (
-                  <div className="rounded-lg bg-rose-50 px-2.5 py-1.5 text-[10px] text-rose-700" role="alert">{job.last_run.error_message}</div>
+                  <div className="rounded-lg bg-rose-50 dark:bg-rose-900/20 px-2.5 py-1.5 text-[10px] text-rose-700 dark:text-rose-400" role="alert">{job.last_run.error_message}</div>
                 )}
               </article>
             );

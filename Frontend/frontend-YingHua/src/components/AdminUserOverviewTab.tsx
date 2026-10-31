@@ -23,7 +23,7 @@ export const AdminUserOverviewTab: React.FC<{ userId: number }> = ({ userId }) =
   const { user } = data;
   return (
     <div className="flex flex-col gap-4">
-      <div className="rounded-xl border border-slate-100 p-4 text-xs text-slate-600 grid sm:grid-cols-2 gap-1">
+      <div className="rounded-xl border border-slate-100 dark:border-slate-700 p-4 text-xs text-slate-600 dark:text-slate-300 grid sm:grid-cols-2 gap-1">
         <div><b>Email:</b> {user.email}</div>
         <div><b>Vai trò:</b> {user.role === 'admin' ? 'Quản trị viên' : 'Học viên'}</div>
         <div><b>Trạng thái:</b> {user.status === 'locked' ? `Đã khóa${user.locked_reason ? ` (${user.locked_reason})` : ''}` : 'Đang hoạt động'}</div>

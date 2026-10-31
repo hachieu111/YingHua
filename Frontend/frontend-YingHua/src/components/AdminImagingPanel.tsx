@@ -77,14 +77,14 @@ export const AdminImagingPanel: React.FC<AdminImagingPanelProps> = ({ notify }) 
           { label: 'Lỗi', value: counts.failed ?? 0 },
           { label: 'Hoàn tất', value: counts.done ?? 0 }
         ].map(stat => (
-          <div key={stat.label} className="rounded-xl border border-slate-100 p-3">
-            <div className="text-[10px] font-semibold text-slate-500">{stat.label}</div>
-            <div className="mt-1 text-xl font-extrabold text-slate-900">{stat.value}</div>
+          <div key={stat.label} className="rounded-xl border border-slate-100 dark:border-slate-700 p-3">
+            <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">{stat.label}</div>
+            <div className="mt-1 text-xl font-extrabold text-slate-900 dark:text-white">{stat.value}</div>
           </div>
         ))}
-        <div className="rounded-xl border border-slate-100 p-3">
-          <div className="text-[10px] font-semibold text-slate-500">Thời gian xử lý trung bình</div>
-          <div className="mt-1 text-xl font-extrabold text-slate-900">{formatDuration(data?.avg_processing_ms ?? null)}</div>
+        <div className="rounded-xl border border-slate-100 dark:border-slate-700 p-3">
+          <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">Thời gian xử lý trung bình</div>
+          <div className="mt-1 text-xl font-extrabold text-slate-900 dark:text-white">{formatDuration(data?.avg_processing_ms ?? null)}</div>
         </div>
       </div>
 
@@ -94,7 +94,7 @@ export const AdminImagingPanel: React.FC<AdminImagingPanelProps> = ({ notify }) 
             {item.label}
           </Chip>
         ))}
-        <button onClick={() => load()} className="ml-auto text-xs text-blue-700 font-semibold">Làm mới</button>
+        <button onClick={() => load()} className="ml-auto text-xs text-blue-700 dark:text-blue-300 font-semibold">Làm mới</button>
       </div>
 
       {!data ? (
@@ -103,23 +103,23 @@ export const AdminImagingPanel: React.FC<AdminImagingPanelProps> = ({ notify }) 
         <>
           {error && <LoadState loading={false} error={error} onRetry={() => load()} />}
           {data.items.length === 0 ? (
-            <div className="p-6 text-center text-sm text-slate-500">Không có bản dịch nào ở trạng thái này.</div>
+            <div className="p-6 text-center text-sm text-slate-500 dark:text-slate-400">Không có bản dịch nào ở trạng thái này.</div>
           ) : (
-            <div className="divide-y divide-slate-100 rounded-xl border border-slate-100">
+            <div className="divide-y divide-slate-100 dark:divide-slate-700 rounded-xl border border-slate-100 dark:border-slate-700">
               {data.items.map(item => (
                 <div key={item.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3">
                   <div className="min-w-0 space-y-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-xs font-bold text-slate-800">Bản dịch #{item.id}</span>
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-100">Bản dịch #{item.id}</span>
                       <StatusPill status={item.status} />
-                      <span className="text-[10px] text-slate-500">Lần thử: {item.attempts}</span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400">Lần thử: {item.attempts}</span>
                     </div>
-                    <div className="text-[10px] text-slate-500">
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400">
                       Xếp hàng {formatDateTime(item.queued_at)} · Xong {formatDateTime(item.finished_at)} · {formatDuration(item.processing_ms)}
                       {item.worker_id ? ` · Worker ${item.worker_id}` : ''}
                     </div>
                     {item.status === 'failed' && (
-                      <div className="text-[11px] text-red-600">
+                      <div className="text-[11px] text-red-600 dark:text-red-400">
                         {item.error_step ? `Bước “${item.error_step}”: ` : ''}
                         {item.error_message ?? statusLabel('failed')}
                       </div>
@@ -129,7 +129,7 @@ export const AdminImagingPanel: React.FC<AdminImagingPanelProps> = ({ notify }) 
                     <button
                       onClick={() => handleRetry(item)}
                       disabled={retrying === item.id}
-                      className="shrink-0 rounded-full bg-pink-500 px-3.5 py-1.5 text-[11px] font-bold text-white hover:bg-pink-600 disabled:opacity-60"
+                      className="shrink-0 rounded-full bg-pink-500 dark:bg-[#a43073] px-3.5 py-1.5 text-[11px] font-bold text-white hover:bg-pink-600 dark:hover:bg-[#85145a] disabled:opacity-60"
                     >
                       {retrying === item.id ? 'Đang gửi...' : 'Chạy lại'}
                     </button>

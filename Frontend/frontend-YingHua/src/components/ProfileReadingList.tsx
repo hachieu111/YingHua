@@ -37,9 +37,9 @@ export const ProfileReadingList: React.FC<ProfileReadingListProps> = ({ onOpenRe
 
   if (error) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-3xl border border-pink-100 bg-white p-8 text-center" role="alert">
-        <p className="text-sm text-rose-700">{error}</p>
-        <button onClick={() => setTick(value => value + 1)} className="rounded-full border border-pink-200 bg-white px-4 py-1.5 text-xs font-bold text-[#a43073] hover:bg-pink-50">
+      <div className="flex flex-col items-center gap-3 rounded-3xl border border-pink-100 dark:border-slate-800 bg-white dark:bg-[#0f172a] p-8 text-center" role="alert">
+        <p className="text-sm text-rose-700 dark:text-rose-300">{error}</p>
+        <button onClick={() => setTick(value => value + 1)} className="rounded-full border border-pink-200 dark:border-pink-900/40 bg-white dark:bg-[#1e293b] px-4 py-1.5 text-xs font-bold text-[#a43073] dark:text-pink-400 hover:bg-pink-50 dark:hover:bg-slate-700">
           Thử lại
         </button>
       </div>
@@ -50,7 +50,7 @@ export const ProfileReadingList: React.FC<ProfileReadingListProps> = ({ onOpenRe
     return (
       <div className="flex flex-col gap-4" aria-busy="true">
         {[0, 1].map(key => (
-          <div key={key} className="h-40 animate-pulse rounded-3xl border border-pink-100 bg-white"></div>
+          <div key={key} className="h-40 animate-pulse rounded-3xl border border-pink-100 dark:border-slate-800 bg-white dark:bg-[#0f172a]"></div>
         ))}
       </div>
     );
@@ -58,9 +58,9 @@ export const ProfileReadingList: React.FC<ProfileReadingListProps> = ({ onOpenRe
 
   if (items.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-3xl border border-pink-100 bg-white p-10 text-center">
-        <span className="material-symbols-outlined text-[36px] text-pink-300">menu_book</span>
-        <p className="text-sm font-bold text-slate-700">Bạn chưa đọc dở truyện nào</p>
+      <div className="flex flex-col items-center gap-3 rounded-3xl border border-pink-100 dark:border-slate-800 bg-white dark:bg-[#0f172a] p-10 text-center">
+        <span className="material-symbols-outlined text-[36px] text-pink-300 dark:text-pink-400/70">menu_book</span>
+        <p className="text-sm font-bold text-slate-700 dark:text-slate-200">Bạn chưa đọc dở truyện nào</p>
         <button onClick={onBrowse} className="rounded-full bg-[#a43073] px-5 py-2 text-xs font-bold text-white hover:opacity-90">
           Khám phá truyện
         </button>
@@ -74,27 +74,27 @@ export const ProfileReadingList: React.FC<ProfileReadingListProps> = ({ onOpenRe
         const percent = item.total_pages > 0 ? Math.min(100, Math.round((item.page_no / item.total_pages) * 100)) : 0;
         const chapterName = item.chapter_title ? `: ${item.chapter_title}` : '';
         return (
-          <div key={`${item.series_id}-${item.chapter_id}`} className="flex flex-col gap-4 rounded-3xl border border-pink-100 bg-white p-4 shadow-soft transition-shadow hover:shadow-md sm:flex-row">
-            <div className="relative h-36 w-full shrink-0 overflow-hidden rounded-2xl bg-slate-100 sm:w-28">
+          <div key={`${item.series_id}-${item.chapter_id}`} className="flex flex-col gap-4 rounded-3xl border border-pink-100 dark:border-slate-800 bg-white dark:bg-[#0f172a] p-4 shadow-soft dark:shadow-none transition-shadow hover:shadow-md dark:hover:shadow-none sm:flex-row">
+            <div className="relative h-36 w-full shrink-0 overflow-hidden rounded-2xl bg-slate-100 dark:bg-slate-800 sm:w-28">
               <AuthImage src={item.cover_url} alt={item.series_title} className="h-full w-full object-cover" />
             </div>
             <div className="flex min-w-0 flex-1 flex-col justify-between">
               <div>
                 <div className="flex items-start justify-between gap-2">
-                  <h3 className="text-base font-bold text-slate-800">{item.series_title}</h3>
-                  <span className="shrink-0 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-900">Tiến độ {percent}%</span>
+                  <h3 className="text-base font-bold text-slate-800 dark:text-white">{item.series_title}</h3>
+                  <span className="shrink-0 rounded-full bg-blue-100 dark:bg-blue-900/30 px-2.5 py-0.5 text-xs font-semibold text-blue-900 dark:text-blue-300">Tiến độ {percent}%</span>
                 </div>
-                <p className="mt-2 line-clamp-2 text-xs text-slate-600">
+                <p className="mt-2 line-clamp-2 text-xs text-slate-600 dark:text-slate-300">
                   Đang đọc đến <strong>Chương {formatChapterNumber(item.chapter_number)}{chapterName}</strong> (Trang {item.page_no}/{item.total_pages}).
                 </p>
                 <ChapterCoverageBar chapterId={item.chapter_id} isLoggedIn compact onOpenLearningSettings={onOpenLearningSettings} />
               </div>
               <div className="mt-3 flex flex-col gap-2">
-                <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
                   <div className="h-full rounded-full bg-gradient-to-r from-blue-400 to-[#a43073]" style={{ width: `${percent}%` }}></div>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-400">Trang {item.page_no} trên {item.total_pages}</span>
+                  <span className="text-xs text-slate-400 dark:text-slate-500">Trang {item.page_no} trên {item.total_pages}</span>
                   <button
                     onClick={() => onOpenReader({ chapterId: item.chapter_id, pageNo: item.page_no, pageId: item.page_id ?? undefined })}
                     className="flex items-center gap-1 rounded-full bg-[#a43073] px-4 py-1.5 text-xs font-bold text-white transition-all hover:opacity-90"

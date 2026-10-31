@@ -206,18 +206,18 @@ export const VocabDetailModal: React.FC<VocabDetailModalProps> = ({ entryId, onC
   };
 
   return (
-    <div className="fixed inset-0 z-[60] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] bg-slate-900/50 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
       <div
-        className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 flex flex-col gap-5"
+        className="bg-white dark:bg-[#0f172a] dark:border dark:border-slate-700 rounded-3xl shadow-2xl dark:shadow-none w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 flex flex-col gap-5 transition-colors duration-300"
         onClick={e => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-label="Chi tiết từ vựng"
       >
-        {loading && <div className="py-10 text-center text-sm text-slate-500">Đang tải chi tiết từ...</div>}
+        {loading && <div className="py-10 text-center text-sm text-slate-500 dark:text-slate-400">Đang tải chi tiết từ...</div>}
         {error && !detail && (
           <div className="flex flex-col items-center gap-3 py-8 text-center">
-            <p className="text-sm text-rose-600">{error}</p>
+            <p className="text-sm text-rose-600 dark:text-rose-400">{error}</p>
             <button onClick={() => void load(entryId)} className="px-4 py-2 rounded-full bg-[#a43073] text-white text-xs font-bold">Thử lại</button>
           </div>
         )}
@@ -227,10 +227,10 @@ export const VocabDetailModal: React.FC<VocabDetailModalProps> = ({ entryId, onC
             <div className="flex items-start justify-between gap-3">
               <div className="flex flex-col gap-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-4xl font-extrabold text-slate-800 font-['Noto_Serif_SC'] break-all">{detail.term}</span>
+                  <span className="text-4xl font-extrabold text-slate-800 dark:text-white font-['Noto_Serif_SC'] break-all">{detail.term}</span>
                   <button
                     onClick={() => void speakChinese(detail.term, 0.85)}
-                    className="w-8 h-8 shrink-0 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-600 flex items-center justify-center"
+                    className="w-8 h-8 shrink-0 rounded-full bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-600 dark:text-blue-300 flex items-center justify-center"
                     title="Nghe phát âm"
                   >
                     <span className="material-symbols-outlined text-[18px]">volume_up</span>
@@ -238,27 +238,27 @@ export const VocabDetailModal: React.FC<VocabDetailModalProps> = ({ entryId, onC
                   <button
                     disabled={busy}
                     onClick={() => void run(() => updateVocab(detail.id, { is_starred: !detail.is_starred }))}
-                    className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center ${detail.is_starred ? 'bg-amber-100 text-amber-500' : 'bg-slate-100 text-slate-400 hover:text-amber-500'}`}
+                    className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center ${detail.is_starred ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-500' : 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-300 hover:text-amber-500 dark:hover:text-amber-400'}`}
                     title="Đánh dấu sao"
                   >
                     <span className="material-symbols-outlined text-[18px]">{detail.is_starred ? 'star' : 'star_border'}</span>
                   </button>
                 </div>
-                {detail.pinyin && <span className="text-sm font-mono font-semibold text-blue-600">{detail.pinyin}</span>}
-                {detail.sino_vietnamese && <span className="text-xs font-semibold text-[#a43073]">Hán Việt: {detail.sino_vietnamese}</span>}
-                <span className="self-start mt-1 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold text-xs">
+                {detail.pinyin && <span className="text-sm font-mono font-semibold text-blue-600 dark:text-blue-300">{detail.pinyin}</span>}
+                {detail.sino_vietnamese && <span className="text-xs font-semibold text-[#a43073] dark:text-pink-400">Hán Việt: {detail.sino_vietnamese}</span>}
+                <span className="self-start mt-1 px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-900 dark:text-amber-300 font-bold text-xs">
                   {hskLabel(detail.hsk_level)}
                   {detail.hsk_source === 'derived' && <span className="font-normal"> (ước lượng)</span>}
                 </span>
               </div>
-              <button onClick={onClose} className="p-1.5 rounded-full text-slate-500 hover:bg-slate-100" title="Đóng">
+              <button onClick={onClose} className="p-1.5 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700" title="Đóng">
                 <span className="material-symbols-outlined text-[22px]">close</span>
               </button>
             </div>
 
-            <div className="p-4 rounded-2xl bg-[#eff4ff] border border-blue-100">
+            <div className="p-4 rounded-2xl bg-[#eff4ff] dark:bg-slate-800 border border-blue-100 dark:border-slate-700">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nghĩa tiếng Việt</span>
+                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Nghĩa tiếng Việt</span>
                 {!editingMeaning && (
                   <button
                     disabled={busy}
@@ -266,7 +266,7 @@ export const VocabDetailModal: React.FC<VocabDetailModalProps> = ({ entryId, onC
                       setMeaningDraft(detail.meaning_vi ?? '');
                       setEditingMeaning(true);
                     }}
-                    className="inline-flex items-center gap-1 text-[11px] font-bold text-[#a43073] hover:underline disabled:opacity-50"
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-[#a43073] dark:text-pink-400 hover:underline disabled:opacity-50"
                   >
                     <span className="material-symbols-outlined text-[14px]">edit</span>
                     {detail.meaning_vi ? 'Sửa nghĩa' : 'Nhập nghĩa'}
@@ -282,10 +282,10 @@ export const VocabDetailModal: React.FC<VocabDetailModalProps> = ({ entryId, onC
                     rows={2}
                     autoFocus
                     placeholder="Nhập nghĩa tiếng Việt của bạn..."
-                    className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-[#f472b6] resize-y"
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1e293b] p-2.5 text-sm text-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-[#f472b6] resize-y"
                   />
                   <div className="flex justify-end gap-2">
-                    <button disabled={busy} onClick={() => setEditingMeaning(false)} className="px-3 py-1 rounded-full text-xs font-bold text-slate-600 hover:bg-white">Hủy</button>
+                    <button disabled={busy} onClick={() => setEditingMeaning(false)} className="px-3 py-1 rounded-full text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700">Hủy</button>
                     <button
                       disabled={busy || !meaningDraft.trim()}
                       onClick={() => void saveMeaning(detail)}
@@ -296,14 +296,14 @@ export const VocabDetailModal: React.FC<VocabDetailModalProps> = ({ entryId, onC
                   </div>
                 </div>
               ) : (
-                <span className={`text-sm font-semibold ${detail.meaning_vi ? 'text-slate-800' : 'text-slate-500'}`}>
+                <span className={`text-sm font-semibold ${detail.meaning_vi ? 'text-slate-800 dark:text-slate-100' : 'text-slate-500 dark:text-slate-400'}`}>
                   {detail.meaning_vi || 'Chưa có nghĩa trong từ điển, bạn có thể tự nhập nghĩa.'}
                 </span>
               )}
             </div>
 
             <div className="flex flex-col gap-2">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Trạng thái học</span>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Trạng thái học</span>
               <div className="flex flex-wrap gap-2">
                 {STATUS_OPTIONS.map(option => (
                   <button
@@ -311,7 +311,7 @@ export const VocabDetailModal: React.FC<VocabDetailModalProps> = ({ entryId, onC
                     disabled={busy || detail.status === option.value}
                     onClick={() => void run(() => updateVocab(detail.id, { status: option.value }), `Đã chuyển sang “${option.label}”`)}
                     className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
-                      detail.status === option.value ? 'bg-[#a43073] text-white' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+                      detail.status === option.value ? 'bg-[#a43073] text-white' : 'bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'
                     }`}
                   >
                     {option.label}
@@ -322,8 +322,8 @@ export const VocabDetailModal: React.FC<VocabDetailModalProps> = ({ entryId, onC
 
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Ghi chú của bạn</span>
-                <span className="text-[10px] text-slate-400">{note.length}/{NOTE_MAX}</span>
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ghi chú của bạn</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500">{note.length}/{NOTE_MAX}</span>
               </div>
               <textarea
                 value={note}
@@ -331,7 +331,7 @@ export const VocabDetailModal: React.FC<VocabDetailModalProps> = ({ entryId, onC
                 onChange={e => setNote(e.target.value)}
                 rows={3}
                 placeholder="Mẹo nhớ, cách dùng, ví dụ riêng..."
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-[#f472b6] resize-y"
+                className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#1e293b] p-3 text-sm text-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-[#f472b6] resize-y"
               />
               <button
                 disabled={busy || !noteChanged}
@@ -347,7 +347,7 @@ export const VocabDetailModal: React.FC<VocabDetailModalProps> = ({ entryId, onC
             ) : (
               <button
                 onClick={() => setAiOpenFor(detail.id)}
-                className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-violet-200 bg-violet-50 px-4 py-2.5 text-xs font-bold text-[#a43073] hover:bg-pink-50"
+                className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-violet-200 dark:border-violet-900/50 bg-violet-50 dark:bg-violet-900/20 px-4 py-2.5 text-xs font-bold text-[#a43073] dark:text-pink-400 hover:bg-pink-50 dark:hover:bg-pink-900/20"
               >
                 <span className="material-symbols-outlined text-[16px]">auto_awesome</span>
                 Xem thẻ mở rộng AI (mẹo nhớ, ví dụ, cụm từ)
@@ -355,17 +355,17 @@ export const VocabDetailModal: React.FC<VocabDetailModalProps> = ({ entryId, onC
             )}
 
             <div className="flex flex-col gap-2">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Ngữ cảnh ({detail.contexts.length})</span>
-              {detail.contexts.length === 0 && <p className="text-xs text-slate-500">Từ này chưa có ngữ cảnh (lưu từ khung tra từ).</p>}
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ngữ cảnh ({detail.contexts.length})</span>
+              {detail.contexts.length === 0 && <p className="text-xs text-slate-500 dark:text-slate-400">Từ này chưa có ngữ cảnh (lưu từ khung tra từ).</p>}
               {detail.contexts.map(context => (
-                <div key={context.id} className="rounded-2xl border border-pink-100 bg-[#ffd8e7]/20 p-3 flex flex-col gap-2">
+                <div key={context.id} className="rounded-2xl border border-pink-100 dark:border-pink-900/40 bg-[#ffd8e7]/20 dark:bg-pink-900/20 p-3 flex flex-col gap-2">
                   {context.snippet_url && (
-                    <AuthImage src={context.snippet_url} alt={`Ngữ cảnh của ${detail.term}`} className="w-full max-h-48 object-contain rounded-xl bg-white" />
+                    <AuthImage src={context.snippet_url} alt={`Ngữ cảnh của ${detail.term}`} className="w-full max-h-48 object-contain rounded-xl bg-white dark:bg-slate-900" />
                   )}
-                  <p className="text-sm font-['Noto_Serif_SC'] font-bold text-slate-800">{context.sentence_zh}</p>
-                  {context.sentence_vi && <p className="text-xs text-slate-600 italic">{context.sentence_vi}</p>}
+                  <p className="text-sm font-['Noto_Serif_SC'] font-bold text-slate-800 dark:text-slate-100">{context.sentence_zh}</p>
+                  {context.sentence_vi && <p className="text-xs text-slate-600 dark:text-slate-300 italic">{context.sentence_vi}</p>}
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-[11px] text-slate-500">{context.source_label ?? 'Không rõ nguồn'}</span>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400">{context.source_label ?? 'Không rõ nguồn'}</span>
                     <div className="flex items-center gap-1">
                       {context.source && context.source.chapter_id !== null && (
                         <button
@@ -375,7 +375,7 @@ export const VocabDetailModal: React.FC<VocabDetailModalProps> = ({ entryId, onC
                             onClose();
                             onOpenReader({ chapterId: source.chapter_id, pageNo: source.page_no, pageId: source.page_id });
                           }}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold text-[#0060ac] hover:bg-blue-50"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold text-[#0060ac] dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                         >
                           <span className="material-symbols-outlined text-[14px]">open_in_new</span>
                           Mở trang truyện
@@ -384,7 +384,7 @@ export const VocabDetailModal: React.FC<VocabDetailModalProps> = ({ entryId, onC
                       <button
                         disabled={busy}
                         onClick={() => setPending({ kind: 'delete-context', contextId: context.id })}
-                        className="p-1 rounded-full text-slate-400 hover:text-rose-600 hover:bg-rose-50"
+                        className="p-1 rounded-full text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20"
                         title="Xóa ngữ cảnh"
                       >
                         <span className="material-symbols-outlined text-[18px]">delete</span>
@@ -396,18 +396,18 @@ export const VocabDetailModal: React.FC<VocabDetailModalProps> = ({ entryId, onC
             </div>
 
             <div className="flex flex-col gap-2">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Thẻ ôn ({detail.cards.length})</span>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Thẻ ôn ({detail.cards.length})</span>
               {detail.cards.map(card => (
-                <div key={card.id} className="rounded-2xl border border-slate-200 p-3 flex flex-col gap-2">
+                <div key={card.id} className="rounded-2xl border border-slate-200 dark:border-slate-700 p-3 flex flex-col gap-2">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex flex-col">
-                      <span className="text-sm font-bold text-slate-800">
+                      <span className="text-sm font-bold text-slate-800 dark:text-slate-100">
                         {CARD_TYPE_LABEL[card.card_type]}
                         {card.is_suspended && (
-                          <span className="ml-2 px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 text-[10px] font-bold">Đang tạm ngưng</span>
+                          <span className="ml-2 px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 text-[10px] font-bold dark:bg-slate-700 dark:text-slate-300">Đang tạm ngưng</span>
                         )}
                       </span>
-                      <span className="text-[11px] text-slate-500">
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400">
                         {CARD_STATE_LABEL[card.state] ?? card.state} · ôn {card.reps} lần · quên {card.lapses} lần · hạn {formatDateTime(card.due_at)}
                       </span>
                     </div>
@@ -420,27 +420,27 @@ export const VocabDetailModal: React.FC<VocabDetailModalProps> = ({ entryId, onC
                             card.is_suspended ? 'Đã tiếp tục thẻ' : 'Đã tạm ngưng thẻ'
                           )
                         }
-                        className="px-2.5 py-1 rounded-full text-[11px] font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 disabled:opacity-50"
+                        className="px-2.5 py-1 rounded-full text-[11px] font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 dark:text-slate-100 dark:bg-[#1e293b] dark:hover:bg-slate-700"
                       >
                         {card.is_suspended ? 'Tiếp tục' : 'Tạm ngưng'}
                       </button>
                       <button
                         disabled={busy}
                         onClick={() => setPending({ kind: 'reset-card', cardId: card.id })}
-                        className="px-2.5 py-1 rounded-full text-[11px] font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 disabled:opacity-50"
+                        className="px-2.5 py-1 rounded-full text-[11px] font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 disabled:opacity-50 dark:text-amber-300 dark:bg-amber-900/30 dark:hover:bg-amber-900/40"
                       >
                         Đặt lại
                       </button>
                       <button
                         onClick={() => void toggleHistory(card)}
-                        className="px-2.5 py-1 rounded-full text-[11px] font-bold text-[#0060ac] bg-blue-50 hover:bg-blue-100"
+                        className="px-2.5 py-1 rounded-full text-[11px] font-bold text-[#0060ac] bg-blue-50 hover:bg-blue-100 dark:text-blue-300 dark:bg-blue-900/30 dark:hover:bg-blue-900/40"
                       >
                         Lịch sử
                       </button>
                     </div>
                   </div>
                   {historyFor === card.id && (
-                    <div className="text-[11px] text-slate-600 bg-slate-50 rounded-xl p-2.5">
+                    <div className="text-[11px] text-slate-600 bg-slate-50 rounded-xl p-2.5 dark:text-slate-300 dark:bg-[#1e293b]">
                       {historyLoading && <span>Đang tải lịch sử...</span>}
                       {history && history.length === 0 && <span>Thẻ chưa được ôn lần nào.</span>}
                       {history?.map(log => (
@@ -455,16 +455,16 @@ export const VocabDetailModal: React.FC<VocabDetailModalProps> = ({ entryId, onC
               ))}
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+            <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-700">
               <button
                 disabled={busy}
                 onClick={() => setPending({ kind: 'delete-word' })}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 disabled:opacity-50 dark:text-rose-400 dark:bg-rose-900/30 dark:hover:bg-rose-900/40"
               >
                 <span className="material-symbols-outlined text-[16px]">delete</span>
                 Xóa từ khỏi Sổ tay
               </button>
-              <button onClick={onClose} className="px-5 py-2 rounded-full text-xs font-bold text-slate-600 hover:bg-slate-100">Đóng</button>
+              <button onClick={onClose} className="px-5 py-2 rounded-full text-xs font-bold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700">Đóng</button>
             </div>
           </>
         )}

@@ -13,9 +13,13 @@ export interface ApiSettings {
   reminder_enabled: boolean;
   /** Giờ nhắc "HH:MM" theo múi giờ của người học. */
   reminder_time: string | null;
+  /** Hiện tên trên bảng xếp hạng; tắt thì ẩn danh (F16.08). */
+  show_on_leaderboard: boolean;
+  /** Các tour hướng dẫn đã xem; máy chủ chưa hỗ trợ thì không có trường này. */
+  dismissed_tours?: string[];
 }
 
-export const getSettings = (): Promise<ApiSettings> => apiRequest<ApiSettings>('/settings');
+export const getSettings = (signal?: AbortSignal): Promise<ApiSettings> => apiRequest<ApiSettings>('/settings', { signal });
 
 export const updateSettings = (changes: Partial<ApiSettings>): Promise<ApiSettings> =>
   apiRequest<ApiSettings>('/settings', { method: 'PATCH', body: changes });

@@ -1,14 +1,14 @@
-import React, { useEffect, useMemo } from 'react';
-import { useLocation, useParams, useSearchParams } from 'react-router';
+import React, { useCallback, useEffect, useMemo } from 'react';
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import { ReaderTarget } from '../types';
-import { parsePositiveInt } from '../routes';
+import { parsePositiveInt, readerPath } from '../routes';
 import { ComicReader } from './ComicReader';
 import { LoginRequiredPage } from './LoginRequiredPage';
 import { NotFoundPage } from './NotFoundPage';
 
 type ComicReaderProps = React.ComponentProps<typeof ComicReader>;
 
-interface ReaderRouteProps extends Omit<ComicReaderProps, 'target'> {
+interface ReaderRouteProps extends Omit<ComicReaderProps, 'target' | 'onSyncUrl'> {
   onLogin: () => void;
   onRegister: () => void;
   onGoHome: () => void;
@@ -21,6 +21,7 @@ export const ReaderRoute: React.FC<ReaderRouteProps> = ({ onLogin, onRegister, o
   const { chapterId, pageId } = useParams();
   const [searchParams] = useSearchParams();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const hasChapterParam = chapterId !== undefined;
   const hasPageParam = pageId !== undefined;
@@ -47,6 +48,9 @@ export const ReaderRoute: React.FC<ReaderRouteProps> = ({ onLogin, onRegister, o
     return null;
   }, [invalid, chapterNumber, pageNo, queryPageId, pageIdNumber]);
 
+  // Đổi trang trong cùng chương/bộ ảnh: thay URL tại chỗ (không thêm mục lịch sử) để F5 và chia sẻ link đúng trang.
+  const syncUrl = useCallback((next: ReaderTarget) => navigate(readerPath(next), { replace: true }), [navigate]);
+
   const currentPath = location.pathname + location.search;
   useEffect(() => {
     if (target) onPathChange(currentPath);
@@ -57,5 +61,5 @@ export const ReaderRoute: React.FC<ReaderRouteProps> = ({ onLogin, onRegister, o
   if (!readerProps.isLoggedIn && target === null) {
     return <LoginRequiredPage onLogin={onLogin} onRegister={onRegister} onGoHome={onGoHome} />;
   }
-  return <ComicReader {...readerProps} target={target} />;
+  return <ComicReader {...readerProps} target={target} onSyncUrl={syncUrl} />;
 };

@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useEffect, useState } from 'react';
-import { Route, Routes, useLocation, useNavigate, useSearchParams } from 'react-router';
+import { Navigate, Route, Routes, useLocation, useNavigate, useSearchParams } from 'react-router';
 import { NavigationTab, ReaderTarget, UserProfileData } from './types';
 import { CURRENT_USER } from './data/mockData';
 import { ApiUser, getMe, hasStoredSession, logout, logoutAllDevices, removeAvatar, setAvatarPreset, updateMe, uploadAvatar } from './api/auth';
@@ -9,7 +9,9 @@ import { avatarFields, toUserProfile } from './api/profile';
 import { ResetPasswordModal } from './components/ResetPasswordModal';
 import { Navbar } from './components/Navbar';
 import { StreakProvider } from './utils/useStreak';
+import { RewardsProvider } from './utils/useRewards';
 import { SystemStatusProvider } from './utils/useSystemStatus';
+import { TourProvider } from './tour/TourProvider';
 import { MaintenanceBanner } from './components/MaintenanceBanner';
 import { Footer } from './components/Footer';
 import { LoginRequiredPage } from './components/LoginRequiredPage';
@@ -24,7 +26,7 @@ import { SeriesManagerModal } from './components/SeriesManagerModal';
 import { ApiPage } from './api/library';
 import { setSpeechNoticeListener } from './utils/speech';
 import { useDocumentTitle } from './utils/useDocumentTitle';
-import { QUIZ_SECTION_PARAM, QUIZ_SECTION_VALUE, SAMPLE_PAGE_PATH, TAB_PATHS, readerPath, tabFromPathname } from './routes';
+import { BLADE_GAME_PATH, LEGACY_RADICAL_GAME_PATH, QUIZ_SECTION_PARAM, QUIZ_SECTION_VALUE, REWARD_SHOP_PATH, SAMPLE_PAGE_PATH, TAB_PATHS, readerPath, tabFromPathname } from './routes';
 
 // Tách mã theo trang: mỗi trang lớn chỉ tải khi người dùng mở tới.
 const CatalogPage = lazy(() => import('./components/CatalogPage').then(m => ({ default: m.CatalogPage })));
@@ -35,6 +37,14 @@ const AdminDashboard = lazy(() => import('./components/AdminDashboard').then(m =
 const ReaderRoute = lazy(() => import('./components/ReaderRoute').then(m => ({ default: m.ReaderRoute })));
 const SamplePage = lazy(() => import('./components/SamplePage').then(m => ({ default: m.SamplePage })));
 const FlashcardsRoute = lazy(() => import('./components/FlashcardsRoute').then(m => ({ default: m.FlashcardsRoute })));
+const RewardShopPage = lazy(() => import('./components/RewardShopPage').then(m => ({ default: m.RewardShopPage })));
+const PhiKiemPage = lazy(() => import('./components/PhiKiemPage').then(m => ({ default: m.PhiKiemPage })));
+
+const OTHER_PAGE_TITLES: Record<string, string> = {
+  [SAMPLE_PAGE_PATH]: 'Trang mẫu',
+  [REWARD_SHOP_PATH]: 'Cửa hàng đổi thưởng',
+  [BLADE_GAME_PATH]: 'Phi Kiếm Trảm Tự'
+};
 
 const PAGE_TITLES: Record<NavigationTab, string> = {
   catalog: 'Trang chủ',
@@ -47,7 +57,7 @@ const PAGE_TITLES: Record<NavigationTab, string> = {
 };
 
 const PageFallback: React.FC = () => (
-  <div className="flex items-center justify-center gap-2 py-24 text-sm text-slate-500">
+  <div className="flex items-center justify-center gap-2 py-24 text-sm text-slate-500 dark:text-slate-400">
     <span className="w-5 h-5 border-2 border-pink-300 border-t-transparent rounded-full animate-spin"></span>
     Đang tải...
   </div>
@@ -88,7 +98,7 @@ export default function App() {
     setTimeout(() => setToastMessage(null), 3200);
   };
 
-  useDocumentTitle(activeTab ? PAGE_TITLES[activeTab] : location.pathname === SAMPLE_PAGE_PATH ? 'Trang mẫu' : 'Không tìm thấy trang');
+  useDocumentTitle(activeTab ? PAGE_TITLES[activeTab] : (OTHER_PAGE_TITLES[location.pathname] ?? 'Không tìm thấy trang'));
 
   // Sang trang khác thì cuộn về đầu trang.
   useEffect(() => {
@@ -119,7 +129,7 @@ export default function App() {
     } catch {
       // Hồ sơ vẫn hiển thị được khi chưa tải được cài đặt.
     }
-    setUserProfile(previous => toUserProfile(user, settings, previous));
+    setUserProfile(toUserProfile(user, settings));
     setIsAdmin(user.role === 'admin');
     setIsLoggedIn(true);
   };
@@ -350,14 +360,16 @@ export default function App() {
   );
 
   if (!authReady) {
-    return <div className="min-h-screen bg-[#f8f9ff] flex items-center justify-center text-sm text-slate-500">Đang tải...</div>;
+    return <div className="min-h-screen bg-[#f8f9ff] dark:bg-[#020617] flex items-center justify-center text-sm text-slate-500 dark:text-slate-400">Đang tải...</div>;
   }
 
   return (
     <SystemStatusProvider>
     <StreakProvider isLoggedIn={isLoggedIn}>
+    <RewardsProvider isLoggedIn={isLoggedIn}>
+    <TourProvider isLoggedIn={isLoggedIn}>
       <MaintenanceBanner />
-    <div className="min-h-screen bg-[#f8f9ff] text-[#0b1c30] flex flex-col font-['Inter'] selection:bg-[#ffd8e7] selection:text-[#3d0026]">
+    <div className="min-h-screen bg-[#f8f9ff] dark:bg-[#020617] text-[#0b1c30] dark:text-slate-200 flex flex-col font-['Inter'] selection:bg-[#ffd8e7] selection:text-[#3d0026] transition-colors duration-300">
       
       {/* Top Navbar */}
       {activeTab !== 'admin' && <Navbar
@@ -399,6 +411,11 @@ export default function App() {
               path={TAB_PATHS.leaderboard}
               element={
                 <LeaderboardPage
+                  isLoggedIn={isLoggedIn}
+                  onNavigateToReader={() => handleNavigate('reader')}
+                  onNavigateToFlashcards={() => handleNavigate('flashcards')}
+                  onRequireLogin={handleRequireLogin}
+                  onOpenPrivacySettings={() => openAccountSettings('privacy')}
                   onStartQuiz={() => {
                     if (!isLoggedIn) {
                       handleNavigate('flashcards');
@@ -420,6 +437,7 @@ export default function App() {
                     onOpenUpload={handleOpenUpload}
                     onBrowse={() => handleNavigate('catalog')}
                     onOpenReader={handleOpenReader}
+                    refreshKey={dataVersion}
                     onRequireLogin={handleRequireLogin}
                     onLookupWord={setLookupTerm}
                     onOpenLearningSettings={() => openAccountSettings('learning')}
@@ -494,6 +512,12 @@ export default function App() {
               }
             />
 
+            <Route path={REWARD_SHOP_PATH} element={isLoggedIn ? <RewardShopPage showToast={showToast} /> : loginRequiredPage} />
+
+            <Route path={BLADE_GAME_PATH} element={isLoggedIn ? <PhiKiemPage /> : loginRequiredPage} />
+
+            <Route path={LEGACY_RADICAL_GAME_PATH} element={<Navigate to={BLADE_GAME_PATH} replace />} />
+
             <Route path={SAMPLE_PAGE_PATH} element={isLoggedIn ? <SamplePage onLookupWord={setLookupTerm} /> : loginRequiredPage} />
 
             <Route path="*" element={<NotFoundPage onGoHome={() => handleNavigate('catalog')} />} />
@@ -503,7 +527,7 @@ export default function App() {
 
       {/* Global Toast Alert */}
       {toastMessage && (
-        <div className="fixed top-24 right-6 z-50 bg-white/95 backdrop-blur-md px-4 py-3 rounded-2xl shadow-floating border border-pink-200 text-xs font-bold text-slate-800 flex items-center gap-2 animate-bounce">
+        <div className="fixed top-24 right-6 z-50 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md px-4 py-3 rounded-2xl shadow-floating dark:shadow-none border border-pink-200 dark:border-pink-900/40 text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 animate-bounce">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
           <span>{toastMessage}</span>
         </div>
@@ -602,6 +626,8 @@ export default function App() {
       />}
 
     </div>
+    </TourProvider>
+    </RewardsProvider>
     </StreakProvider>
     </SystemStatusProvider>
   );

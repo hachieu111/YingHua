@@ -86,48 +86,48 @@ export const MistakeReviewPanel: React.FC<MistakeReviewPanelProps> = ({ quizId, 
         type="button"
         onClick={toggle}
         aria-expanded={open}
-        className="flex items-center gap-1.5 self-start rounded-full bg-pink-50 px-4 py-1.5 text-xs font-bold text-[#a43073] transition-colors hover:bg-pink-100"
+        className="flex items-center gap-1.5 self-start rounded-full bg-pink-50 px-4 py-1.5 text-xs font-bold text-[#a43073] transition-colors hover:bg-pink-100 dark:bg-pink-900/20 dark:text-pink-400 dark:hover:bg-pink-900/30"
       >
         <span className="material-symbols-outlined text-[16px]">psychology_alt</span>
         {open ? 'Ẩn giải thích' : hasReview ? 'Xem lại: Vì sao sai?' : 'Vì sao sai?'}
       </button>
 
       {open && (
-        <div className="flex flex-col gap-3 rounded-xl border border-pink-100 bg-pink-50/40 p-3">
-          {loading && <p className="text-xs text-slate-500">Đang chuẩn bị giải thích...</p>}
+        <div className="flex flex-col gap-3 rounded-xl border border-pink-100 bg-pink-50/40 p-3 dark:border-pink-900/40 dark:bg-pink-900/10">
+          {loading && <p className="text-xs text-slate-500 dark:text-slate-400">Đang chuẩn bị giải thích...</p>}
           {error && (
-            <div role="alert" className="flex flex-wrap items-center justify-between gap-2 text-xs text-rose-700">
+            <div role="alert" className="flex flex-wrap items-center justify-between gap-2 text-xs text-rose-700 dark:text-rose-300">
               <span>{error}</span>
-              <button type="button" onClick={() => void load()} className="font-bold text-[#a43073] hover:underline">Thử lại</button>
+              <button type="button" onClick={() => void load()} className="font-bold text-[#a43073] dark:text-pink-400 hover:underline">Thử lại</button>
             </div>
           )}
 
           {review && (
             <>
-              <p className="text-xs leading-relaxed text-slate-700">{review.explanation}</p>
+              <p className="text-xs leading-relaxed text-slate-700 dark:text-slate-200">{review.explanation}</p>
               {review.difference && (
-                <p className="rounded-lg bg-white px-3 py-2 text-xs leading-relaxed text-slate-700">
-                  <span className="font-bold text-[#a43073]">Điểm khác biệt: </span>
+                <p className="rounded-lg bg-white px-3 py-2 text-xs leading-relaxed text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                  <span className="font-bold text-[#a43073] dark:text-pink-400">Điểm khác biệt: </span>
                   {review.difference}
                 </p>
               )}
-              {review.ai_label && <p className="text-[11px] italic text-slate-500">{review.ai_label}</p>}
+              {review.ai_label && <p className="text-[11px] italic text-slate-500 dark:text-slate-400">{review.ai_label}</p>}
 
               {review.practice && (
-                <div className="flex flex-col gap-2 rounded-xl border border-slate-100 bg-white p-3">
-                  <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Luyện thêm</span>
-                  <p className="text-sm font-bold text-slate-800">{review.practice.prompt}</p>
+                <div className="flex flex-col gap-2 rounded-xl border border-slate-100 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
+                  <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Luyện thêm</span>
+                  <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{review.practice.prompt}</p>
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     {review.practice.options.map(option => {
                       const picked = choice === option;
                       const isRight = practiceResult?.correct_answer === option;
-                      let tone = 'border-slate-200 bg-white text-slate-700 hover:bg-pink-50';
+                      let tone = 'border-slate-200 bg-white text-slate-700 hover:bg-pink-50 dark:border-slate-700 dark:bg-[#1e293b] dark:text-slate-200 dark:hover:bg-slate-700';
                       if (practiceResult) {
-                        if (isRight) tone = 'border-emerald-300 bg-emerald-50 text-emerald-800';
-                        else if (picked) tone = 'border-rose-300 bg-rose-50 text-rose-800';
-                        else tone = 'border-slate-100 bg-slate-50 text-slate-400';
+                        if (isRight) tone = 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-900/30 dark:text-emerald-300';
+                        else if (picked) tone = 'border-rose-300 bg-rose-50 text-rose-800 dark:border-rose-900/50 dark:bg-rose-900/30 dark:text-rose-300';
+                        else tone = 'border-slate-100 bg-slate-50 text-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-500';
                       } else if (picked) {
-                        tone = 'border-[#a43073] bg-pink-50 text-[#a43073]';
+                        tone = 'border-[#a43073] bg-pink-50 text-[#a43073] dark:bg-pink-900/20 dark:text-pink-400';
                       }
                       return (
                         <button
@@ -142,19 +142,19 @@ export const MistakeReviewPanel: React.FC<MistakeReviewPanelProps> = ({ quizId, 
                       );
                     })}
                   </div>
-                  {practiceError && <p role="alert" className="text-xs text-rose-700">{practiceError}</p>}
+                  {practiceError && <p role="alert" className="text-xs text-rose-700 dark:text-rose-300">{practiceError}</p>}
                   {practiceResult && (
                     <div className="flex flex-col gap-1 text-xs">
-                      <p className={`font-bold ${practiceResult.is_correct ? 'text-emerald-700' : 'text-rose-700'}`}>
+                      <p className={`font-bold ${practiceResult.is_correct ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-300'}`}>
                         {practiceResult.is_correct ? 'Chính xác!' : `Chưa đúng. Đáp án: ${practiceResult.correct_answer}`}
                       </p>
-                      <p className="leading-relaxed text-slate-600">{practiceResult.explanation}</p>
-                      <button type="button" onClick={retryPractice} className="self-start text-[11px] font-bold text-[#a43073] hover:underline">
+                      <p className="leading-relaxed text-slate-600 dark:text-slate-300">{practiceResult.explanation}</p>
+                      <button type="button" onClick={retryPractice} className="self-start text-[11px] font-bold text-[#a43073] dark:text-pink-400 hover:underline">
                         Làm lại
                       </button>
                     </div>
                   )}
-                  <p className="text-[11px] italic text-slate-400">Câu luyện thêm chỉ để ôn tập, không thay đổi điểm bài kiểm tra.</p>
+                  <p className="text-[11px] italic text-slate-400 dark:text-slate-500">Câu luyện thêm chỉ để ôn tập, không thay đổi điểm bài kiểm tra.</p>
                 </div>
               )}
             </>

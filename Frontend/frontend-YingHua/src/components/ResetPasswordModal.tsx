@@ -41,27 +41,27 @@ export const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({ token, o
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="relative w-full max-w-[440px] bg-white rounded-3xl p-6 sm:p-8 shadow-floating border border-pink-100 flex flex-col gap-4">
+    <div className="fixed inset-0 z-50 bg-slate-900/50 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="relative w-full max-w-[440px] bg-white dark:bg-[#0f172a] rounded-3xl p-6 sm:p-8 shadow-floating dark:shadow-none border border-pink-100 dark:border-slate-700 flex flex-col gap-4">
         <button
           type="button"
           onClick={onClose}
           aria-label="Đóng"
-          className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors"
+          className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 dark:bg-[#1e293b] hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center transition-colors"
         >
           <span className="material-symbols-outlined text-[18px]">close</span>
         </button>
 
         <div className="flex flex-col gap-1">
-          <h2 className="text-xl font-extrabold text-slate-800 font-['Plus_Jakarta_Sans']">Đặt lại mật khẩu 🌸</h2>
-          <p className="text-xs text-slate-500">
+          <h2 className="text-xl font-extrabold text-slate-800 dark:text-white font-['Plus_Jakarta_Sans']">Đặt lại mật khẩu 🌸</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             Nhập mật khẩu mới cho tài khoản của bạn. Sau khi đổi, mọi thiết bị đang đăng nhập sẽ bị đăng xuất.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-semibold text-slate-700" htmlFor="reset_new">Mật khẩu mới</label>
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300" htmlFor="reset_new">Mật khẩu mới</label>
             <div className="relative flex items-center">
               <input
                 id="reset_new"
@@ -70,12 +70,12 @@ export const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({ token, o
                 onChange={(e) => { setPassword(e.target.value); setError(null); }}
                 placeholder={`Tối thiểu ${MIN_PASSWORD_LENGTH} ký tự`}
                 autoComplete="new-password"
-                className="w-full bg-[#eff4ff] text-slate-800 text-xs pl-4 pr-10 py-2.5 rounded-full outline-none focus:bg-white focus:ring-2 focus:ring-[#f472b6] transition-all"
+                className="w-full bg-[#eff4ff] dark:bg-[#1e293b] text-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 text-xs pl-4 pr-10 py-2.5 rounded-full outline-none focus:bg-white dark:focus:bg-[#1e293b] focus:ring-2 focus:ring-[#f472b6] transition-all"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 text-slate-400 hover:text-[#a43073]"
+                className="absolute right-3.5 text-slate-400 hover:text-[#a43073] dark:hover:text-pink-400"
                 aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
               >
                 <span className="material-symbols-outlined text-[18px]">{showPassword ? 'visibility_off' : 'visibility'}</span>
@@ -84,7 +84,7 @@ export const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({ token, o
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-semibold text-slate-700" htmlFor="reset_confirm">Xác nhận mật khẩu mới</label>
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300" htmlFor="reset_confirm">Xác nhận mật khẩu mới</label>
             <input
               id="reset_confirm"
               type={showPassword ? 'text' : 'password'}
@@ -92,11 +92,11 @@ export const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({ token, o
               onChange={(e) => { setConfirm(e.target.value); setError(null); }}
               placeholder="Nhập lại mật khẩu mới"
               autoComplete="new-password"
-              className="w-full bg-[#eff4ff] text-slate-800 text-xs px-4 py-2.5 rounded-full outline-none focus:bg-white focus:ring-2 focus:ring-[#f472b6] transition-all"
+              className="w-full bg-[#eff4ff] dark:bg-[#1e293b] text-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 text-xs px-4 py-2.5 rounded-full outline-none focus:bg-white dark:focus:bg-[#1e293b] focus:ring-2 focus:ring-[#f472b6] transition-all"
             />
           </div>
 
-          {error && <p role="alert" className="text-xs font-semibold text-rose-600">{error}</p>}
+          {error && <p role="alert" className="text-xs font-semibold text-rose-600 dark:text-rose-400">{error}</p>}
 
           <button
             type="submit"

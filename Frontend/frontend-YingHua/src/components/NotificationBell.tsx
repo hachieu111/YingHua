@@ -138,7 +138,7 @@ export const NotificationBell: React.FC = () => {
     <div ref={boxRef} className="relative">
       <button
         onClick={() => setOpen(value => !value)}
-        className="relative w-9 h-9 rounded-full bg-white border border-pink-100 text-slate-600 hover:text-[#a43073] hover:border-pink-300 flex items-center justify-center shadow-xs transition-all"
+        className="relative w-9 h-9 rounded-full bg-white dark:bg-[#1e293b] border border-pink-100 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-[#a43073] dark:hover:text-pink-400 hover:border-pink-300 dark:hover:border-pink-900/60 flex items-center justify-center shadow-xs dark:shadow-none transition-colors duration-300"
         title="Thông báo"
         aria-label={unread > 0 ? `Thông báo, ${unread} chưa đọc` : 'Thông báo'}
         aria-expanded={open}
@@ -152,39 +152,39 @@ export const NotificationBell: React.FC = () => {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-80 max-w-[90vw] bg-white rounded-2xl shadow-floating border border-pink-100 z-50 overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-2.5 border-b border-pink-100">
-            <span className="text-sm font-bold text-slate-800">Thông báo</span>
+        <div className="absolute right-0 top-full mt-2 w-80 max-w-[90vw] bg-white dark:bg-slate-800 rounded-2xl shadow-floating dark:shadow-none border border-pink-100 dark:border-slate-700 z-50 overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-2.5 border-b border-pink-100 dark:border-slate-700">
+            <span className="text-sm font-bold text-slate-800 dark:text-slate-100">Thông báo</span>
             <button
               onClick={handleMarkAll}
               disabled={unread === 0}
-              className="text-[11px] font-bold text-[#a43073] hover:underline disabled:text-slate-400 disabled:no-underline"
+              className="text-[11px] font-bold text-[#a43073] dark:text-pink-400 hover:underline disabled:text-slate-400 dark:disabled:text-slate-500 disabled:no-underline"
             >
               Đánh dấu tất cả đã đọc
             </button>
           </div>
           <div className="max-h-96 overflow-y-auto">
             {error && (
-              <div className="px-4 py-3 text-xs text-rose-600 flex items-center justify-between gap-2">
+              <div className="px-4 py-3 text-xs text-rose-600 dark:text-rose-400 flex items-center justify-between gap-2">
                 <span>{error}</span>
                 <button onClick={reload} className="font-bold underline">Thử lại</button>
               </div>
             )}
-            {loading && items.length === 0 && <div className="px-4 py-6 text-center text-xs text-slate-500">Đang tải...</div>}
+            {loading && items.length === 0 && <div className="px-4 py-6 text-center text-xs text-slate-500 dark:text-slate-400">Đang tải...</div>}
             {!loading && !error && items.length === 0 && (
-              <div className="px-4 py-6 text-center text-xs text-slate-500">Chưa có thông báo nào.</div>
+              <div className="px-4 py-6 text-center text-xs text-slate-500 dark:text-slate-400">Chưa có thông báo nào.</div>
             )}
             {items.map(item => (
               <button
                 key={item.id}
                 onClick={() => void handleOpen(item)}
-                className={`w-full text-left px-4 py-3 flex gap-3 border-b border-slate-50 hover:bg-pink-50 ${item.is_read ? '' : 'bg-pink-50/60'}`}
+                className={`w-full text-left px-4 py-3 flex gap-3 border-b border-slate-50 dark:border-slate-700 hover:bg-pink-50 dark:hover:bg-slate-700 ${item.is_read ? '' : 'bg-pink-50/60 dark:bg-pink-900/20'}`}
               >
-                <span className="material-symbols-outlined text-[20px] text-[#a43073] shrink-0">{KIND_ICON[item.kind] ?? 'notifications'}</span>
+                <span className="material-symbols-outlined text-[20px] text-[#a43073] dark:text-pink-400 shrink-0">{KIND_ICON[item.kind] ?? 'notifications'}</span>
                 <span className="flex flex-col gap-0.5 min-w-0">
-                  <span className={`text-xs text-slate-800 ${item.is_read ? 'font-medium' : 'font-bold'}`}>{item.title}</span>
-                  {item.body && <span className="text-[11px] text-slate-500 break-words">{item.body}</span>}
-                  <span className="text-[10px] text-slate-400">{formatTime(item.created_at)}</span>
+                  <span className={`text-xs text-slate-800 dark:text-slate-100 ${item.is_read ? 'font-medium' : 'font-bold'}`}>{item.title}</span>
+                  {item.body && <span className="text-[11px] text-slate-500 dark:text-slate-400 break-words">{item.body}</span>}
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500">{formatTime(item.created_at)}</span>
                 </span>
                 {!item.is_read && <span className="ml-auto mt-1 w-2 h-2 rounded-full bg-[#a43073] shrink-0" aria-label="Chưa đọc" />}
               </button>

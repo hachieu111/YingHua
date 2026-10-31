@@ -3,7 +3,7 @@ import { Bookmark, BookmarkCheck, Download, Eraser, Highlighter, Palette, PenLin
 import { ApiError, errorMessage, isAbortedError } from '../api/client';
 import { WordLookup, hskLabel } from '../api/dictionary';
 import { downloadPageImage, retranslatePage } from '../api/imaging';
-import { ApiPage, ContinueItem, getChapter, getPage, listContinueReading, saveProgress } from '../api/library';
+import { ApiChapter, ApiPage, getChapter, getPage, saveProgress } from '../api/library';
 import {
   ApiStroke,
   ReadingBubble,
@@ -35,13 +35,23 @@ import {
 import { ReaderTarget } from '../types';
 import { formatChapterNumber } from '../utils/format';
 import { speakChinese } from '../utils/speech';
+import { LoadedPages, findLoadedIndex, targetOfPage } from '../utils/readerPages';
 import { notifyActivity, useStreak } from '../utils/useStreak';
+import { useReaderSources, useSeriesChapters } from '../utils/useReaderSources';
 import { AuthImage } from './AuthImage';
 import { ChapterCoverageBar } from './ChapterCoverageBar';
 import { ChapterSuggestions } from './ChapterSuggestions';
 import { GrammarPanel } from './GrammarPanel';
+import { ReaderChapterSelect } from './ReaderChapterSelect';
+import { ReaderEmptyState } from './ReaderEmptyState';
+import { ReaderPageSidebar } from './ReaderPageSidebar';
+import { ReaderSourcePicker } from './ReaderSourcePicker';
+import { useTourPage } from '../tour/TourProvider';
+import { TourReplayButton } from '../tour/TourReplayButton';
 import { ReportErrorDialog, ReportTarget } from './ReportErrorDialog';
 import { StatusPill } from './StatusPill';
+import { UnlockVipDialog } from './UnlockVipDialog';
+import { usePageStatuses } from './usePageStatuses';
 
 interface ComicReaderProps {
   /** Chương/trang cần mở; null khi vào trình đọc mà chưa chọn truyện. */
@@ -50,6 +60,10 @@ interface ComicReaderProps {
   onOpenUpload: () => void;
   onBrowse: () => void;
   onOpenReader: (target: ReaderTarget) => void;
+  /** Cập nhật URL (thay thế mục lịch sử) khi đổi trang trong cùng chương/bộ ảnh, để F5 và chia sẻ link đúng trang. */
+  onSyncUrl: (target: ReaderTarget) => void;
+  /** Tăng lên khi người dùng vừa tải ảnh, để đọc lại danh sách nguồn đọc. */
+  refreshKey?: number;
   onRequireLogin: (message: string) => void;
   onLookupWord: (term: string) => void;
   /** Mở cài đặt Học tập để khai báo trình độ (gợi ý từ). */
@@ -62,6 +76,8 @@ interface ReaderMeta {
   title: string;
   chapterId: number | null;
   chapterNumber: number | null;
+  chapterTitle: string | null;
+  seriesId: number | null;
 }
 
 interface VocabEntry {
@@ -107,6 +123,8 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
   onOpenUpload,
   onBrowse,
   onOpenReader,
+  onSyncUrl,
+  refreshKey = 0,
   onRequireLogin,
   onLookupWord,
   onOpenLearningSettings
@@ -123,6 +141,9 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
   const [meta, setMeta] = useState<ReaderMeta | null>(null);
   const [loadingChapter, setLoadingChapter] = useState<boolean>(false);
   const [chapterError, setChapterError] = useState<ApiError | null>(null);
+  // Mở khóa truyện VIP bằng vé rồi nạp lại chương (F17.05, F17.06).
+  const [vipDialogOpen, setVipDialogOpen] = useState<boolean>(false);
+  const [chapterTick, setChapterTick] = useState<number>(0);
   const [currentPageIndex, setCurrentPageIndex] = useState<number>(0);
   const [reading, setReading] = useState<ReadingData | null>(null);
   const [bubbles, setBubbles] = useState<ReadingBubble[]>([]);
@@ -151,8 +172,9 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
   const [editing, setEditing] = useState<{ bubbleId: number; text: string } | null>(null);
   const [editBusy, setEditBusy] = useState<boolean>(false);
   const [retranslating, setRetranslating] = useState<boolean>(false);
-  const [continueItems, setContinueItems] = useState<ContinueItem[]>([]);
 
+  const sources = useReaderSources(isLoggedIn, refreshKey);
+  const loadedRef = useRef<LoadedPages | null>(null);
   const drawingPointerId = useRef<number | null>(null);
   const highlightsRef = useRef<Record<string, string>>({});
   const strokesRef = useRef<ApiStroke[]>([]);
@@ -164,6 +186,11 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
 
   const activePage: ApiPage | undefined = pages[currentPageIndex];
   const activePageId = activePage?.id ?? null;
+  const chapters = useSeriesChapters(meta?.seriesId ?? null, isLoggedIn, refreshKey);
+  // Trang khác đang xếp hàng/xử lý trong bộ đang xem: hỏi trạng thái để nhãn trạng thái ở cột trái tự cập nhật.
+  // Trang đang xem đã có vòng hỏi riêng bên dưới nên không đưa vào đây để khỏi hỏi trùng.
+  const pendingOtherIds = pages.filter(page => page.id !== activePageId && (page.status === 'queued' || page.status === 'running')).map(page => page.id);
+  const { statuses: otherStatuses } = usePageStatuses(pendingOtherIds, pendingOtherIds.length > 0);
   const pageStatus = reading?.page.status ?? null;
   const awaitingTranslation = pageStatus === 'queued' || pageStatus === 'running';
   const effectiveStatus = pageStatus;
@@ -293,12 +320,26 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
   }, [flushAnnotations]);
 
   const goToPage = (index: number) => {
+    const page = pages[index];
+    if (!page || !meta) return;
     void flushAnnotations();
     setCurrentPageIndex(index);
+    onSyncUrl(targetOfPage(meta.chapterId, page));
   };
+
+  // Bộ trang đang nạp, để biết đích mới (do đổi URL) có nằm trong đó không.
+  useEffect(() => {
+    loadedRef.current = meta ? { chapterId: meta.chapterId, pages } : null;
+  }, [meta, pages]);
 
   // ---- Nạp chương hoặc ảnh lẻ theo `target` ----
   useEffect(() => {
+    // Đổi trang trong cùng chương/bộ ảnh (URL đổi theo): chỉ chuyển trang, không nạp lại.
+    const loadedIndex = findLoadedIndex(target, loadedRef.current);
+    if (loadedIndex !== null) {
+      setCurrentPageIndex(loadedIndex);
+      return;
+    }
     void flushAnnotations();
     setPages([]);
     setMeta(null);
@@ -316,12 +357,18 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
         else if (target.pageNo !== undefined) index = detail.pages.findIndex(page => page.page_no === target.pageNo);
         else if (detail.progress) index = detail.pages.findIndex(page => page.page_no === detail.progress?.page_no);
         setPages(detail.pages);
-        setMeta({ title: detail.series_title, chapterId: detail.chapter.id, chapterNumber: detail.chapter.number });
+        setMeta({
+          title: detail.series_title,
+          chapterId: detail.chapter.id,
+          chapterNumber: detail.chapter.number,
+          chapterTitle: detail.chapter.title,
+          seriesId: detail.series_id
+        });
         setCurrentPageIndex(Math.max(0, index));
       } else if (target.pageId !== undefined) {
         const page = await getPage(target.pageId, controller.signal);
         setPages([page]);
-        setMeta({ title: 'Ảnh bạn tải lên', chapterId: null, chapterNumber: null });
+        setMeta({ title: 'Ảnh bạn tải lên', chapterId: null, chapterNumber: null, chapterTitle: null, seriesId: null });
       }
     };
     run()
@@ -332,7 +379,17 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
         if (!controller.signal.aborted) setLoadingChapter(false);
       });
     return () => controller.abort();
-  }, [target]);
+  }, [target, chapterTick]);
+
+  // ---- Ảnh tải nhanh: cột trái liệt kê cả bộ ảnh còn hạn của người dùng, ảnh đang mở được tô ----
+  const quickUploads = sources.quick;
+  useEffect(() => {
+    if (!meta || meta.chapterId !== null || !quickUploads || target?.pageId === undefined) return;
+    const index = quickUploads.findIndex(page => page.id === target.pageId);
+    if (index < 0) return; // Ảnh hết hạn hoặc ngoài bộ: chỉ hiện riêng ảnh đó.
+    setPages(quickUploads);
+    setCurrentPageIndex(index);
+  }, [meta, quickUploads, target]);
 
   // ---- Nạp dữ liệu đọc của trang đang xem ----
   useEffect(() => {
@@ -376,20 +433,6 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
     return () => clearTimeout(timer);
   }, [isLoggedIn, meta, activePage, currentPageIndex, pages.length]);
 
-  // ---- Khi chưa chọn truyện: gợi ý truyện đang đọc dở ----
-  useEffect(() => {
-    if (target || !isLoggedIn) return;
-    let cancelled = false;
-    listContinueReading(5)
-      .then(items => {
-        if (!cancelled) setContinueItems(items);
-      })
-      .catch(() => undefined);
-    return () => {
-      cancelled = true;
-    };
-  }, [target, isLoggedIn]);
-
   const vocabulary = useMemo<VocabEntry[]>(() => {
     const seen = new Set<string>();
     const entries: VocabEntry[] = [];
@@ -416,8 +459,10 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
     };
   }, []);
 
+  // Khi vừa đổi trang, `bubbles` còn là của trang cũ tới khi dữ liệu đọc mới về: chỉ hỏi khi `reading` đã khớp trang đang xem.
+  const readingPageId = reading?.page.id ?? null;
   useEffect(() => {
-    if (!isLoggedIn || activePageId === null || bubbles.length === 0) return;
+    if (!isLoggedIn || activePageId === null || readingPageId !== activePageId || bubbles.length === 0) return;
     const pageId = activePageId;
     const pageBubbleIds = bubbles.map(bubble => bubble.id);
     const terms = [...new Set(bubbles.flatMap(bubble => bubble.tokens.map(token => token.word)))]
@@ -444,7 +489,7 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
         // Lỗi mạng: giữ trạng thái đang có, lần đổi trang/quay lại tab sau sẽ thử lại.
       });
     return () => controller.abort();
-  }, [isLoggedIn, activePageId, bubbles, savedStatusTick]);
+  }, [isLoggedIn, activePageId, readingPageId, bubbles, savedStatusTick]);
 
   const handlePlayVoice = (text: string) => {
     speakChinese(text, speechRate);
@@ -750,72 +795,80 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
     }, FONT_SCALE_SAVE_DELAY_MS);
   };
 
-  const prevPage = () => goToPage(currentPageIndex > 0 ? currentPageIndex - 1 : pages.length - 1);
-  const nextPage = () => goToPage(currentPageIndex < pages.length - 1 ? currentPageIndex + 1 : 0);
+  // Hết trang cuối chương thì bấm "kế tiếp" sang chương sau (không vòng về trang 1); trang đầu bấm lùi về cuối chương trước.
+  const chapterIndex = meta?.chapterId != null ? chapters.findIndex(chapter => chapter.id === meta.chapterId) : -1;
+  const prevChapter: ApiChapter | null = chapterIndex > 0 ? chapters[chapterIndex - 1] : null;
+  const nextChapter: ApiChapter | null = chapterIndex >= 0 && chapterIndex < chapters.length - 1 ? chapters[chapterIndex + 1] : null;
+  const canGoPrev = currentPageIndex > 0 || prevChapter !== null;
+  const canGoNext = currentPageIndex < pages.length - 1 || nextChapter !== null;
+
+  const prevPage = () => {
+    if (currentPageIndex > 0) goToPage(currentPageIndex - 1);
+    else if (prevChapter) {
+      showMessage(`Về Chương ${formatChapterNumber(prevChapter.number)}`);
+      onOpenReader({ chapterId: prevChapter.id, pageNo: prevChapter.page_count });
+    }
+  };
+  const nextPage = () => {
+    if (currentPageIndex < pages.length - 1) goToPage(currentPageIndex + 1);
+    else if (nextChapter) {
+      showMessage(`Sang Chương ${formatChapterNumber(nextChapter.number)}`);
+      onOpenReader({ chapterId: nextChapter.id, pageNo: 1 });
+    }
+  };
+  const liveStatus = (page: ApiPage) => {
+    if (reading && reading.page.id === page.id) return reading.page.status;
+    const base = page.status;
+    return (base === 'queued' || base === 'running') && otherStatuses[page.id] ? otherStatuses[page.id].status : base;
+  };
+
+  useTourPage(target && !loadingChapter && !chapterError && activePage && reading && !readingLoading ? 'reader' : null);
 
   // ---- Trạng thái chưa có nội dung ----
   if (!target) {
-    return (
-      <div className="w-full max-w-[700px] mx-auto px-4 py-16 flex flex-col items-center text-center gap-5">
-        <div className="w-20 h-20 rounded-3xl bg-pink-100 flex items-center justify-center text-[#a43073] shadow-md border border-pink-200">
-          <span className="material-symbols-outlined text-[42px]">menu_book</span>
-        </div>
-        <h2 className="text-2xl font-extrabold text-slate-800 font-['Plus_Jakarta_Sans']">Chưa chọn truyện để đọc</h2>
-        <p className="text-sm text-slate-600 max-w-md">Chọn một truyện ở Trang Chủ hoặc Thư viện, hoặc tải lên ảnh trang truyện của riêng bạn để bắt đầu.</p>
-        {continueItems.length > 0 && (
-          <div className="w-full flex flex-col gap-2">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Đọc dở gần đây</span>
-            {continueItems.map(item => (
-              <button
-                key={item.chapter_id}
-                onClick={() => onOpenReader({ chapterId: item.chapter_id, pageNo: item.page_no, pageId: item.page_id ?? undefined })}
-                className="flex items-center justify-between gap-3 text-left px-4 py-3 rounded-2xl bg-white border border-pink-100 hover:border-pink-300 transition-colors"
-              >
-                <span className="text-sm font-bold text-slate-800 truncate">
-                  {item.series_title} · Chương {formatChapterNumber(item.chapter_number)}
-                </span>
-                <span className="text-xs text-[#a43073] font-bold shrink-0">Trang {item.page_no}/{item.total_pages}</span>
-              </button>
-            ))}
-          </div>
-        )}
-        <div className="flex flex-wrap items-center justify-center gap-3">
-          <button onClick={onBrowse} className="px-6 py-3 rounded-full bg-[#a43073] hover:bg-[#85145a] text-white font-bold text-sm shadow-md transition-all">
-            Khám phá truyện
-          </button>
-          <button onClick={onOpenUpload} className="px-6 py-3 rounded-full bg-white hover:bg-pink-50 text-[#a43073] border border-pink-200 font-bold text-sm transition-all">
-            Tải ảnh dịch
-          </button>
-        </div>
-      </div>
-    );
+    return <ReaderEmptyState isLoggedIn={isLoggedIn} sources={sources} onOpenReader={onOpenReader} onBrowse={onBrowse} onOpenUpload={onOpenUpload} />;
   }
 
   if (loadingChapter || chapterError || pages.length === 0 || !activePage) {
-    const needsLogin = chapterError !== null && (chapterError.status === 401 || chapterError.status === 403);
+    const vipRequired = chapterError?.code === 'VIP_REQUIRED' && isLoggedIn;
+    const needsLogin = chapterError !== null && !vipRequired && (chapterError.status === 401 || chapterError.status === 403);
+    const vipSeriesId = typeof chapterError?.details.series_id === 'number' ? chapterError.details.series_id : null;
     return (
       <div className="w-full max-w-[700px] mx-auto px-4 py-20 flex flex-col items-center text-center gap-4">
         {loadingChapter ? (
           <>
-            <span className="w-8 h-8 border-2 border-pink-300 border-t-transparent rounded-full animate-spin"></span>
-            <p className="text-sm text-slate-500">Đang tải truyện...</p>
+            <span className="w-8 h-8 border-2 border-pink-300 border-t-transparent rounded-full animate-spin dark:border-pink-900/40"></span>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Đang tải truyện...</p>
           </>
         ) : (
           <>
             <span className="material-symbols-outlined text-[44px] text-pink-300">{chapterError ? 'error' : 'photo_library'}</span>
-            <p className="text-sm font-bold text-slate-700">
+            <p className="text-sm font-bold text-slate-700 dark:text-slate-100">
               {chapterError ? chapterError.message : 'Chương này chưa có trang nào để đọc.'}
             </p>
             <div className="flex items-center gap-3">
+              {vipRequired && vipSeriesId !== null && (
+                <button onClick={() => setVipDialogOpen(true)} className="px-5 py-2.5 rounded-full bg-[#a43073] text-white text-xs font-bold">
+                  Mở khóa truyện VIP
+                </button>
+              )}
               {needsLogin && (
                 <button onClick={() => onRequireLogin('Vui lòng đăng nhập để đọc chương này!')} className="px-5 py-2.5 rounded-full bg-[#a43073] text-white text-xs font-bold">
                   Đăng nhập
                 </button>
               )}
-              <button onClick={onBrowse} className="px-5 py-2.5 rounded-full bg-white border border-pink-200 text-[#a43073] text-xs font-bold hover:bg-pink-50">
+              <button onClick={onBrowse} className="px-5 py-2.5 rounded-full bg-white border border-pink-200 text-[#a43073] text-xs font-bold hover:bg-pink-50 dark:bg-slate-800 dark:border-pink-900/40 dark:text-pink-400 dark:hover:bg-pink-900/40">
                 Về Trang Chủ
               </button>
             </div>
+            {vipDialogOpen && vipSeriesId !== null && (
+              <UnlockVipDialog
+                seriesId={vipSeriesId}
+                hasTicketsHint={chapterError?.details.has_tickets === true}
+                onClose={() => setVipDialogOpen(false)}
+                onUnlocked={() => setChapterTick(value => value + 1)}
+              />
+            )}
           </>
         )}
       </div>
@@ -834,34 +887,40 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
   const stageHint = textReady ? 'Đang xóa chữ và đắp bản dịch…' : 'Đang nhận diện chữ…';
   const canEditPage = reading?.page.can_edit ?? false;
   const failureMessage = reading?.page.error_message ?? null;
-  const pageLabel = meta?.chapterNumber !== null && meta?.chapterNumber !== undefined ? `Chương ${formatChapterNumber(meta.chapterNumber)} · ` : '';
+  const inQuickSet = meta?.chapterId === null;
+  const positionLabel = inQuickSet
+    ? `Ảnh ${currentPageIndex + 1}/${pages.length}`
+    : `${meta?.chapterNumber != null ? `Chương ${formatChapterNumber(meta.chapterNumber)} · ` : ''}Trang ${currentPageIndex + 1}/${pages.length}`;
+  const sidebarHeading = inQuickSet
+    ? `Ảnh tải lên · ${pages.length} ảnh`
+    : `${meta?.chapterNumber != null ? `Chương ${formatChapterNumber(meta.chapterNumber)}` : 'Chương'} · ${pages.length} trang`;
 
   const studyToolsMenu = isStudyMenuOpen ? (
-    <div className="mt-2 w-64 max-h-[min(70vh,34rem)] overflow-y-auto rounded-2xl border border-blue-100 bg-white/95 p-3 shadow-xl backdrop-blur">
-      <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2">
+    <div className="mt-2 w-64 max-h-[min(70vh,34rem)] overflow-y-auto rounded-2xl border border-blue-100 bg-white/95 p-3 shadow-xl backdrop-blur dark:border-blue-900/40 dark:bg-slate-800">
+      <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2 dark:border-slate-700">
         <div>
-          <h3 className="text-xs font-extrabold text-slate-800">Công cụ học tập</h3>
-          <p className="text-[10px] text-slate-500">Từ vựng và ghi chú trang truyện</p>
+          <h3 className="text-xs font-extrabold text-slate-800 dark:text-slate-100">Công cụ học tập</h3>
+          <p className="text-[10px] text-slate-500 dark:text-slate-400">Từ vựng và ghi chú trang truyện</p>
         </div>
-        <button onClick={toggleSavePage} className="inline-flex shrink-0 items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1.5 text-[10px] font-bold text-blue-700 hover:bg-blue-100">
+        <button onClick={toggleSavePage} className="inline-flex shrink-0 items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1.5 text-[10px] font-bold text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/40">
           {isBookmarked ? <BookmarkCheck size={13}/> : <Bookmark size={13}/>}
           {isBookmarked ? 'Đã lưu trang' : 'Lưu trang'}
         </button>
       </div>
 
       <div className="mt-3 flex items-center justify-between gap-2">
-        <span className="text-[10px] font-bold text-slate-600">Từ vựng · {vocabulary.length}</span>
-        <button onClick={handleSaveAllVocab} disabled={vocabulary.length === 0 || savingAllWords} className="inline-flex items-center gap-1 rounded-full bg-pink-50 px-2.5 py-1.5 text-[10px] font-bold text-[#a43073] hover:bg-pink-100 disabled:opacity-50">
+        <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300">Từ vựng · {vocabulary.length}</span>
+        <button onClick={handleSaveAllVocab} disabled={vocabulary.length === 0 || savingAllWords} className="inline-flex items-center gap-1 rounded-full bg-pink-50 px-2.5 py-1.5 text-[10px] font-bold text-[#a43073] hover:bg-pink-100 disabled:opacity-50 dark:bg-pink-900/30 dark:text-pink-400 dark:hover:bg-pink-900/40">
           <span className="material-symbols-outlined text-[13px]">style</span>{savingAllWords ? 'Đang lưu...' : pendingMoreWords > 0 ? `Lưu tiếp (${pendingMoreWords})` : 'Lưu tất cả'}
         </button>
       </div>
       <div className="mt-2 space-y-1.5">
         {vocabulary.length === 0 && <p className="text-[10px] text-slate-400">Trang này chưa có từ vựng nhận diện được.</p>}
         {vocabulary.map(vocab => (
-          <div key={vocab.word} className="flex items-center justify-between gap-2 rounded-xl bg-slate-50 px-2.5 py-2">
+          <div key={vocab.word} className="flex items-center justify-between gap-2 rounded-xl bg-slate-50 px-2.5 py-2 dark:bg-[#1e293b]">
             <div className="min-w-0">
-              <span className="font-['Noto_Serif_SC'] text-sm font-bold text-slate-800">{vocab.word}</span>
-              <span className="ml-2 text-[10px] text-slate-500">{vocab.pinyin}</span>
+              <span className="font-['Noto_Serif_SC'] text-sm font-bold text-slate-800 dark:text-slate-100">{vocab.word}</span>
+              <span className="ml-2 text-[10px] text-slate-500 dark:text-slate-400">{vocab.pinyin}</span>
             </div>
             <button onClick={() => void saveVocabulary(vocab.word, vocab.bubbleId)} disabled={isSaved(vocab.word) || isSaving(vocab.word)} className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold disabled:bg-emerald-50 disabled:text-emerald-700 enabled:bg-white enabled:text-blue-700 enabled:hover:bg-blue-100">
               {isSaved(vocab.word) ? 'Đã lưu' : isSaving(vocab.word) ? 'Đang lưu...' : isInNotebook(vocab.word) ? '+ Ngữ cảnh' : '+ Sổ tay'}
@@ -870,14 +929,14 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
         ))}
       </div>
 
-      <div className="mt-3 border-t border-slate-100 pt-3">
-        <div className="mb-2 text-[10px] font-bold text-slate-600">Bút ghi chú</div>
+      <div className="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700">
+        <div className="mb-2 text-[10px] font-bold text-slate-600 dark:text-slate-300">Bút ghi chú</div>
         <div className="grid grid-cols-2 gap-2">
-          <button onClick={() => chooseTool('highlight')} className={`flex items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-[10px] font-bold ${annotationTool === 'highlight' ? 'bg-pink-500 text-white' : 'bg-pink-50 text-pink-700'}`}><Highlighter size={14}/>Tô nền thoại</button>
-          <button onClick={() => chooseTool('draw')} className={`flex items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-[10px] font-bold ${annotationTool === 'draw' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-700'}`}><PenLine size={14}/>Bút vẽ</button>
+          <button onClick={() => chooseTool('highlight')} className={`flex items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-[10px] font-bold ${annotationTool === 'highlight' ? 'bg-pink-500 text-white' : 'bg-pink-50 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400'}`}><Highlighter size={14}/>Tô nền thoại</button>
+          <button onClick={() => chooseTool('draw')} className={`flex items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-[10px] font-bold ${annotationTool === 'draw' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'}`}><PenLine size={14}/>Bút vẽ</button>
         </div>
         <div className="mt-2 flex items-center justify-between gap-2">
-          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-600"><Palette size={13}/>Màu bút</span>
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-600 dark:text-slate-300"><Palette size={13}/>Màu bút</span>
           <label className="relative h-7 w-7 cursor-pointer overflow-hidden rounded-full border-2 border-white shadow ring-1 ring-slate-200" style={{ backgroundColor: annotationColor }} title="Chọn màu tùy chỉnh">
             <input type="color" value={annotationColor} onChange={event => setAnnotationColor(event.target.value)} aria-label="Chọn màu tùy chỉnh" className="absolute inset-0 h-full w-full cursor-pointer opacity-0" />
           </label>
@@ -887,7 +946,7 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
         </div>
         <div className="mt-2 flex items-center justify-between gap-2">
           <span className="text-[9px] text-slate-400">{annotationTool === 'highlight' ? 'Chạm khung thoại để tô màu' : annotationTool === 'draw' ? 'Vẽ trực tiếp lên ảnh truyện' : isLoggedIn ? 'Chọn loại bút để bắt đầu' : 'Đăng nhập để ghi chú'}</span>
-          <button onClick={clearAllAnnotations} className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-[9px] font-semibold text-slate-500 hover:bg-slate-100"><Eraser size={12}/>Xóa ghi chú</button>
+          <button onClick={clearAllAnnotations} className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-[9px] font-semibold text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700"><Eraser size={12}/>Xóa ghi chú</button>
         </div>
       </div>
     </div>
@@ -901,8 +960,8 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
       title={available ? undefined : hint}
       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
         viewMode === mode
-          ? 'bg-white text-[#a43073] shadow-xs font-bold'
-          : 'text-slate-500 hover:text-slate-800'
+          ? 'bg-white text-[#a43073] shadow-xs font-bold dark:bg-slate-800 dark:text-pink-400'
+          : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white'
       }`}
     >
       <span className="material-symbols-outlined text-[16px] text-pink-400">{icon}</span>
@@ -914,32 +973,41 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
     <div className="w-full max-w-[1440px] mx-auto px-4 md:px-8 lg:px-12 py-6">
 
       {/* CHAPTER & SUB-NAV BAR */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 bg-white/80 backdrop-blur-md p-3.5 px-6 rounded-2xl border border-pink-100 shadow-sm">
+      {/* `relative z-30`: backdrop-blur tạo lớp chồng riêng, không nâng lên thì bảng "Đổi nguồn đọc" bị khung ảnh đè. */}
+      <div className="relative z-30 flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 bg-white/80 backdrop-blur-md p-3.5 px-6 rounded-2xl border border-pink-100 shadow-sm dark:bg-slate-800 dark:border-pink-900/40">
 
         {/* Breadcrumb / Title */}
         <div className="flex items-center gap-3">
           <button
             onClick={prevPage}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-[#a43073] hover:bg-pink-50 transition-colors"
-            title="Trang trước"
+            disabled={!canGoPrev}
+            className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-[#a43073] hover:bg-pink-50 transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400 dark:hover:text-pink-300 dark:hover:bg-pink-900/40"
+            title={currentPageIndex === 0 && prevChapter ? 'Về chương trước' : inQuickSet ? 'Ảnh trước' : 'Trang trước'}
+            aria-label={currentPageIndex === 0 && prevChapter ? 'Về chương trước' : inQuickSet ? 'Ảnh trước' : 'Trang trước'}
           >
             <span className="material-symbols-outlined text-[20px]">chevron_left</span>
           </button>
 
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-bold text-slate-800">
+            <span className="text-sm font-bold text-slate-800 dark:text-slate-100">
               {meta?.title}
             </span>
+            {isLoggedIn && (
+              <ReaderSourcePicker sources={sources} currentSeriesId={meta?.seriesId ?? null} inQuickSet={inQuickSet} onOpenReader={onOpenReader} />
+            )}
+            <ReaderChapterSelect chapters={chapters} currentChapterId={meta?.chapterId ?? null} onSelect={chapterId => onOpenReader({ chapterId })} />
             <span className="text-slate-300 hidden sm:inline">|</span>
-            <span className="text-xs text-[#a43073] font-semibold bg-pink-50 px-2.5 py-0.5 rounded-md border border-pink-200/50">
-              {pageLabel}Trang {currentPageIndex + 1}/{pages.length}
+            <span className="text-xs text-[#a43073] font-semibold bg-pink-50 px-2.5 py-0.5 rounded-md border border-pink-200/50 dark:text-pink-400 dark:bg-pink-900/30 dark:border-pink-900/40">
+              {positionLabel}
             </span>
           </div>
 
           <button
             onClick={nextPage}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-[#a43073] hover:bg-pink-50 transition-colors"
-            title="Trang kế tiếp"
+            disabled={!canGoNext}
+            className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-[#a43073] hover:bg-pink-50 transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400 dark:hover:text-pink-300 dark:hover:bg-pink-900/40"
+            title={currentPageIndex === pages.length - 1 && nextChapter ? 'Sang chương kế' : inQuickSet ? 'Ảnh kế tiếp' : 'Trang kế tiếp'}
+            aria-label={currentPageIndex === pages.length - 1 && nextChapter ? 'Sang chương kế' : inQuickSet ? 'Ảnh kế tiếp' : 'Trang kế tiếp'}
           >
             <span className="material-symbols-outlined text-[20px]">chevron_right</span>
           </button>
@@ -956,7 +1024,7 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
           </button>
 
           {/* Ba dạng hiển thị của trang */}
-          <div className="flex items-center bg-slate-100 p-1 rounded-2xl border border-slate-200/60 text-xs font-medium">
+          <div data-tour="reader-modes" className="flex items-center bg-slate-100 p-1 rounded-2xl border border-slate-200/60 text-xs font-medium dark:bg-[#1e293b] dark:border-slate-700">
             {modeButton('bubble', 'chat_bubble', 'Bóng Thoại (Overlay)', true, '')}
             {modeButton('inpainted', 'ink_eraser', 'Đã xóa chữ', !!reading?.variants.inpainted, awaitingTranslation ? stageHint : 'Trang chưa được xử lý xong')}
             {modeButton('rendered', 'translate', 'Đã đắp chữ', !!reading?.variants.rendered, awaitingTranslation ? stageHint : 'Trang chưa được xử lý xong')}
@@ -965,7 +1033,7 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
           <button
             onClick={handleDownload}
             disabled={!variantUrl}
-            className="w-9 h-9 rounded-xl bg-white border border-pink-100 text-slate-500 hover:text-[#a43073] hover:border-pink-300 flex items-center justify-center shadow-xs transition-all disabled:opacity-40"
+            className="w-9 h-9 rounded-xl bg-white border border-pink-100 text-slate-500 hover:text-[#a43073] hover:border-pink-300 flex items-center justify-center shadow-xs transition-all disabled:opacity-40 dark:bg-slate-800 dark:border-pink-900/40 dark:text-slate-400 dark:hover:text-pink-300"
             title="Tải ảnh đang xem về máy"
           >
             <Download size={18}/>
@@ -974,7 +1042,7 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
           <button
             onClick={() => openReport(null)}
             disabled={!activePage}
-            className="w-9 h-9 rounded-xl bg-white border border-pink-100 text-slate-500 hover:text-[#a43073] hover:border-pink-300 flex items-center justify-center shadow-xs transition-all disabled:opacity-40"
+            className="w-9 h-9 rounded-xl bg-white border border-pink-100 text-slate-500 hover:text-[#a43073] hover:border-pink-300 flex items-center justify-center shadow-xs transition-all disabled:opacity-40 dark:bg-slate-800 dark:border-pink-900/40 dark:text-slate-400 dark:hover:text-pink-300"
             title="Báo lỗi trang này"
             aria-label="Báo lỗi trang này"
           >
@@ -983,18 +1051,20 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
 
           <button
             onClick={toggleSavePage}
-            className="w-9 h-9 rounded-xl bg-white border border-pink-100 text-slate-500 hover:text-[#a43073] hover:border-pink-300 flex items-center justify-center shadow-xs transition-all"
+            className="w-9 h-9 rounded-xl bg-white border border-pink-100 text-slate-500 hover:text-[#a43073] hover:border-pink-300 flex items-center justify-center shadow-xs transition-all dark:bg-slate-800 dark:border-pink-900/40 dark:text-slate-400 dark:hover:text-pink-300"
             title={isBookmarked ? 'Bỏ lưu trang này' : 'Lưu trang này'}
           >
-            {isBookmarked ? <BookmarkCheck size={18} className="text-[#a43073]"/> : <Bookmark size={18}/>}
+            {isBookmarked ? <BookmarkCheck size={18} className="text-[#a43073] dark:text-pink-400"/> : <Bookmark size={18}/>}
           </button>
+
+          <TourReplayButton className="flex" />
         </div>
 
       </div>
 
       {savedSuccessMsg && (
-        <div className="mb-4 p-3 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-semibold flex items-center gap-2 animate-bounce">
-          <span className="material-symbols-outlined text-[18px] text-emerald-600">check_circle</span>
+        <div className="mb-4 p-3 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-semibold flex items-center gap-2 animate-bounce dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-900/40">
+          <span className="material-symbols-outlined text-[18px] text-emerald-600 dark:text-emerald-400">check_circle</span>
           <span>{savedSuccessMsg}</span>
         </div>
       )}
@@ -1002,84 +1072,25 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
       {/* MAIN LAYOUT GRID (2 cols sidebar, 7 cols canvas, 3 cols study panel) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pb-28">
 
-        {/* LEFT THUMBNAILS SIDEBAR (2 Cols) */}
-        <aside className="hidden lg:flex flex-col gap-3 lg:col-span-2 sticky top-24">
-          <div className="flex items-center justify-between px-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              Trang truyện
-            </span>
-            <span className="text-[11px] font-semibold text-[#a43073] bg-pink-50 px-2 py-0.5 rounded-full">
-              {pages.length} trang
-            </span>
-          </div>
-
-          <div className="space-y-3 custom-scrollbar max-h-[70vh] overflow-y-auto pr-1">
-
-            {/* Upload Action Tile */}
-            <div
-              onClick={onOpenUpload}
-              className="group relative rounded-2xl border-2 border-dashed border-pink-300 hover:border-pink-500 bg-pink-50/50 hover:bg-pink-100/60 p-3 flex flex-col items-center justify-center text-center cursor-pointer transition-all shadow-xs"
-            >
-              <div className="w-8 h-8 rounded-xl bg-white shadow-xs flex items-center justify-center text-pink-500 group-hover:scale-110 group-hover:bg-pink-500 group-hover:text-white transition-all mb-1">
-                <span className="material-symbols-outlined text-[18px]">add_photo_alternate</span>
-              </div>
-              <span className="text-xs font-bold text-pink-600">+ Tải ảnh mới</span>
-              <span className="text-[10px] text-slate-400 mt-0.5">PNG, JPG, WebP</span>
-            </div>
-
-            {/* List of Pages */}
-            {pages.map((page, idx) => {
-              const isSelected = idx === currentPageIndex;
-              const badge = page.status === 'done' ? 'Đã dịch' : page.status === 'failed' ? 'Lỗi' : page.status ? 'Đang chờ' : 'Ảnh gốc';
-              return (
-                <div
-                  key={page.id}
-                  onClick={() => goToPage(idx)}
-                  className={`group relative rounded-2xl overflow-hidden cursor-pointer transition-all bg-white ${
-                    isSelected
-                      ? 'border-2 border-pink-400 shadow-md ring-4 ring-pink-100/70'
-                      : 'border-2 border-transparent hover:border-pink-200 shadow-xs hover:shadow-md'
-                  }`}
-                >
-                  <AuthImage
-                    src={page.original_url}
-                    alt={`Trang ${page.page_no}`}
-                    className={`w-full h-28 object-cover object-top transition-opacity ${
-                      isSelected ? 'opacity-100' : 'opacity-80 group-hover:opacity-100'
-                    }`}
-                  />
-                  <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-900/85 to-transparent p-2 flex items-center justify-between text-white">
-                    <span className="text-[11px] font-bold">
-                      Trang {page.page_no}
-                    </span>
-                    <span className="text-[10px] bg-pink-500/90 px-1.5 py-0.5 rounded text-white font-medium">
-                      {badge}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-
-          </div>
-
-          {/* Quick Learning Tip */}
-          <div className="mt-2 p-3 rounded-2xl bg-amber-50 border border-amber-200/70 text-slate-700 shadow-xs">
-            <div className="flex items-center gap-1.5 text-amber-700 font-bold text-xs mb-1">
-              <span className="material-symbols-outlined text-[16px]">lightbulb</span>
-              <span>Mẹo học nhanh:</span>
-            </div>
-            <p className="text-[11px] text-slate-600 leading-relaxed">
-              Rê chuột vào các khung phát sáng <span className="inline-block w-2 h-2 rounded-full bg-pink-400 align-middle"></span> trên ảnh để xem Pinyin, nghĩa tiếng Việt và bấm nghe phát âm nhé!
-            </p>
-          </div>
-        </aside>
+        {/* LEFT PAGE LIST (2 Cols): trang của chương hoặc bộ ảnh tải lên */}
+        <ReaderPageSidebar
+          heading={sidebarHeading}
+          subheading={inQuickSet ? null : meta?.chapterTitle}
+          pages={pages}
+          currentIndex={currentPageIndex}
+          labelOf={(page, idx) => (inQuickSet ? `Ảnh ${idx + 1}` : `Trang ${page.page_no}`)}
+          liveStatus={liveStatus}
+          onSelect={goToPage}
+          onOpenUpload={onOpenUpload}
+        />
 
         {/* CENTRAL MANHUA CANVAS (7 Cols) */}
-        <section className="col-span-1 lg:col-span-7 flex flex-col items-center">
-          <div className="relative w-full max-w-2xl bg-white p-3 sm:p-4 rounded-3xl shadow-soft border border-pink-100 transition-all">
+        {/* `relative z-0`: cô lập các lớp z-index bên trong khung ảnh để không đè lên bảng chọn ở thanh đầu trang. */}
+        <section className="relative z-0 col-span-1 lg:col-span-7 flex flex-col items-center">
+          <div className="relative w-full max-w-2xl bg-white p-3 sm:p-4 rounded-3xl shadow-soft border border-pink-100 transition-all dark:bg-slate-800 dark:border-pink-900/40">
 
             {/* Status Pill Top Right */}
-            <div className="absolute top-6 right-6 z-20 flex items-center gap-2 bg-white/95 backdrop-blur-md px-3 py-1 rounded-full shadow-md border border-pink-100 text-xs font-semibold text-slate-700">
+            <div className="absolute top-6 right-6 z-20 flex items-center gap-2 bg-white/95 backdrop-blur-md px-3 py-1 rounded-full shadow-md border border-pink-100 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:border-pink-900/40 dark:text-slate-100">
               {effectiveStatus === 'done' ? (
                 <>
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
@@ -1092,7 +1103,7 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
 
             {/* Trạng thái xử lý: đang chờ, đang xử lý hoặc lỗi */}
             {(awaitingTranslation || effectiveStatus === 'failed') && reading && (
-              <div className={`mb-3 p-3 rounded-2xl border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 ${effectiveStatus === 'failed' ? 'bg-red-50 border-red-200 text-red-800' : 'bg-amber-50 border-amber-200 text-amber-900'}`} role="status">
+              <div className={`mb-3 p-3 rounded-2xl border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 ${effectiveStatus === 'failed' ? 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/30 dark:border-red-900/40 dark:text-red-300' : 'bg-amber-50 border-amber-200 text-amber-900 dark:bg-amber-900/30 dark:border-amber-900/40 dark:text-amber-300'} dark:border-red-900/40`} role="status">
                 <span>
                   {effectiveStatus === 'failed'
                     ? (failureMessage ?? 'Xử lý ảnh không thành công.')
@@ -1105,7 +1116,7 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
                   {timedOut && ' Đã chờ lâu, bộ xử lý ảnh có thể đang bận; bạn có thể quay lại sau.'}
                 </span>
                 {effectiveStatus === 'failed' && canEditPage && (
-                  <button onClick={handleRetranslate} disabled={retranslating} className="shrink-0 px-4 py-1.5 rounded-full bg-white border border-red-200 text-red-700 font-bold hover:bg-red-100 disabled:opacity-60">
+                  <button onClick={handleRetranslate} disabled={retranslating} className="shrink-0 px-4 py-1.5 rounded-full bg-white border border-red-200 text-red-700 font-bold hover:bg-red-100 disabled:opacity-60 dark:bg-slate-800 dark:border-red-900/40 dark:text-red-400 dark:hover:bg-red-900/40">
                     {retranslating ? 'Đang gửi...' : 'Dịch lại'}
                   </button>
                 )}
@@ -1113,19 +1124,19 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
             )}
 
             {/* Comic Canvas Wrapper */}
-            <div id="canvas-wrapper" className="relative rounded-2xl border border-slate-100 shadow-inner bg-slate-50 min-h-[16rem]">
+            <div id="canvas-wrapper" data-tour="reader-canvas" className="relative scroll-mt-24 rounded-2xl border border-slate-100 shadow-inner bg-slate-50 min-h-[16rem] dark:border-slate-700 dark:bg-[#1e293b]">
               <div className="absolute left-3 top-3 z-50">
-                <button type="button" onClick={() => setIsStudyMenuOpen(open => !open)} aria-expanded={isStudyMenuOpen} aria-label="Mở công cụ ghi chú" title="Công cụ học tập và ghi chú" className={`flex h-10 w-10 items-center justify-center rounded-full border shadow-lg transition ${annotationTool !== 'none' ? 'border-pink-300 bg-pink-500 text-white' : 'border-white bg-white/95 text-slate-700 hover:text-pink-600'}`}>
+                <button type="button" onClick={() => setIsStudyMenuOpen(open => !open)} aria-expanded={isStudyMenuOpen} aria-label="Mở công cụ ghi chú" title="Công cụ học tập và ghi chú" className={`flex h-10 w-10 items-center justify-center rounded-full border shadow-lg transition ${annotationTool !== 'none' ? 'border-pink-300 bg-pink-500 text-white dark:border-pink-900/40' : 'border-white bg-white/95 text-slate-700 hover:text-pink-600 dark:bg-slate-800 dark:text-slate-100'} dark:bg-slate-800`}>
                   <PenLine size={18}/>
                 </button>
                 {studyToolsMenu}
               </div>
 
               {readingError ? (
-                <div className="p-10 text-center text-sm text-red-700 flex flex-col items-center gap-3">
+                <div className="p-10 text-center text-sm text-red-700 flex flex-col items-center gap-3 dark:text-red-400">
                   <span className="material-symbols-outlined text-[36px] text-red-300">error</span>
                   <p>{readingError.message}</p>
-                  <button onClick={() => setReadingTick(value => value + 1)} className="px-4 py-2 rounded-full bg-white border border-red-200 text-xs font-bold hover:bg-red-50">Thử lại</button>
+                  <button onClick={() => setReadingTick(value => value + 1)} className="px-4 py-2 rounded-full bg-white border border-red-200 text-xs font-bold hover:bg-red-50 dark:bg-slate-800 dark:border-red-900/40 dark:hover:bg-red-900/40">Thử lại</button>
                 </div>
               ) : (
                 <AuthImage
@@ -1296,7 +1307,7 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
             </div>
 
             {/* Hint bar at bottom of canvas */}
-            <div className="mt-3 flex flex-wrap items-center justify-between text-xs text-slate-500 px-2 gap-2">
+            <div className="mt-3 flex flex-wrap items-center justify-between text-xs text-slate-500 px-2 gap-2 dark:text-slate-400">
               <div className="flex items-center gap-3">
                 <span className="flex items-center gap-1">
                   <span className="w-2.5 h-2.5 rounded-full bg-pink-400"></span>
@@ -1321,8 +1332,8 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
 
           {/* Card: Sửa bản dịch */}
           {editing && (
-            <div className="bg-white rounded-3xl p-5 shadow-soft border border-amber-200">
-              <div className="flex items-center gap-2 mb-2 text-xs font-bold text-amber-800">
+            <div className="bg-white rounded-3xl p-5 shadow-soft border border-amber-200 dark:bg-slate-800 dark:border-amber-900/40">
+              <div className="flex items-center gap-2 mb-2 text-xs font-bold text-amber-800 dark:text-amber-300">
                 <Pencil size={14}/>Sửa bản dịch của bạn
               </div>
               <textarea
@@ -1330,11 +1341,11 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
                 onChange={event => setEditing({ ...editing, text: event.target.value })}
                 maxLength={1000}
                 rows={4}
-                className="w-full text-xs text-slate-700 p-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-[#f472b6]"
+                className="w-full text-xs text-slate-700 p-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-[#f472b6] dark:text-slate-100 dark:border-slate-700"
                 aria-label="Bản dịch tiếng Việt"
               />
               <div className="flex items-center justify-end gap-2 mt-2">
-                <button onClick={() => setEditing(null)} className="px-3 py-1.5 rounded-full text-xs font-semibold text-slate-600 hover:bg-slate-100">Hủy</button>
+                <button onClick={() => setEditing(null)} className="px-3 py-1.5 rounded-full text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700">Hủy</button>
                 <button onClick={submitEdit} disabled={editBusy} className="px-4 py-1.5 rounded-full bg-[#a43073] text-white text-xs font-bold hover:bg-[#85145a] disabled:opacity-60">
                   {editBusy ? 'Đang lưu...' : 'Lưu bản dịch'}
                 </button>
@@ -1345,42 +1356,42 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
 
           {/* Card: Tra nhanh từ trong bong bóng */}
           {lookupCard && (
-            <div className="bg-white rounded-3xl p-5 shadow-soft border border-blue-100">
+            <div className="bg-white rounded-3xl p-5 shadow-soft border border-blue-100 dark:bg-slate-800 dark:border-blue-900/40">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-blue-700 uppercase tracking-wide">Tra nhanh</span>
-                <button onClick={() => setLookupCard(null)} className="text-slate-400 hover:text-slate-700" aria-label="Đóng"><span className="material-symbols-outlined text-[16px]">close</span></button>
+                <span className="text-xs font-bold text-blue-700 uppercase tracking-wide dark:text-blue-400">Tra nhanh</span>
+                <button onClick={() => setLookupCard(null)} className="text-slate-400 hover:text-slate-700 dark:hover:text-white" aria-label="Đóng"><span className="material-symbols-outlined text-[16px]">close</span></button>
               </div>
               <div className="flex items-center gap-2">
-                <span className="font-['Noto_Serif_SC'] text-xl font-bold text-slate-800">{lookupCard.word}</span>
-                <button onClick={() => handlePlayVoice(lookupCard.word)} className="w-7 h-7 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center" title="Phát âm"><span className="material-symbols-outlined text-[16px]">volume_up</span></button>
+                <span className="font-['Noto_Serif_SC'] text-xl font-bold text-slate-800 dark:text-slate-100">{lookupCard.word}</span>
+                <button onClick={() => handlePlayVoice(lookupCard.word)} className="w-7 h-7 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center dark:bg-blue-900/30 dark:text-blue-400" title="Phát âm"><span className="material-symbols-outlined text-[16px]">volume_up</span></button>
               </div>
-              {lookupCard.status === 'loading' && <p className="text-xs text-slate-500 mt-2">Đang tra từ...</p>}
-              {lookupCard.status === 'error' && <p className="text-xs text-red-600 mt-2">{lookupCard.message}</p>}
+              {lookupCard.status === 'loading' && <p className="text-xs text-slate-500 mt-2 dark:text-slate-400">Đang tra từ...</p>}
+              {lookupCard.status === 'error' && <p className="text-xs text-red-600 mt-2 dark:text-red-400">{lookupCard.message}</p>}
               {lookupCard.status === 'limit' && (
-                <div className="mt-2 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-xl p-3">
+                <div className="mt-2 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-xl p-3 dark:text-amber-300 dark:bg-amber-900/30 dark:border-amber-900/40">
                   <p>{lookupCard.message}</p>
                   <button onClick={() => onRequireLogin('Bạn đã dùng hết lượt tra thử. Đăng nhập để tra từ không giới hạn!')} className="mt-2 px-3 py-1.5 rounded-full bg-[#a43073] text-white font-bold">Đăng nhập để tra tiếp</button>
                 </div>
               )}
               {lookupCard.status === 'ok' && lookupCard.data && (
-                <div className="mt-1 text-xs text-slate-600 space-y-1.5">
+                <div className="mt-1 text-xs text-slate-600 space-y-1.5 dark:text-slate-300">
                   <div className="flex flex-wrap items-center gap-2">
-                    {lookupCard.data.pinyin && <span className="font-mono text-blue-600">{lookupCard.data.pinyin}</span>}
-                    {lookupCard.data.han_viet && <span className="text-slate-500">· {lookupCard.data.han_viet}</span>}
-                    <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold">{hskLabel(lookupCard.data.hsk.level)}</span>
+                    {lookupCard.data.pinyin && <span className="font-mono text-blue-600 dark:text-blue-400">{lookupCard.data.pinyin}</span>}
+                    {lookupCard.data.han_viet && <span className="text-slate-500 dark:text-slate-400">· {lookupCard.data.han_viet}</span>}
+                    <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold dark:bg-amber-900/30 dark:text-amber-300">{hskLabel(lookupCard.data.hsk.level)}</span>
                   </div>
                   {!lookupCard.data.found && <p>Chưa có trong từ điển.</p>}
                   {lookupCard.data.readings.slice(0, 1).flatMap(reading => reading.definitions.slice(0, 3)).map((definition, index) => (
                     <p key={index}>• {definition.gloss}</p>
                   ))}
                   {lookupCard.data.limited && (
-                    <p className="text-[11px] text-amber-700">Khách chỉ xem phần cơ bản. Đăng nhập để xem đầy đủ nghĩa, ví dụ và phân rã chữ Hán.</p>
+                    <p className="text-[11px] text-amber-700 dark:text-amber-400">Khách chỉ xem phần cơ bản. Đăng nhập để xem đầy đủ nghĩa, ví dụ và phân rã chữ Hán.</p>
                   )}
                   <div className="flex flex-wrap items-center gap-3 pt-1">
                     <button
                       onClick={() => void saveVocabulary(lookupCard.word, lookupCard.bubbleId)}
                       disabled={isSaved(lookupCard.word) || isSaving(lookupCard.word)}
-                      className="inline-flex items-center gap-1 rounded-full bg-pink-50 px-3 py-1.5 text-[11px] font-bold text-[#a43073] hover:bg-pink-100 disabled:bg-emerald-50 disabled:text-emerald-700"
+                      className="inline-flex items-center gap-1 rounded-full bg-pink-50 px-3 py-1.5 text-[11px] font-bold text-[#a43073] hover:bg-pink-100 disabled:bg-emerald-50 disabled:text-emerald-700 dark:bg-pink-900/30 dark:text-pink-400 dark:hover:bg-pink-900/40"
                     >
                       <span className="material-symbols-outlined text-[14px]">{isSaved(lookupCard.word) ? 'check' : 'bookmark_add'}</span>
                       {isSaved(lookupCard.word)
@@ -1391,7 +1402,7 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
                             ? 'Đã có · thêm ngữ cảnh trang này'
                             : 'Lưu vào Sổ tay'}
                     </button>
-                    <button onClick={() => onLookupWord(lookupCard.word)} className="text-[11px] font-bold text-[#a43073] hover:underline">Xem chi tiết đầy đủ</button>
+                    <button onClick={() => onLookupWord(lookupCard.word)} className="text-[11px] font-bold text-[#a43073] hover:underline dark:text-pink-400">Xem chi tiết đầy đủ</button>
                   </div>
                 </div>
               )}
@@ -1399,15 +1410,15 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
           )}
 
           {/* Card: Vocabulary on this page */}
-          <div className="bg-white rounded-3xl p-5 shadow-soft border border-pink-100">
+          <div data-tour="reader-vocab" className="bg-white rounded-3xl p-5 shadow-soft border border-pink-100 dark:bg-slate-800 dark:border-pink-900/40">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-xl bg-pink-100 flex items-center justify-center text-pink-600 text-xs font-bold">
+                <div className="w-7 h-7 rounded-xl bg-pink-100 flex items-center justify-center text-pink-600 text-xs font-bold dark:bg-pink-900/30 dark:text-pink-400">
                   <span className="material-symbols-outlined text-[16px]">school</span>
                 </div>
-                <h3 className="text-sm font-bold text-slate-800">Từ vựng trang này</h3>
+                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">Từ vựng trang này</h3>
               </div>
-              <span className="text-xs font-semibold text-[#a43073] bg-pink-50 px-2 py-0.5 rounded-full">
+              <span className="text-xs font-semibold text-[#a43073] bg-pink-50 px-2 py-0.5 rounded-full dark:text-pink-400 dark:bg-pink-900/30">
                 {vocabulary.length} từ
               </span>
             </div>
@@ -1422,19 +1433,19 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
                 <div
                   key={vocab.word}
                   onClick={() => { handlePlayVoice(vocab.word); void lookupWord(vocab.bubbleId, vocab.word); }}
-                  className="p-2.5 rounded-2xl bg-slate-50 hover:bg-pink-50/60 border border-slate-100 hover:border-pink-200 transition-all cursor-pointer group"
+                  className="p-2.5 rounded-2xl bg-slate-50 hover:bg-pink-50/60 border border-slate-100 hover:border-pink-200 transition-all cursor-pointer group dark:bg-[#1e293b] dark:border-slate-700"
                 >
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <span className="font-['Noto_Serif_SC'] font-bold text-base text-slate-800 group-hover:text-[#a43073]">
+                        <span className="font-['Noto_Serif_SC'] font-bold text-base text-slate-800 group-hover:text-[#a43073] dark:text-slate-100">
                           {vocab.word}
                         </span>
-                        <span className="text-[11px] text-slate-500 font-mono">
+                        <span className="text-[11px] text-slate-500 font-mono dark:text-slate-400">
                           {vocab.pinyin}
                         </span>
                       </div>
-                      <div className="text-xs text-slate-600 font-medium">
+                      <div className="text-xs text-slate-600 font-medium dark:text-slate-300">
                         {meaningOf(lookupCache.current.get(vocab.word)) || 'Bấm để xem nghĩa'}
                       </div>
                     </div>
@@ -1445,7 +1456,7 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
                           e.stopPropagation();
                           handlePlayVoice(vocab.word);
                         }}
-                        className="w-7 h-7 rounded-lg bg-white group-hover:bg-pink-200/60 text-slate-400 group-hover:text-pink-600 flex items-center justify-center text-xs transition-colors"
+                        className="w-7 h-7 rounded-lg bg-white group-hover:bg-pink-200/60 text-slate-400 group-hover:text-pink-600 flex items-center justify-center text-xs transition-colors dark:bg-slate-800"
                         title="Phát âm"
                       >
                         <span className="material-symbols-outlined text-[16px]">volume_up</span>
@@ -1453,10 +1464,10 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
                       <button
                         onClick={(e) => { e.stopPropagation(); void saveVocabulary(vocab.word, vocab.bubbleId); }}
                         disabled={isSaved(vocab.word) || isSaving(vocab.word)}
-                        className="w-7 h-7 rounded-lg bg-white text-slate-400 hover:bg-blue-100 hover:text-blue-700 disabled:text-emerald-600 disabled:bg-emerald-50 flex items-center justify-center transition-colors"
+                        className="w-7 h-7 rounded-lg bg-white text-slate-400 hover:bg-blue-100 hover:text-blue-700 disabled:text-emerald-600 disabled:bg-emerald-50 flex items-center justify-center transition-colors dark:bg-slate-800 dark:hover:bg-blue-900/40"
                         title={isSaved(vocab.word) ? 'Đã lưu vào Sổ tay' : isInNotebook(vocab.word) ? 'Đã có trong Sổ tay — bấm để thêm ngữ cảnh từ trang này' : 'Lưu từ vào Sổ tay'}
                       >
-                        <span className={`material-symbols-outlined text-[16px] ${!isSaved(vocab.word) && isInNotebook(vocab.word) ? 'text-blue-600' : ''}`}>
+                        <span className={`material-symbols-outlined text-[16px] ${!isSaved(vocab.word) && isInNotebook(vocab.word) ? 'text-blue-600 dark:text-blue-400' : ''}`}>
                           {isSaved(vocab.word) ? 'check' : isInNotebook(vocab.word) ? 'bookmark_added' : 'style'}
                         </span>
                       </button>
@@ -1469,7 +1480,7 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
             <button
               onClick={handleSaveAllVocab}
               disabled={vocabulary.length === 0 || savingAllWords}
-              className="w-full mt-3 py-2 bg-pink-50 hover:bg-pink-100 text-[#a43073] text-xs font-bold rounded-2xl border border-pink-200 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
+              className="w-full mt-3 py-2 bg-pink-50 hover:bg-pink-100 text-[#a43073] text-xs font-bold rounded-2xl border border-pink-200 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50 dark:bg-pink-900/30 dark:hover:bg-pink-900/40 dark:text-pink-400 dark:border-pink-900/40"
             >
               <span className="material-symbols-outlined text-[14px]">add</span>
               <span>{savingAllWords ? 'Đang lưu...' : pendingMoreWords > 0 ? `Lưu tiếp ${pendingMoreWords} từ còn lại` : 'Lưu toàn bộ vào Sổ tay'}</span>
@@ -1506,16 +1517,16 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
           />
 
           {/* Card: Streak */}
-          <div className="bg-white rounded-3xl p-4 shadow-soft border border-amber-100 flex items-center justify-between">
+          <div className="bg-white rounded-3xl p-4 shadow-soft border border-amber-100 flex items-center justify-between dark:bg-slate-800 dark:border-amber-900/40">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-500 text-lg">
+              <div className="w-10 h-10 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-500 text-lg dark:bg-amber-900/30">
                 🔥
               </div>
               <div>
-                <div className="text-xs font-bold text-slate-800">
+                <div className="text-xs font-bold text-slate-800 dark:text-slate-100">
                   {streak ? `Chuỗi học ${streak.current_streak} ngày` : 'Chuỗi ngày học'}
                 </div>
-                <div className="text-[11px] text-slate-500">
+                <div className="text-[11px] text-slate-500 dark:text-slate-400">
                   {streak
                     ? `Đã đọc ${streak.week[streak.week.length - 1]?.pages_read ?? 0} trang hôm nay`
                     : isLoggedIn ? 'Đang tải...' : 'Đăng nhập để theo dõi chuỗi học'}
@@ -1523,7 +1534,7 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
               </div>
             </div>
             {/* TODO(M16): XP chưa có API (GĐ6.5); giữ hiển thị như thiết kế. */}
-            <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-xl border border-amber-200">
+            <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-xl border border-amber-200 dark:text-amber-400 dark:bg-amber-900/30 dark:border-amber-900/40">
               +50 XP
             </span>
           </div>
@@ -1537,23 +1548,23 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
         <div className="glass-dock rounded-full px-5 py-2.5 flex items-center gap-4 border border-white/80">
 
           {/* Navigation */}
-          <div className="flex items-center gap-1.5 border-r border-slate-200/80 pr-3">
+          <div className="flex items-center gap-1.5 border-r border-slate-200/80 pr-3 dark:border-slate-700">
             <button
               onClick={prevPage}
-              className="w-9 h-9 rounded-full bg-slate-100/80 hover:bg-pink-100 text-slate-600 hover:text-pink-600 flex items-center justify-center transition-all shadow-xs"
+              className="w-9 h-9 rounded-full bg-slate-100/80 hover:bg-pink-100 text-slate-600 hover:text-pink-600 flex items-center justify-center transition-all shadow-xs dark:bg-[#1e293b] dark:hover:bg-pink-900/40 dark:text-slate-300"
               title="Trang trước"
             >
               <span className="material-symbols-outlined text-[18px]">skip_previous</span>
             </button>
             <div className="text-center px-2">
-              <span className="text-xs font-bold text-slate-700 block leading-tight">
+              <span className="text-xs font-bold text-slate-700 block leading-tight dark:text-slate-100">
                 Trang {currentPageIndex + 1}
               </span>
               <span className="text-[10px] text-slate-400 block font-medium">{pages.length} trang</span>
             </div>
             <button
               onClick={nextPage}
-              className="w-9 h-9 rounded-full bg-slate-100/80 hover:bg-pink-100 text-slate-600 hover:text-pink-600 flex items-center justify-center transition-all shadow-xs"
+              className="w-9 h-9 rounded-full bg-slate-100/80 hover:bg-pink-100 text-slate-600 hover:text-pink-600 flex items-center justify-center transition-all shadow-xs dark:bg-[#1e293b] dark:hover:bg-pink-900/40 dark:text-slate-300"
               title="Trang tiếp"
             >
               <span className="material-symbols-outlined text-[18px]">skip_next</span>
@@ -1561,7 +1572,7 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
           </div>
 
           {/* Full Page Read Button */}
-          <div className="flex items-center gap-2 border-r border-slate-200/80 pr-3">
+          <div data-tour="reader-listen" className="flex items-center gap-2 border-r border-slate-200/80 pr-3 dark:border-slate-700">
             <button
               onClick={handleReadEntirePage}
               disabled={isPlayingFullPage || bubbles.length === 0}
@@ -1579,7 +1590,7 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
 
             <button
               onClick={cycleSpeed}
-              className="w-8 h-8 rounded-full bg-slate-100/80 hover:bg-slate-200 text-slate-600 text-xs font-bold transition-colors"
+              className="w-8 h-8 rounded-full bg-slate-100/80 hover:bg-slate-200 text-slate-600 text-xs font-bold transition-colors dark:bg-[#1e293b] dark:hover:bg-slate-700 dark:text-slate-300"
               title="Tốc độ đọc"
             >
               {speechRate}x
@@ -1587,18 +1598,18 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
           </div>
 
           {/* Font Resize */}
-          <div className="flex items-center gap-1 border-r border-slate-200/80 pr-3">
+          <div className="flex items-center gap-1 border-r border-slate-200/80 pr-3 dark:border-slate-700">
             <button
               onClick={() => changeFontSize(-1)}
-              className="w-7 h-7 rounded-full hover:bg-slate-100 text-slate-600 flex items-center justify-center text-xs"
+              className="w-7 h-7 rounded-full hover:bg-slate-100 text-slate-600 flex items-center justify-center text-xs dark:hover:bg-slate-700 dark:text-slate-300"
               title="Giảm cỡ chữ"
             >
               A-
             </button>
-            <span className="text-xs font-mono font-semibold text-slate-600 px-1 min-w-[2.75rem] text-center" title="Cỡ chữ bản dịch">{fontScale}%</span>
+            <span className="text-xs font-mono font-semibold text-slate-600 px-1 min-w-[2.75rem] text-center dark:text-slate-300" title="Cỡ chữ bản dịch">{fontScale}%</span>
             <button
               onClick={() => changeFontSize(1)}
-              className="w-7 h-7 rounded-full hover:bg-slate-100 text-slate-600 flex items-center justify-center text-xs"
+              className="w-7 h-7 rounded-full hover:bg-slate-100 text-slate-600 flex items-center justify-center text-xs dark:hover:bg-slate-700 dark:text-slate-300"
               title="Tăng cỡ chữ"
             >
               A+
@@ -1610,8 +1621,8 @@ export const ComicReader: React.FC<ComicReaderProps> = ({
             onClick={() => setOverlaysVisible(!overlaysVisible)}
             className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-colors ${
               overlaysVisible
-                ? 'bg-pink-100 text-[#a43073] hover:bg-pink-200'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                ? 'bg-pink-100 text-[#a43073] hover:bg-pink-200 dark:bg-pink-900/30 dark:text-pink-400 dark:hover:bg-pink-900/40'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-[#1e293b] dark:text-slate-300 dark:hover:bg-slate-700'
             }`}
           >
             <span className="material-symbols-outlined text-[16px]">

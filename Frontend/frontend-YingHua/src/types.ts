@@ -88,19 +88,6 @@ export interface ComicSeries {
   pages?: ComicPage[];
 }
 
-export interface LeaderboardUser {
-  rank: number;
-  name: string;
-  avatar: string;
-  hskLevel: string;
-  pagesRead: number;
-  exp: number;
-  streakDays: number;
-  vocabCount?: number;
-  tag?: string;
-  isCurrentUser?: boolean;
-}
-
 export interface FlashcardDeck {
   id: string;
   title: string;
@@ -117,10 +104,8 @@ export interface FlashcardDeck {
 export interface UserProfileData {
   name: string;
   chineseName: string;
-  badge: string;
   hskLevel: string;
   id: string;
-  vipExpiry: string;
   joinDate: string;
   email: string;
   showEmail?: boolean;

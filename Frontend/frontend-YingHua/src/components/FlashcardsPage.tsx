@@ -6,6 +6,7 @@ import { formatDateTime } from '../utils/format';
 import { QuizSection } from './QuizSection';
 import { ReviewRoom } from './ReviewRoom';
 import { VocabNotebook } from './VocabNotebook';
+import { useTourPage } from '../tour/TourProvider';
 
 interface FlashcardsPageProps {
   onNavigateToReader: () => void;
@@ -14,6 +15,9 @@ interface FlashcardsPageProps {
   /** true khi nơi khác (nhiệm vụ ngày) muốn đưa người học tới khu Kiểm tra cá nhân hóa. */
   focusQuiz?: boolean;
   onFocusQuizHandled?: () => void;
+  /** Khóa bộ thẻ từ URL (`?bo=`): chọn bộ này và bắt đầu ôn ngay một lần. */
+  initialDeck?: string | null;
+  onInitialDeckHandled?: () => void;
 }
 
 interface NotebookCounts {
@@ -31,14 +35,15 @@ const ALL_DECK_KEY = 'all';
 const ALL_DECK_TITLE = 'Tất cả từ vựng';
 
 const DECK_BADGE: Record<ApiDeck['kind'] | 'all', { label: string; color: string }> = {
-  all: { label: 'Tất cả', color: 'bg-pink-100 text-[#85145a]' },
-  starred: { label: 'Yêu thích ⭐', color: 'bg-amber-100 text-amber-900' },
-  series: { label: 'Bộ truyện', color: 'bg-blue-100 text-blue-900' }
+  all: { label: 'Tất cả', color: 'bg-pink-100 dark:bg-pink-900/30 text-[#85145a] dark:text-pink-300' },
+  starred: { label: 'Yêu thích ⭐', color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-900 dark:text-amber-300' },
+  series: { label: 'Bộ truyện', color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-900 dark:text-blue-300' }
 };
 
 const percent = (part: number, whole: number): number => (whole > 0 ? Math.round((part / whole) * 100) : 0);
 
-export const FlashcardsPage: React.FC<FlashcardsPageProps> = ({ onNavigateToReader, onOpenReader, showToast, focusQuiz = false, onFocusQuizHandled }) => {
+export const FlashcardsPage: React.FC<FlashcardsPageProps> = ({ onNavigateToReader, onOpenReader, showToast, focusQuiz = false, onFocusQuizHandled, initialDeck = null, onInitialDeckHandled }) => {
+  useTourPage('flashcards');
   const [summary, setSummary] = useState<ReviewSummary | null>(null);
   const [decks, setDecks] = useState<ApiDeck[]>([]);
   const [counts, setCounts] = useState<NotebookCounts | null>(null);
@@ -114,6 +119,16 @@ export const FlashcardsPage: React.FC<FlashcardsPageProps> = ({ onNavigateToRead
     roomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
+  // StrictMode chạy effect hai lần ở dev; một bộ từ URL chỉ được mở một phiên ôn.
+  const handledDeck = useRef<string | null>(null);
+  useEffect(() => {
+    if (!initialDeck || handledDeck.current === initialDeck) return;
+    handledDeck.current = initialDeck;
+    setSelectedDeck(initialDeck);
+    setStartTick(value => value + 1);
+    onInitialDeckHandled?.();
+  }, [initialDeck, onInitialDeckHandled]);
+
   const visibleDecks = useMemo(
     () => decks.filter(deck => deckKindFilter === 'all' || deck.kind === deckKindFilter),
     [decks, deckKindFilter]
@@ -131,21 +146,21 @@ export const FlashcardsPage: React.FC<FlashcardsPageProps> = ({ onNavigateToRead
     <div className="w-full max-w-[1440px] mx-auto px-4 md:px-8 lg:px-12 py-6 flex flex-col gap-10">
       {/* TOP PROGRESS & SUMMARY BENTO */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-        <div className="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-8 shadow-soft border border-pink-100 flex flex-col justify-between relative overflow-hidden">
-          <div className="absolute -right-12 -top-12 w-48 h-48 rounded-full bg-pink-100/50 blur-2xl pointer-events-none"></div>
-          <div className="absolute right-1/3 bottom-0 w-32 h-32 rounded-full bg-blue-100/40 blur-xl pointer-events-none"></div>
+        <div className="lg:col-span-7 bg-white dark:bg-[#0f172a] rounded-3xl p-6 sm:p-8 shadow-soft dark:shadow-none border border-pink-100 dark:border-slate-800 transition-colors duration-300 flex flex-col justify-between relative overflow-hidden">
+          <div className="absolute -right-12 -top-12 w-48 h-48 rounded-full bg-pink-100/50 dark:bg-pink-900/20 blur-2xl pointer-events-none"></div>
+          <div className="absolute right-1/3 bottom-0 w-32 h-32 rounded-full bg-blue-100/40 dark:bg-blue-900/20 blur-xl pointer-events-none"></div>
 
           <div className="flex flex-col gap-2 relative z-10">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#ffd8e7] text-[#85145a] font-bold text-xs shadow-xs">
+            <div data-tour="flash-overview" className="flex items-center gap-2 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#ffd8e7] dark:bg-pink-900/30 text-[#85145a] dark:text-pink-300 font-bold text-xs shadow-xs dark:shadow-none">
                 <span>🌸</span> SRS Spaced Repetition Hệ Thống
               </span>
-              <span className="text-xs text-slate-500 font-medium">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                 {summary ? `Hôm nay bạn đã ôn ${summary.reviewed_today} lượt` : 'Đang tải số liệu ôn tập...'}
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight font-['Plus_Jakarta_Sans']">Từ Vựng & Flashcard Theo Manhua</h1>
-            <p className="text-xs sm:text-sm text-slate-600 max-w-xl leading-relaxed">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-800 dark:text-white tracking-tight font-['Plus_Jakarta_Sans']">Từ Vựng & Flashcard Theo Manhua</h1>
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-xl leading-relaxed">
               Tập trung học sâu từ vựng bản xứ trích xuất trực tiếp qua từng khung tranh truyện. Ôn tập đúng nhịp độ khoa học, biến kiến thức thụ động thành phản xạ giao tiếp tự nhiên.
             </p>
           </div>
@@ -153,15 +168,15 @@ export const FlashcardsPage: React.FC<FlashcardsPageProps> = ({ onNavigateToRead
           <div className="mt-6 pt-4 flex flex-col gap-3 relative z-10">
             <div className="flex items-baseline justify-between gap-2 flex-wrap">
               <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-extrabold text-[#a43073] font-['Plus_Jakarta_Sans']">{counts ? total : '–'}</span>
-                <span className="text-xs text-slate-500 font-semibold">tổng từ vựng trong Sổ tay</span>
+                <span className="text-4xl font-extrabold text-[#a43073] dark:text-pink-400 font-['Plus_Jakarta_Sans']">{counts ? total : '–'}</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">tổng từ vựng trong Sổ tay</span>
               </div>
-              <span className="text-xs text-[#0060ac] font-bold bg-blue-100 px-3 py-1 rounded-full">
+              <span className="text-xs text-[#0060ac] dark:text-blue-300 font-bold bg-blue-100 dark:bg-blue-900/30 px-3 py-1 rounded-full">
                 {counts && total > 0 ? `${percent(counts.known, total)}% đã thuộc` : 'Chưa có từ nào'}
               </span>
             </div>
 
-            <div className="w-full h-3 rounded-full bg-slate-100 flex overflow-hidden p-0.5">
+            <div className="w-full h-3 rounded-full bg-slate-100 dark:bg-slate-700 flex overflow-hidden p-0.5">
               <div className="h-full bg-[#a43073] rounded-full" style={{ width: `${percent(counts?.known ?? 0, total)}%` }} title={`Đã thuộc: ${counts?.known ?? 0}`}></div>
               <div className="h-full bg-[#64a8fe] rounded-full mx-0.5" style={{ width: `${percent(counts?.learning ?? 0, total)}%` }} title={`Đang học: ${counts?.learning ?? 0}`}></div>
               <div className="h-full bg-amber-400 rounded-full" style={{ width: `${percent(counts?.ignored ?? 0, total)}%` }} title={`Tạm bỏ qua: ${counts?.ignored ?? 0}`}></div>
@@ -171,78 +186,78 @@ export const FlashcardsPage: React.FC<FlashcardsPageProps> = ({ onNavigateToRead
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-[#a43073]"></span>
                 <div className="flex flex-col">
-                  <span className="text-xs text-slate-800 font-bold">{counts?.known ?? 0} từ</span>
-                  <span className="text-[10px] text-slate-500">Đã thuộc</span>
+                  <span className="text-xs text-slate-800 dark:text-slate-100 font-bold">{counts?.known ?? 0} từ</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400">Đã thuộc</span>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-[#64a8fe]"></span>
                 <div className="flex flex-col">
-                  <span className="text-xs text-slate-800 font-bold">{counts?.learning ?? 0} từ</span>
-                  <span className="text-[10px] text-slate-500">Đang học</span>
+                  <span className="text-xs text-slate-800 dark:text-slate-100 font-bold">{counts?.learning ?? 0} từ</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400">Đang học</span>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
                 <div className="flex flex-col">
-                  <span className="text-xs text-slate-800 font-bold">{counts?.ignored ?? 0} từ</span>
-                  <span className="text-[10px] text-slate-500">Tạm bỏ qua</span>
+                  <span className="text-xs text-slate-800 dark:text-slate-100 font-bold">{counts?.ignored ?? 0} từ</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400">Tạm bỏ qua</span>
                 </div>
               </div>
               {counts?.dueWords != null && (
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-rose-400"></span>
                   <div className="flex flex-col">
-                    <span className="text-xs text-slate-800 font-bold">{counts.dueWords} từ</span>
-                    <span className="text-[10px] text-slate-500">Cần xem lại</span>
+                    <span className="text-xs text-slate-800 dark:text-slate-100 font-bold">{counts.dueWords} từ</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400">Cần xem lại</span>
                   </div>
                 </div>
               )}
             </div>
             {statsError && (
-              <button onClick={refreshStats} className="self-start text-xs font-bold text-rose-600 hover:underline">{statsError} Bấm để thử lại.</button>
+              <button onClick={refreshStats} className="self-start text-xs font-bold text-rose-600 dark:text-rose-400 hover:underline">{statsError} Bấm để thử lại.</button>
             )}
           </div>
         </div>
 
-        <div className="lg:col-span-5 bg-gradient-to-br from-[#eff4ff] to-white rounded-3xl p-6 sm:p-8 shadow-soft border border-pink-100 flex flex-col justify-between">
+        <div className="lg:col-span-5 bg-gradient-to-br from-[#eff4ff] to-white dark:from-[#0f172a] dark:to-[#0f172a] rounded-3xl p-6 sm:p-8 shadow-soft dark:shadow-none border border-pink-100 dark:border-slate-800 transition-colors duration-300 flex flex-col justify-between">
           <div className="flex items-start justify-between">
             <div>
-              <span className="text-[11px] font-bold text-[#a43073] uppercase tracking-wider">Hôm Nay Cần Học</span>
-              <div className="text-2xl font-bold text-slate-800 mt-1">{summary ? `${dueNow} Thẻ Đến Hạn` : 'Đang tải...'}</div>
+              <span className="text-[11px] font-bold text-[#a43073] dark:text-pink-400 uppercase tracking-wider">Hôm Nay Cần Học</span>
+              <div className="text-2xl font-bold text-slate-800 dark:text-white mt-1">{summary ? `${dueNow} Thẻ Đến Hạn` : 'Đang tải...'}</div>
               {summary && dueNow === 0 && summary.next_due_at && (
-                <div className="text-xs text-slate-500 mt-1">Thẻ kế tiếp đến hạn lúc {formatDateTime(summary.next_due_at)}</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">Thẻ kế tiếp đến hạn lúc {formatDateTime(summary.next_due_at)}</div>
               )}
               {summary && dueNow > 0 && summary.due_later_today > 0 && (
-                <div className="text-xs text-slate-500 mt-1">Còn {summary.due_later_today} thẻ nữa sẽ đến hạn trong hôm nay</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">Còn {summary.due_later_today} thẻ nữa sẽ đến hạn trong hôm nay</div>
               )}
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-pink-100 flex items-center justify-center text-[#a43073] shadow-xs">
+            <div className="w-12 h-12 rounded-2xl bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center text-[#a43073] dark:text-pink-400 shadow-xs dark:shadow-none">
               <span className="material-symbols-outlined text-[26px]">psychology</span>
             </div>
           </div>
 
-          <div className="my-4 p-3.5 bg-white rounded-2xl shadow-xs border border-pink-100/60 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-700">
+          <div className="my-4 p-3.5 bg-white dark:bg-slate-800 rounded-2xl shadow-xs dark:shadow-none border border-pink-100/60 dark:border-slate-700 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-700 dark:text-blue-300">
               <span className="material-symbols-outlined text-[22px]">auto_stories</span>
             </div>
             <div className="flex flex-col min-w-0 flex-1">
               {busiestDeck ? (
                 <>
-                  <span className="text-xs font-bold text-slate-800 truncate">{busiestDeck.title}</span>
-                  <span className="text-[11px] text-slate-500">Có {busiestDeck.due_count} thẻ đến hạn trong bộ này</span>
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">{busiestDeck.title}</span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">Có {busiestDeck.due_count} thẻ đến hạn trong bộ này</span>
                 </>
               ) : (
                 <>
-                  <span className="text-xs font-bold text-slate-800">Lưu thêm từ khi đọc truyện</span>
-                  <span className="text-[11px] text-slate-500">Mỗi từ lưu sẽ có ảnh ngữ cảnh và 3 thẻ ôn</span>
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-100">Lưu thêm từ khi đọc truyện</span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">Mỗi từ lưu sẽ có ảnh ngữ cảnh và 3 thẻ ôn</span>
                 </>
               )}
             </div>
             {busiestDeck ? (
-              <button onClick={() => startReview(busiestDeck.key)} className="text-xs font-bold text-[#a43073] hover:underline">Ôn bộ này</button>
+              <button onClick={() => startReview(busiestDeck.key)} className="text-xs font-bold text-[#a43073] dark:text-pink-400 hover:underline">Ôn bộ này</button>
             ) : (
-              <button onClick={onNavigateToReader} className="text-xs font-bold text-[#a43073] hover:underline">Đọc truyện</button>
+              <button onClick={onNavigateToReader} className="text-xs font-bold text-[#a43073] dark:text-pink-400 hover:underline">Đọc truyện</button>
             )}
           </div>
 
@@ -256,7 +271,7 @@ export const FlashcardsPage: React.FC<FlashcardsPageProps> = ({ onNavigateToRead
             </button>
             <button
               onClick={() => setShuffleTick(value => value + 1)}
-              className="w-11 h-11 rounded-full bg-white hover:bg-slate-100 text-slate-600 flex items-center justify-center shadow-xs border border-slate-200 transition-colors"
+              className="w-11 h-11 rounded-full bg-white dark:bg-[#1e293b] hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center shadow-xs dark:shadow-none border border-slate-200 dark:border-slate-700 transition-colors"
               title="Xáo trộn thứ tự từ trong bảng Sổ tay bên dưới"
             >
               <span className="material-symbols-outlined text-[20px]">shuffle</span>
@@ -266,7 +281,7 @@ export const FlashcardsPage: React.FC<FlashcardsPageProps> = ({ onNavigateToRead
       </div>
 
       {/* PHÒNG ÔN FLASHCARD 3D */}
-      <div ref={roomRef} className="scroll-mt-24">
+      <div data-tour="flash-review" ref={roomRef} className="scroll-mt-24">
         <ReviewRoom
           deck={selectedDeck}
           deckTitle={deckTitle}
@@ -279,6 +294,7 @@ export const FlashcardsPage: React.FC<FlashcardsPageProps> = ({ onNavigateToRead
       </div>
 
       {/* KIỂM TRA CÁ NHÂN HÓA (M09) */}
+      <div data-tour="flash-quiz">
       <QuizSection
         focusTick={quizFocusTick}
         onNavigateToReader={onNavigateToReader}
@@ -286,16 +302,17 @@ export const FlashcardsPage: React.FC<FlashcardsPageProps> = ({ onNavigateToRead
         onChanged={refreshStats}
         showToast={showToast}
       />
+      </div>
 
       {/* FLASHCARD DECKS / CATEGORIES GRID */}
       <div className="flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
           <div>
-            <span className="text-xs font-bold text-[#a43073] uppercase tracking-wider">Thư Viện Bộ Thẻ</span>
-            <h3 className="text-2xl font-bold text-slate-800 font-['Plus_Jakarta_Sans']">Chọn Bộ Flashcard Để Ôn Tập</h3>
+            <span className="text-xs font-bold text-[#a43073] dark:text-pink-400 uppercase tracking-wider">Thư Viện Bộ Thẻ</span>
+            <h3 className="text-2xl font-bold text-slate-800 dark:text-white font-['Plus_Jakarta_Sans']">Chọn Bộ Flashcard Để Ôn Tập</h3>
           </div>
 
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-full text-xs font-semibold">
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-full text-xs font-semibold">
             {([
               ['all', 'Tất cả'],
               ['series', 'Theo Bộ Truyện'],
@@ -304,7 +321,7 @@ export const FlashcardsPage: React.FC<FlashcardsPageProps> = ({ onNavigateToRead
               <button
                 key={kind}
                 onClick={() => setDeckKindFilter(kind)}
-                className={`px-3.5 py-1.5 rounded-full transition-all ${deckKindFilter === kind ? 'bg-[#a43073] text-white shadow-xs' : 'text-slate-600'}`}
+                className={`px-3.5 py-1.5 rounded-full transition-all ${deckKindFilter === kind ? 'bg-[#a43073] text-white shadow-xs' : 'text-slate-600 dark:text-slate-300'}`}
               >
                 {label}
               </button>
@@ -340,12 +357,13 @@ export const FlashcardsPage: React.FC<FlashcardsPageProps> = ({ onNavigateToRead
           ))}
         </div>
         {visibleDecks.length === 0 && deckKindFilter !== 'all' && (
-          <p className="text-sm text-slate-500 text-center py-4">
+          <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-4">
             {deckKindFilter === 'starred' ? 'Bạn chưa đánh dấu sao từ nào.' : 'Chưa có bộ truyện nào có từ đã lưu.'}
           </p>
         )}
       </div>
 
+      <div data-tour="flash-notebook">
       <VocabNotebook
         refreshKey={statsTick}
         shuffleTick={shuffleTick}
@@ -354,6 +372,7 @@ export const FlashcardsPage: React.FC<FlashcardsPageProps> = ({ onNavigateToRead
         onNavigateToReader={onNavigateToReader}
         showToast={showToast}
       />
+      </div>
     </div>
   );
 };
@@ -377,30 +396,30 @@ const DeckTile: React.FC<DeckTileProps> = ({ active, badge, title, wordCount, re
     onKeyDown={e => {
       if (e.key === 'Enter') onSelect();
     }}
-    className={`bg-white rounded-2xl p-4 shadow-xs border hover:shadow-md transition-all flex flex-col justify-between cursor-pointer group ${
-      active ? 'border-[#a43073] ring-2 ring-pink-200' : 'border-pink-100'
+    className={`bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-xs dark:shadow-none border hover:shadow-md dark:hover:shadow-none transition-all flex flex-col justify-between cursor-pointer group ${
+      active ? 'border-[#a43073] dark:border-pink-400 ring-2 ring-pink-200 dark:ring-pink-900/50' : 'border-pink-100 dark:border-slate-700'
     }`}
   >
     <div>
       <div className="flex items-center justify-between mb-2">
         <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${badge.color}`}>{badge.label}</span>
-        <span className="text-xs font-bold text-slate-500">{wordCount} từ vựng</span>
+        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{wordCount} từ vựng</span>
       </div>
-      <h4 className="text-sm font-bold text-slate-800 group-hover:text-[#a43073] transition-colors">{title}</h4>
-      <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">{description}</p>
+      <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100 group-hover:text-[#a43073] dark:group-hover:text-pink-400 transition-colors">{title}</h4>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">{description}</p>
     </div>
-    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+    <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between gap-2">
       {reviewedCount !== null ? (
         <>
-          <div className="w-24 bg-slate-100 h-1.5 rounded-full overflow-hidden">
+          <div className="w-24 bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
             <div className="bg-[#a43073] h-full rounded-full" style={{ width: `${percent(reviewedCount, wordCount)}%` }}></div>
           </div>
-          <span className="text-xs font-bold text-[#a43073]">Ôn {reviewedCount}/{wordCount}</span>
+          <span className="text-xs font-bold text-[#a43073] dark:text-pink-400">Ôn {reviewedCount}/{wordCount}</span>
         </>
       ) : (
-        <span className="text-xs font-bold text-[#a43073]">Bấm để ôn</span>
+        <span className="text-xs font-bold text-[#a43073] dark:text-pink-400">Bấm để ôn</span>
       )}
-      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${dueCount > 0 ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-500'}`}>
+      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${dueCount > 0 ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'}`}>
         {dueCount} đến hạn
       </span>
     </div>

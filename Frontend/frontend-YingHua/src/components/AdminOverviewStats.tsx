@@ -9,9 +9,9 @@ const formatPercent = (rate: number | null): string => (rate === null ? 'Chưa c
 const formatMinutes = (seconds: number): string => `${Math.round(seconds / 60).toLocaleString('vi-VN')} phút`;
 
 const Card: React.FC<{ title: string; icon: React.ReactNode; tone: string; children: React.ReactNode }> = ({ title, icon, tone, children }) => (
-  <article className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+  <article className="rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-[#0f172a] p-4 shadow-sm dark:shadow-none transition-colors duration-300">
     <div className="flex items-center justify-between gap-2">
-      <h3 className="text-[11px] font-bold text-slate-500">{title}</h3>
+      <h3 className="text-[11px] font-bold text-slate-500 dark:text-slate-400">{title}</h3>
       <span className={`flex h-7 w-7 items-center justify-center rounded-full ${tone}`}>{icon}</span>
     </div>
     <div className="mt-3 grid grid-cols-2 gap-2">{children}</div>
@@ -58,32 +58,32 @@ export const AdminOverviewStats: React.FC = () => {
     <div className="mb-5">
       {error && <div className="mb-2"><LoadState loading={false} error={error} onRetry={reload} /></div>}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <Card title="Người dùng" icon={<Users size={16} />} tone="bg-blue-100 text-blue-700">
+        <Card title="Người dùng" icon={<Users size={16} />} tone="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
           <Stat label="Tổng" value={formatNumber(users.total)} />
           <Stat label="Mới 7 ngày" value={formatNumber(users.new_last_7_days)} />
           <Stat label="Quản trị viên" value={formatNumber(users.admins)} />
           <Stat label="Bị khóa" value={formatNumber(users.locked)} />
         </Card>
-        <Card title="Nội dung" icon={<BookOpen size={16} />} tone="bg-pink-100 text-pink-700">
+        <Card title="Nội dung" icon={<BookOpen size={16} />} tone="bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-400">
           <Stat label="Truyện" value={`${formatNumber(content.series_total)} (${formatNumber(content.series_public)} công khai)`} />
           <Stat label="Chương" value={formatNumber(content.chapters)} />
           <Stat label="Trang" value={formatNumber(content.pages)} />
           <Stat label="Từ đã lưu" value={formatNumber(stats.words_saved_total)} />
         </Card>
-        <Card title="Xử lý ảnh (OCR)" icon={<CheckCheck size={16} />} tone="bg-amber-100 text-amber-700">
+        <Card title="Xử lý ảnh (OCR)" icon={<CheckCheck size={16} />} tone="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">
           <Stat label="Tỉ lệ thành công" value={formatPercent(imaging.ocr_success_rate)} />
           <Stat label="Tỉ lệ lỗi" value={formatPercent(imaging.ocr_failure_rate)} />
           <Stat label="Chờ / đang chạy" value={`${formatNumber(imaging.pages_queued)} / ${formatNumber(imaging.pages_running)}`} />
           <Stat label="Thời gian TB" value={imaging.avg_processing_ms === null ? 'Chưa có dữ liệu' : `${(imaging.avg_processing_ms / 1000).toFixed(1)} giây`} />
         </Card>
-        <Card title="Hoạt động học" icon={<Activity size={16} />} tone="bg-rose-100 text-rose-700">
+        <Card title="Hoạt động học" icon={<Activity size={16} />} tone="bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400">
           <Stat label="Học viên hôm nay" value={formatNumber(today.active_users)} />
           <Stat label="Lượt ôn hôm nay" value={formatNumber(today.reviews_count)} />
           <Stat label="Trang đọc 7 ngày" value={formatNumber(week.pages_read)} />
           <Stat label="Thời gian học 7 ngày" value={formatMinutes(week.study_seconds)} />
         </Card>
       </div>
-      <p className="mt-2 text-right text-[10px] text-slate-400">Cập nhật {formatDateTime(stats.generated_at)}</p>
+      <p className="mt-2 text-right text-[10px] text-slate-400 dark:text-slate-500">Cập nhật {formatDateTime(stats.generated_at)}</p>
     </div>
   );
 };

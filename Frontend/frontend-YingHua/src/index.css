@@ -1,5 +1,46 @@
 @import "tailwindcss";
 
+/* Chế độ tối: bật bằng class `dark` trên <html> (xem src/utils/useTheme.tsx). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Đổi sáng/tối lan từ nút bấm như gợn nước: mask nhiều nấc tạo viền mềm, bán kính do useTheme.tsx tăng dần. */
+@property --theme-ripple {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-new(root) {
+  -webkit-mask-image: radial-gradient(
+    circle at var(--ripple-x) var(--ripple-y),
+    #000 calc(var(--theme-ripple) - 170px),
+    rgb(0 0 0 / 0.72) calc(var(--theme-ripple) - 135px),
+    #000 calc(var(--theme-ripple) - 100px),
+    rgb(0 0 0 / 0.5) calc(var(--theme-ripple) - 62px),
+    rgb(0 0 0 / 0.8) calc(var(--theme-ripple) - 34px),
+    transparent var(--theme-ripple)
+  );
+  mask-image: radial-gradient(
+    circle at var(--ripple-x) var(--ripple-y),
+    #000 calc(var(--theme-ripple) - 170px),
+    rgb(0 0 0 / 0.72) calc(var(--theme-ripple) - 135px),
+    #000 calc(var(--theme-ripple) - 100px),
+    rgb(0 0 0 / 0.5) calc(var(--theme-ripple) - 62px),
+    rgb(0 0 0 / 0.8) calc(var(--theme-ripple) - 34px),
+    transparent var(--theme-ripple)
+  );
+}
+.theme-rippling,
+.theme-rippling *,
+.theme-rippling *::before,
+.theme-rippling *::after {
+  transition: none !important;
+}
+
 @layer base {
   :root {
     --primary: #a43073;
@@ -79,4 +120,63 @@
 .bubble-pin:hover {
   transform: scale(1.03);
   z-index: 40;
+}
+
+/* Chế độ tối (hiện chỉ áp dụng cho trang chủ) */
+body {
+  transition: background-color 0.3s, color 0.3s;
+}
+.dark body {
+  background-color: #020617;
+  color: #e2e8f0;
+  color-scheme: dark;
+}
+.dark .glass-nav {
+  background: rgba(15, 23, 42, 0.88);
+}
+.dark .glass-dock {
+  background: rgba(15, 23, 42, 0.92);
+  box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(51, 65, 85, 0.8);
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #f472b6;
+}
+
+/* Tour hướng dẫn: bóng đổ rất rộng làm lớp tối, phần không bị phủ chính là vùng được tô sáng */
+.tour-spot {
+  border-radius: 14px;
+  box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.45);
+  transition: transform 0.28s ease, width 0.28s ease, height 0.28s ease;
+}
+.tour-spot::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  border: 2px solid #f472b6;
+  box-shadow: 0 0 16px rgba(244, 114, 182, 0.65);
+  animation: tour-breathe 2.2s ease-in-out infinite;
+}
+.tour-card {
+  transition: transform 0.28s ease, opacity 0.18s ease;
+}
+.tour-progress {
+  transition: width 0.28s ease;
+}
+@keyframes tour-breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tour-spot,
+  .tour-card,
+  .tour-progress {
+    transition: none;
+  }
+  .tour-spot::after {
+    animation: none;
+  }
 }

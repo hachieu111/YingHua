@@ -6,7 +6,9 @@ import { validateImageFile } from '../api/library';
 import { ConfirmDialog } from './ConfirmDialog';
 import { ProfileAvatar } from './ProfileAvatar';
 import { UserProfileData } from '../types';
-import { AVAILABLE_BADGES } from '../data/achievements';
+import { BadgePicker } from './AchievementViews';
+import { BadgeChip } from './BadgeChip';
+import { useRewards } from '../utils/useRewards';
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -35,7 +37,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
 }) => {
   const [name, setName] = useState<string>(userProfile?.name || '');
   const [chineseName, setChineseName] = useState<string>(userProfile?.chineseName || '');
-  const [selectedBadge, setSelectedBadge] = useState<string>(userProfile?.badge || '');
+  const { me } = useRewards();
   // Mã avatar có sẵn được chọn và ảnh tự tải lên đang chờ lưu lên máy chủ.
   const [presetId, setPresetId] = useState<string | null>(null);
   // Mã máy chủ chấp nhận; null = chưa biết (hiện đủ bộ ảnh).
@@ -52,7 +54,6 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
     if (!isOpen) return;
     setName(userProfile?.name || '');
     setChineseName(userProfile?.chineseName || '');
-    setSelectedBadge(userProfile?.badge || '');
     setPresetId(null);
     setPendingFile(null);
     setAvatarError(null);
@@ -145,8 +146,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
       }
       const saved = await onSaveProfile({
         name: name.trim(),
-        chineseName: chineseName.trim(),
-        badge: selectedBadge
+        chineseName: chineseName.trim()
       });
       if (!saved) return;
       showToast('Cập nhật hồ sơ cá nhân thành công!');
@@ -157,25 +157,25 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white w-full max-w-xl rounded-3xl shadow-floating border border-pink-100 overflow-hidden flex flex-col my-auto max-h-[90vh]">
+    <div className="fixed inset-0 z-50 bg-slate-900/50 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+      <div className="bg-white dark:bg-[#0f172a] w-full max-w-xl rounded-3xl shadow-floating dark:shadow-none border border-pink-100 dark:border-slate-700 overflow-hidden flex flex-col my-auto max-h-[90vh]">
         
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-pink-100 bg-gradient-to-r from-pink-50/70 via-white to-pink-50/40 shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-pink-100 dark:border-slate-700 bg-gradient-to-r from-pink-50/70 via-white to-pink-50/40 dark:from-pink-900/20 dark:via-[#0f172a] dark:to-pink-900/10 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-2xl bg-pink-100 flex items-center justify-center text-[#a43073] text-sm font-bold">
+            <div className="w-9 h-9 rounded-2xl bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center text-[#a43073] dark:text-pink-400 text-sm font-bold">
               <span className="material-symbols-outlined text-[20px]">edit_note</span>
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-800">Chỉnh sửa hồ sơ</h3>
-              <p className="text-[11px] text-slate-400 font-medium">
+              <h3 className="text-base font-bold text-slate-800 dark:text-white">Chỉnh sửa hồ sơ</h3>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
                 Cập nhật tên, ảnh đại diện và thẻ danh hiệu đang hiển thị
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors"
+            className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-300 flex items-center justify-center transition-colors"
           >
             <span className="material-symbols-outlined text-[18px]">close</span>
           </button>
@@ -186,26 +186,26 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
           
           {/* SECTION 1: AVATAR SELECTION */}
           <div className="flex flex-col gap-3">
-            <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-[16px] text-[#a43073]">account_circle</span>
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-[16px] text-[#a43073] dark:text-pink-400">account_circle</span>
               <span>1. Ảnh đại diện (Avatar)</span>
             </span>
 
             {/* Current Selected Avatar Preview & Upload */}
-            <div className="flex items-center gap-4 p-3.5 rounded-2xl bg-[#eff4ff] border border-blue-100">
+            <div className="flex items-center gap-4 p-3.5 rounded-2xl bg-[#eff4ff] dark:bg-slate-800 border border-blue-100 dark:border-slate-700">
               <div className="relative shrink-0">
                 {pendingPreview || presetPreviewUrl ? (
                   <img
                     src={pendingPreview ?? presetPreviewUrl ?? ''}
                     alt="Avatar Preview"
-                    className="w-16 h-16 rounded-full object-cover ring-4 ring-pink-300 shadow-md bg-white"
+                    className="w-16 h-16 rounded-full object-cover ring-4 ring-pink-300 dark:ring-pink-900/60 shadow-md dark:shadow-none bg-white dark:bg-[#0f172a]"
                   />
                 ) : (
                   <ProfileAvatar
                     serverUrl={userProfile.avatarUrl}
                     fallbackSrc={userProfile.avatar}
                     alt="Avatar Preview"
-                    className="w-16 h-16 rounded-full object-cover ring-4 ring-pink-300 shadow-md bg-white"
+                    className="w-16 h-16 rounded-full object-cover ring-4 ring-pink-300 dark:ring-pink-900/60 shadow-md dark:shadow-none bg-white dark:bg-[#0f172a]"
                   />
                 )}
                 <span className="absolute -bottom-1 -right-1 w-5 h-5 bg-[#a43073] text-white rounded-full flex items-center justify-center text-[10px]">
@@ -214,19 +214,19 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               </div>
 
               <div className="flex flex-col gap-1 flex-1">
-                <span className="text-xs font-bold text-slate-800">Ảnh đang chọn</span>
-                <span className="text-[11px] text-slate-500">
+                <span className="text-xs font-bold text-slate-800 dark:text-white">Ảnh đang chọn</span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400">
                   Tải ảnh JPG, PNG hoặc WebP (tối đa 10 MB) để lưu lâu dài, hoặc chọn nhân vật gợi ý bên dưới (được lưu vào tài khoản)
                 </span>
                 {pendingFile && (
-                  <span className="text-[11px] text-[#a43073] font-semibold truncate">Ảnh sẽ được tải lên khi bạn bấm “Lưu thay đổi hồ sơ”: {pendingFile.name}</span>
+                  <span className="text-[11px] text-[#a43073] dark:text-pink-400 font-semibold truncate">Ảnh sẽ được tải lên khi bạn bấm “Lưu thay đổi hồ sơ”: {pendingFile.name}</span>
                 )}
                 {avatarError && (
-                  <span className="text-[11px] text-red-600 font-semibold" role="alert">{avatarError}</span>
+                  <span className="text-[11px] text-red-600 dark:text-red-400 font-semibold" role="alert">{avatarError}</span>
                 )}
                 
                 {/* File input button */}
-                <label className="mt-1 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white hover:bg-pink-50 text-[#a43073] border border-pink-200 text-xs font-semibold cursor-pointer w-fit shadow-xs transition-colors">
+                <label className="mt-1 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-[#1e293b] hover:bg-pink-50 dark:hover:bg-slate-700 text-[#a43073] dark:text-pink-400 border border-pink-200 dark:border-pink-900/40 text-xs font-semibold cursor-pointer w-fit shadow-xs dark:shadow-none transition-colors">
                   <span className="material-symbols-outlined text-[16px]">upload</span>
                   <span>Tải ảnh từ máy tính</span>
                   <input
@@ -241,7 +241,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                     type="button"
                     onClick={() => setConfirmRemove(true)}
                     disabled={removing || saving}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 text-xs font-semibold w-fit shadow-xs transition-colors disabled:opacity-60"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-[#1e293b] hover:bg-rose-50 dark:hover:bg-rose-900/20 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/50 text-xs font-semibold w-fit shadow-xs dark:shadow-none transition-colors disabled:opacity-60"
                   >
                     <span className="material-symbols-outlined text-[16px]">delete</span>
                     <span>Gỡ ảnh đại diện</span>
@@ -263,7 +263,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
 
             {/* Avatar Preset Grid */}
             <div className="flex flex-col gap-1.5">
-              <span className="text-[11px] font-semibold text-slate-500">
+              <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
                 Gợi ý avatar manhua & biểu trưng:
               </span>
               <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
@@ -276,16 +276,16 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                       onClick={() => handlePresetPick(av.id)}
                       className={`relative rounded-2xl p-1 flex flex-col items-center gap-1 transition-all ${
                         isSelected
-                          ? 'ring-2 ring-[#a43073] bg-pink-50 scale-105'
-                          : 'hover:bg-slate-50 border border-slate-100'
+                          ? 'ring-2 ring-[#a43073] dark:ring-pink-400 bg-pink-50 dark:bg-pink-900/20 scale-105'
+                          : 'hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-100 dark:border-slate-700'
                       }`}
                     >
                       <img
                         src={av.url}
                         alt={av.name}
-                        className="w-12 h-12 rounded-full object-cover shadow-xs bg-white"
+                        className="w-12 h-12 rounded-full object-cover shadow-xs dark:shadow-none bg-white dark:bg-slate-800"
                       />
-                      <span className="text-[10px] text-slate-700 font-medium truncate max-w-[70px]">
+                      <span className="text-[10px] text-slate-700 dark:text-slate-200 font-medium truncate max-w-[70px]">
                         {av.name}
                       </span>
                     </button>
@@ -297,18 +297,18 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
 
           {/* SECTION 2: NAME EDITING */}
           <div className="flex flex-col gap-3">
-            <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-[16px] text-[#0060ac]">badge</span>
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-[16px] text-[#0060ac] dark:text-blue-300">badge</span>
               <span>2. Tên hiển thị & Chữ Hán</span>
             </span>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold text-slate-600">
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">
                   Tên hiển thị học tập
                 </label>
                 <div className="relative flex items-center">
-                  <span className="material-symbols-outlined absolute left-3.5 text-slate-400 text-[18px]">
+                  <span className="material-symbols-outlined absolute left-3.5 text-slate-400 dark:text-slate-500 text-[18px]">
                     person
                   </span>
                   <input
@@ -316,17 +316,17 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Lam Hiên Vũ"
-                    className="w-full bg-[#eff4ff] text-slate-800 text-xs pl-10 pr-4 py-2.5 rounded-full outline-none focus:bg-white focus:ring-2 focus:ring-[#f472b6] transition-all"
+                    className="w-full bg-[#eff4ff] dark:bg-[#1e293b] text-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 text-xs pl-10 pr-4 py-2.5 rounded-full outline-none focus:bg-white dark:focus:bg-[#1e293b] focus:ring-2 focus:ring-[#f472b6] transition-all"
                   />
                 </div>
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold text-slate-600">
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">
                   Tên chữ Hán (nếu có)
                 </label>
                 <div className="relative flex items-center">
-                  <span className="material-symbols-outlined absolute left-3.5 text-slate-400 text-[18px]">
+                  <span className="material-symbols-outlined absolute left-3.5 text-slate-400 dark:text-slate-500 text-[18px]">
                     translate
                   </span>
                   <input
@@ -334,7 +334,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                     value={chineseName}
                     onChange={(e) => setChineseName(e.target.value)}
                     placeholder="轩宇"
-                    className="w-full bg-[#eff4ff] text-slate-800 text-xs pl-10 pr-4 py-2.5 rounded-full outline-none focus:bg-white focus:ring-2 focus:ring-[#f472b6] transition-all font-['Noto_Serif_SC'] font-semibold"
+                    className="w-full bg-[#eff4ff] dark:bg-[#1e293b] text-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 text-xs pl-10 pr-4 py-2.5 rounded-full outline-none focus:bg-white dark:focus:bg-[#1e293b] focus:ring-2 focus:ring-[#f472b6] transition-all font-['Noto_Serif_SC'] font-semibold"
                   />
                 </div>
               </div>
@@ -344,63 +344,30 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
           {/* SECTION 3: ACHIEVEMENT BADGE SELECTION */}
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[16px] text-amber-600">military_tech</span>
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[16px] text-amber-600 dark:text-amber-400">military_tech</span>
                 <span>3. Thẻ thành tựu / Danh hiệu trang bị</span>
               </span>
-              <span className="text-[11px] text-[#a43073] font-bold">
-                Đang dùng: {selectedBadge}
-              </span>
+              {me?.equipped_badge ? (
+                <BadgeChip badge={me.equipped_badge} className="!py-0.5" />
+              ) : (
+                <span className="text-[11px] text-slate-400 dark:text-slate-500 font-semibold">Chưa đeo huy hiệu</span>
+              )}
             </div>
 
-            <p className="text-[11px] text-slate-500">
-              Chọn danh hiệu muốn hiển thị nổi bật bên cạnh tên tài khoản của bạn:
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              Chọn huy hiệu đã mở khóa để hiển thị bên cạnh tên của bạn (lưu ngay khi bấm; bấm lại để tháo):
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {AVAILABLE_BADGES.map((b) => {
-                const isSelected = selectedBadge.includes(b.title);
-                const BadgeIcon = b.icon;
-                return (
-                  <div
-                    key={b.title}
-                    onClick={() => setSelectedBadge(b.title)}
-                    className={`p-3 rounded-2xl cursor-pointer border transition-all flex items-start gap-3 ${
-                      isSelected
-                        ? 'bg-pink-50/80 border-[#a43073] ring-2 ring-pink-200'
-                        : 'bg-slate-50/70 border-slate-200 hover:bg-slate-100'
-                    }`}
-                  >
-                    <span className={`w-10 h-10 rounded-xl border shrink-0 flex items-center justify-center ${b.color}`}>
-                      <BadgeIcon className="w-5 h-5" strokeWidth={2.2} aria-hidden="true" />
-                    </span>
-                    <div className="flex flex-col min-w-0 flex-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-800 truncate">
-                          {b.title}
-                        </span>
-                        {isSelected && (
-                          <span className="w-4 h-4 rounded-full bg-[#a43073] text-white flex items-center justify-center text-[10px]">
-                            ✓
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-[10px] text-slate-500 mt-0.5 line-clamp-1">
-                        {b.desc}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <BadgePicker showToast={showToast} />
           </div>
 
           {/* Footer Actions */}
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-3 shrink-0">
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-700 flex items-center justify-end gap-3 shrink-0">
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 rounded-full text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+              className="px-5 py-2.5 rounded-full text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
             >
               Hủy bỏ
             </button>

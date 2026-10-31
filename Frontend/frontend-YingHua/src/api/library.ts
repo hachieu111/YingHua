@@ -1,6 +1,8 @@
 // Gọi API Thư viện (M03): truyện, chương, trang, tải ảnh, tiến độ đọc, Thư viện cá nhân.
 import { apiRequest } from './client';
 
+export type VipAccess = 'open' | 'trial_only' | 'unlocked' | 'vip';
+
 export interface ApiSeries {
   id: number;
   title_vi: string;
@@ -20,6 +22,10 @@ export interface ApiSeries {
   is_favorite: boolean;
   can_edit: boolean;
   progress: SeriesProgress | null;
+  /** Truyện VIP: người không VIP chỉ đọc chương đọc thử (F17.05). */
+  is_vip: boolean;
+  /** open · trial_only (chỉ đọc thử) · unlocked (đã mở bằng vé) · vip (đang VIP hoặc quản trị). */
+  vip_access: VipAccess;
   created_at: string;
   updated_at: string;
 }
@@ -53,6 +59,8 @@ export interface ApiChapter {
   title: string | null;
   is_trial: boolean;
   page_count: number;
+  /** Chương của truyện VIP mà người gọi chưa có quyền đọc (F17.05). */
+  is_locked: boolean;
   created_at: string;
 }
 
@@ -239,8 +247,8 @@ export function quickUpload(file: File): Promise<ApiPage> {
   return apiRequest<ApiPage>('/quick-uploads', { method: 'POST', body: form });
 }
 
-export const listQuickUploads = (page = 1, size = 20): Promise<Paged<ApiPage>> =>
-  apiRequest<Paged<ApiPage>>(`/quick-uploads${qs({ page, size })}`);
+export const listQuickUploads = (page = 1, size = 20, signal?: AbortSignal): Promise<Paged<ApiPage>> =>
+  apiRequest<Paged<ApiPage>>(`/quick-uploads${qs({ page, size })}`, { signal });
 
 export const deletePage = (pageId: number): Promise<void> => apiRequest<void>(`/pages/${pageId}`, { method: 'DELETE' });
 
@@ -273,7 +281,7 @@ export function pickReadTarget(
   detail: SeriesDetail,
   options: { restart?: boolean; guest?: boolean } = {}
 ): { chapterId: number; pageNo?: number; pageId?: number } | null {
-  const readable = detail.chapters.filter(c => c.page_count > 0 && (!options.guest || c.is_trial));
+  const readable = detail.chapters.filter(c => c.page_count > 0 && !c.is_locked && (!options.guest || c.is_trial));
   const progress = detail.progress;
   if (progress && !options.restart && readable.some(c => c.id === progress.chapter_id)) {
     return { chapterId: progress.chapter_id, pageNo: progress.page_no, pageId: progress.page_id ?? undefined };

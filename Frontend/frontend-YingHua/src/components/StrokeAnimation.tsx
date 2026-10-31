@@ -108,7 +108,7 @@ const StrokeAnimation: React.FC<StrokeAnimationProps> = ({ strokes, medians, siz
         viewBox="0 0 1024 1024"
         width={size}
         height={size}
-        className="bg-white border border-slate-200 rounded-xl"
+        className="bg-white border border-slate-200 rounded-xl dark:bg-slate-800 dark:border-slate-700"
         role="img"
         aria-label="Hoạt ảnh thứ tự nét viết"
       >
@@ -149,14 +149,14 @@ const StrokeAnimation: React.FC<StrokeAnimationProps> = ({ strokes, medians, siz
           ))}
         </g>
       </svg>
-      <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
+      <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
         <span className="font-mono">
           Nét {current}/{total}
         </span>
         <button
           type="button"
           onClick={() => void play()}
-          className="flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-[#a43073]/10 text-[#a43073] font-bold hover:bg-[#a43073]/20 transition-colors"
+          className="flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-[#a43073]/10 text-[#a43073] dark:bg-pink-900/20 dark:text-pink-400 font-bold hover:bg-[#a43073]/20 dark:hover:bg-pink-900/30 transition-colors"
           aria-label="Phát lại hoạt ảnh nét viết"
         >
           <span className="material-symbols-outlined text-[14px]">replay</span>
@@ -165,7 +165,7 @@ const StrokeAnimation: React.FC<StrokeAnimationProps> = ({ strokes, medians, siz
         <button
           type="button"
           onClick={toggleSpeed}
-          className="px-2 py-0.5 rounded-full border border-slate-200 hover:bg-slate-100 transition-colors"
+          className="px-2 py-0.5 rounded-full border border-slate-200 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-700 transition-colors"
           aria-pressed={slow}
         >
           {slow ? 'Chậm' : 'Thường'}

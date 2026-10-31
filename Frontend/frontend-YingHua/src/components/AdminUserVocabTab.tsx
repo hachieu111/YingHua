@@ -97,16 +97,16 @@ const VocabDetailEditor: React.FC<TabProps & { entryId: number; onBack: () => vo
 
   return (
     <div className="flex flex-col gap-4">
-      <button onClick={onBack} className="self-start text-xs font-bold text-[#a43073]">← Về danh sách từ</button>
+      <button onClick={onBack} className="self-start text-xs font-bold text-[#a43073] dark:text-pink-400">← Về danh sách từ</button>
       {!detail ? <LoadState loading={loading} error={error} onRetry={load} /> : (
         <>
           <div className="flex items-start justify-between gap-3">
             <div>
-              <div className="text-2xl font-bold text-slate-800">{detail.term}</div>
-              <div className="text-xs text-slate-500">{detail.pinyin} {detail.sino_vietnamese ? `· ${detail.sino_vietnamese}` : ''} {detail.hsk_level ? `· HSK ${detail.hsk_level}` : ''}</div>
+              <div className="text-2xl font-bold text-slate-800 dark:text-slate-100">{detail.term}</div>
+              <div className="text-xs text-slate-500 dark:text-slate-400">{detail.pinyin} {detail.sino_vietnamese ? `· ${detail.sino_vietnamese}` : ''} {detail.hsk_level ? `· HSK ${detail.hsk_level}` : ''}</div>
             </div>
             <button disabled={busy} onClick={() => patch({ is_starred: !detail.is_starred }, detail.is_starred ? 'Đã bỏ sao.' : 'Đã gắn sao.')}
-              aria-pressed={detail.is_starred} className={`px-3 py-1.5 rounded-full text-xs font-bold ${detail.is_starred ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
+              aria-pressed={detail.is_starred} className={`px-3 py-1.5 rounded-full text-xs font-bold ${detail.is_starred ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : 'bg-slate-100 text-slate-600 dark:bg-[#1e293b] dark:text-slate-300'}`}>
               {detail.is_starred ? '★ Đã gắn sao' : '☆ Gắn sao'}
             </button>
           </div>
@@ -115,40 +115,40 @@ const VocabDetailEditor: React.FC<TabProps & { entryId: number; onBack: () => vo
             {STATUSES.map(s => <Chip key={s} active={detail.status === s} onClick={() => detail.status !== s && void patch({ status: s }, `Đã chuyển sang “${STATUS_LABEL[s]}”.`)}>{STATUS_LABEL[s]}</Chip>)}
           </div>
 
-          <label className="text-xs font-semibold text-slate-600 flex flex-col gap-1">Nghĩa tiếng Việt
-            <input value={meaning} maxLength={500} onChange={e => setMeaning(e.target.value)} className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-normal" />
+          <label className="text-xs font-semibold text-slate-600 flex flex-col gap-1 dark:text-slate-300">Nghĩa tiếng Việt
+            <input value={meaning} maxLength={500} onChange={e => setMeaning(e.target.value)} className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-normal dark:border-slate-700" />
           </label>
-          <label className="text-xs font-semibold text-slate-600 flex flex-col gap-1">Ghi chú
-            <textarea value={note} maxLength={2000} rows={3} onChange={e => setNote(e.target.value)} className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-normal" />
+          <label className="text-xs font-semibold text-slate-600 flex flex-col gap-1 dark:text-slate-300">Ghi chú
+            <textarea value={note} maxLength={2000} rows={3} onChange={e => setNote(e.target.value)} className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-normal dark:border-slate-700" />
           </label>
           <div className="flex gap-2">
             <button disabled={busy} onClick={saveText} className="px-4 py-2 rounded-full bg-[#a43073] text-white text-xs font-bold disabled:opacity-50">Lưu thay đổi</button>
-            <button disabled={busy} onClick={() => setPending({ kind: 'entry' })} className="px-4 py-2 rounded-full bg-rose-50 text-rose-700 text-xs font-bold disabled:opacity-50">Xóa từ</button>
+            <button disabled={busy} onClick={() => setPending({ kind: 'entry' })} className="px-4 py-2 rounded-full bg-rose-50 text-rose-700 text-xs font-bold disabled:opacity-50 dark:bg-rose-900/30 dark:text-rose-400">Xóa từ</button>
           </div>
 
           <section>
-            <h4 className="text-xs font-bold text-slate-700 mb-2">Ngữ cảnh ({detail.contexts.length})</h4>
-            {detail.contexts.length === 0 && <div className="text-xs text-slate-500">Chưa có ngữ cảnh.</div>}
+            <h4 className="text-xs font-bold text-slate-700 mb-2 dark:text-slate-100">Ngữ cảnh ({detail.contexts.length})</h4>
+            {detail.contexts.length === 0 && <div className="text-xs text-slate-500 dark:text-slate-400">Chưa có ngữ cảnh.</div>}
             <div className="flex flex-col gap-2">
               {detail.contexts.map(c => (
-                <div key={c.id} className="flex gap-3 rounded-xl border border-slate-100 p-3">
+                <div key={c.id} className="flex gap-3 rounded-xl border border-slate-100 p-3 dark:border-slate-700">
                   <AuthImage src={c.snippet_url} alt="Ảnh ngữ cảnh" className="w-24 h-16 rounded-lg object-cover shrink-0" />
                   <div className="min-w-0 flex-1 text-xs">
-                    <div className="font-semibold text-slate-800">{c.sentence_zh}</div>
-                    {c.sentence_vi && <div className="text-slate-500">{c.sentence_vi}</div>}
+                    <div className="font-semibold text-slate-800 dark:text-slate-100">{c.sentence_zh}</div>
+                    {c.sentence_vi && <div className="text-slate-500 dark:text-slate-400">{c.sentence_vi}</div>}
                     <div className="text-[10px] text-slate-400 mt-1">{c.source_label ?? 'Không rõ nguồn'} · {formatDateTime(c.created_at)}</div>
                   </div>
-                  <button disabled={busy} onClick={() => setPending({ kind: 'context', contextId: c.id })} className="self-start text-[11px] font-bold text-rose-600 disabled:opacity-50">Xóa</button>
+                  <button disabled={busy} onClick={() => setPending({ kind: 'context', contextId: c.id })} className="self-start text-[11px] font-bold text-rose-600 disabled:opacity-50 dark:text-rose-400">Xóa</button>
                 </div>
               ))}
             </div>
           </section>
 
           <section>
-            <h4 className="text-xs font-bold text-slate-700 mb-2">Thẻ ôn ({detail.cards.length})</h4>
+            <h4 className="text-xs font-bold text-slate-700 mb-2 dark:text-slate-100">Thẻ ôn ({detail.cards.length})</h4>
             <div className="flex flex-col gap-1">
               {detail.cards.map(c => (
-                <div key={c.id} className="flex flex-wrap justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                <div key={c.id} className="flex flex-wrap justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:bg-[#1e293b] dark:text-slate-300">
                   <span className="font-semibold">{CARD_TYPE_LABEL[c.card_type]}{c.is_suspended ? ' (tạm ngưng)' : ''}</span>
                   <span>{CARD_STATE_LABEL[c.state] ?? c.state} · hạn {formatDateTime(c.due_at)} · ôn {c.reps} lần, quên {c.lapses}</span>
                 </div>
@@ -203,21 +203,21 @@ export const AdminUserVocabTab: React.FC<TabProps> = ({ userId, notify }) => {
   return (
     <div className="flex flex-col gap-3">
       <input value={q} onChange={e => setQ(e.target.value)} placeholder="Tìm theo chữ Hán, pinyin hoặc nghĩa..." aria-label="Tìm trong Sổ tay"
-        className="rounded-xl border border-slate-200 px-3 py-2 text-sm" />
+        className="rounded-xl border border-slate-200 px-3 py-2 text-sm dark:border-slate-700" />
       <div className="flex gap-2 flex-wrap">
         <Chip active={!status} onClick={() => setStatus(undefined)}>Tất cả</Chip>
         {STATUSES.map(s => <Chip key={s} active={status === s} onClick={() => setStatus(s)}>{STATUS_LABEL[s]}</Chip>)}
         <Chip active={starred} onClick={() => setStarred(v => !v)}>★ Có sao</Chip>
       </div>
       <LoadState loading={loading && !data} error={error} empty={!loading && !error && items.length === 0} emptyText="Không có từ nào phù hợp" onRetry={() => setVersion(v => v + 1)} />
-      <div className="divide-y divide-slate-100 rounded-xl border border-slate-100">
+      <div className="divide-y divide-slate-100 rounded-xl border border-slate-100 dark:divide-slate-700 dark:border-slate-700">
         {items.map(item => (
-          <button key={item.id} onClick={() => setOpenId(item.id)} className="w-full text-left flex items-center justify-between gap-3 p-3 hover:bg-slate-50">
+          <button key={item.id} onClick={() => setOpenId(item.id)} className="w-full text-left flex items-center justify-between gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-700">
             <div className="min-w-0">
-              <div className="text-sm font-bold text-slate-800">{item.term} <span className="text-xs font-normal text-slate-500">{item.pinyin}</span> {item.is_starred && <span className="text-amber-500">★</span>}</div>
-              <div className="text-xs text-slate-500 truncate">{item.meaning_vi ?? '—'}</div>
+              <div className="text-sm font-bold text-slate-800 dark:text-slate-100">{item.term} <span className="text-xs font-normal text-slate-500 dark:text-slate-400">{item.pinyin}</span> {item.is_starred && <span className="text-amber-500">★</span>}</div>
+              <div className="text-xs text-slate-500 truncate dark:text-slate-400">{item.meaning_vi ?? '—'}</div>
             </div>
-            <span className="shrink-0 rounded-full bg-pink-50 px-2 py-0.5 text-[10px] font-bold text-[#a43073]">{STATUS_LABEL[item.status]}</span>
+            <span className="shrink-0 rounded-full bg-pink-50 px-2 py-0.5 text-[10px] font-bold text-[#a43073] dark:bg-pink-900/30 dark:text-pink-400">{STATUS_LABEL[item.status]}</span>
           </button>
         ))}
       </div>

@@ -22,8 +22,8 @@ const VOICE_SAMPLE_TEXT = '你好，欢迎来到映画。';
 const BUBBLE_SAMPLE_BASE_PX = 12;
 
 const fieldClass =
-  'w-full bg-[#eff4ff] text-slate-800 text-xs px-4 py-2.5 rounded-full outline-none focus:bg-white focus:ring-2 focus:ring-[#f472b6] transition-all';
-const labelClass = 'text-xs font-semibold text-slate-700';
+  'w-full bg-[#eff4ff] text-slate-800 text-xs px-4 py-2.5 rounded-full outline-none focus:bg-white focus:ring-2 focus:ring-[#f472b6] transition-all dark:bg-[#1e293b] dark:text-slate-100';
+const labelClass = 'text-xs font-semibold text-slate-700 dark:text-slate-100';
 
 /** Cài đặt học tập của người học (F02.01-F02.03): trình độ, chế độ mặc định, giọng đọc, mục tiêu. */
 export const LearningSettingsPanel: React.FC<LearningSettingsPanelProps> = ({ onSaved, showToast }) => {
@@ -65,12 +65,12 @@ export const LearningSettingsPanel: React.FC<LearningSettingsPanelProps> = ({ on
   if (!form || !saved) {
     return loading ? (
       <div className="flex justify-center py-8">
-        <span className="w-6 h-6 border-2 border-pink-300 border-t-transparent rounded-full animate-spin"></span>
+        <span className="w-6 h-6 border-2 border-pink-300 border-t-transparent rounded-full animate-spin dark:border-pink-900/40"></span>
       </div>
     ) : (
       <div className="flex flex-col items-center gap-3 py-6 text-center" role="alert">
-        <p className="text-xs text-red-700">{error ?? 'Không tải được cài đặt học tập.'}</p>
-        <button onClick={load} className="px-4 py-1.5 rounded-full bg-white border border-pink-200 text-[#a43073] text-xs font-bold hover:bg-pink-50">
+        <p className="text-xs text-red-700 dark:text-red-400">{error ?? 'Không tải được cài đặt học tập.'}</p>
+        <button onClick={load} className="px-4 py-1.5 rounded-full bg-white border border-pink-200 text-[#a43073] text-xs font-bold hover:bg-pink-50 dark:bg-slate-800 dark:border-pink-900/40 dark:text-pink-400 dark:hover:bg-pink-900/40">
           Thử lại
         </button>
       </div>
@@ -189,7 +189,7 @@ export const LearningSettingsPanel: React.FC<LearningSettingsPanelProps> = ({ on
               type="button"
               onClick={() => void handlePreviewVoice()}
               disabled={previewing}
-              className="shrink-0 px-4 py-2.5 rounded-full bg-white border border-pink-200 text-[#a43073] text-xs font-bold hover:bg-pink-50 disabled:opacity-60 flex items-center gap-1"
+              className="shrink-0 px-4 py-2.5 rounded-full bg-white border border-pink-200 text-[#a43073] text-xs font-bold hover:bg-pink-50 disabled:opacity-60 flex items-center gap-1 dark:bg-slate-800 dark:border-pink-900/40 dark:text-pink-400 dark:hover:bg-pink-900/40"
               title="Nghe thử giọng đang chọn"
             >
               <span className="material-symbols-outlined text-[16px]">volume_up</span>
@@ -211,7 +211,7 @@ export const LearningSettingsPanel: React.FC<LearningSettingsPanelProps> = ({ on
             className="w-full accent-[#a43073]"
           />
           <span
-            className="rounded-xl bg-white/95 border border-pink-200 px-2.5 py-1 font-semibold text-pink-900 w-fit"
+            className="rounded-xl bg-white/95 border border-pink-200 px-2.5 py-1 font-semibold text-pink-900 w-fit dark:bg-slate-800 dark:border-pink-900/40 dark:text-pink-300"
             style={{ fontSize: `${(BUBBLE_SAMPLE_BASE_PX * form.bubble_font_scale) / 100}px` }}
           >
             Chữ mẫu của bản dịch
@@ -219,15 +219,15 @@ export const LearningSettingsPanel: React.FC<LearningSettingsPanelProps> = ({ on
         </div>
       </div>
 
-      <label className="flex items-start gap-2.5 p-3 rounded-2xl bg-pink-50/60 border border-pink-100 cursor-pointer">
+      <label className="flex items-start gap-2.5 p-3 rounded-2xl bg-pink-50/60 border border-pink-100 cursor-pointer dark:bg-pink-900/30 dark:border-pink-900/40">
         <input type="checkbox" checked={form.show_xianxia} onChange={e => set('show_xianxia', e.target.checked)} className="mt-0.5" />
         <span>
-          <span className="text-xs font-bold text-slate-800 block">Hiện thuật ngữ tu tiên</span>
-          <span className="text-[11px] text-slate-500">Bật để hiển thị các thuật ngữ tiên hiệp (cảnh giới, công pháp...) khi đọc và tra từ.</span>
+          <span className="text-xs font-bold text-slate-800 block dark:text-slate-100">Hiện thuật ngữ tu tiên</span>
+          <span className="text-[11px] text-slate-500 dark:text-slate-400">Bật để hiển thị các thuật ngữ tiên hiệp (cảnh giới, công pháp...) khi đọc và tra từ.</span>
         </span>
       </label>
 
-      <div className="flex flex-col gap-2 p-3 rounded-2xl bg-pink-50/60 border border-pink-100">
+      <div className="flex flex-col gap-2 p-3 rounded-2xl bg-pink-50/60 border border-pink-100 dark:bg-pink-900/30 dark:border-pink-900/40">
         <label className="flex items-start gap-2.5 cursor-pointer">
           <input
             type="checkbox"
@@ -236,8 +236,8 @@ export const LearningSettingsPanel: React.FC<LearningSettingsPanelProps> = ({ on
             className="mt-0.5"
           />
           <span>
-            <span className="text-xs font-bold text-slate-800 block">Nhắc ôn thẻ mỗi ngày</span>
-            <span className="text-[11px] text-slate-500">Nhận thông báo trong ứng dụng vào giờ bạn chọn khi có thẻ đến hạn.</span>
+            <span className="text-xs font-bold text-slate-800 block dark:text-slate-100">Nhắc ôn thẻ mỗi ngày</span>
+            <span className="text-[11px] text-slate-500 dark:text-slate-400">Nhận thông báo trong ứng dụng vào giờ bạn chọn khi có thẻ đến hạn.</span>
           </span>
         </label>
         {form.reminder_enabled && (
@@ -251,7 +251,7 @@ export const LearningSettingsPanel: React.FC<LearningSettingsPanelProps> = ({ on
               className={`${fieldClass} sm:w-40 ${reminderInvalid ? 'ring-2 ring-red-300' : ''}`}
               aria-invalid={reminderInvalid}
             />
-            {reminderInvalid && <span className="text-[11px] text-red-600" role="alert">Hãy chọn giờ nhắc để bật nhắc ôn.</span>}
+            {reminderInvalid && <span className="text-[11px] text-red-600 dark:text-red-400" role="alert">Hãy chọn giờ nhắc để bật nhắc ôn.</span>}
           </div>
         )}
       </div>

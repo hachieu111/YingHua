@@ -34,11 +34,11 @@ const History: React.FC<{ userId: number; cardId: number }> = ({ userId, cardId 
       .catch(err => setError(errorMessage(err, 'Không tải được lịch sử')));
   }, [userId, cardId]);
 
-  if (error) return <div className="text-xs text-rose-600">{error}</div>;
+  if (error) return <div className="text-xs text-rose-600 dark:text-rose-400">{error}</div>;
   if (!items) return <div className="text-xs text-slate-400">Đang tải lịch sử...</div>;
-  if (items.length === 0) return <div className="text-xs text-slate-500">Thẻ chưa có lượt ôn nào.</div>;
+  if (items.length === 0) return <div className="text-xs text-slate-500 dark:text-slate-400">Thẻ chưa có lượt ôn nào.</div>;
   return (
-    <ul className="text-xs text-slate-600 flex flex-col gap-1">
+    <ul className="text-xs text-slate-600 flex flex-col gap-1 dark:text-slate-300">
       {items.map(log => (
         <li key={log.id}>
           {formatDateTime(log.reviewed_at)} · <b>{RATING_LABEL[log.rating] ?? log.rating}</b> · hạn kế tiếp {formatDateTime(log.due_after)}
@@ -110,29 +110,29 @@ export const AdminUserCardsTab: React.FC<TabProps> = ({ userId, notify }) => {
       <div className="flex gap-2 flex-wrap items-center">
         <Chip active={!state} onClick={() => setState(undefined)}>Mọi trạng thái</Chip>
         {(['learning', 'review', 'relearning'] as const).map(s => <Chip key={s} active={state === s} onClick={() => setState(s)}>{CARD_STATE_LABEL[s]}</Chip>)}
-        <select aria-label="Lọc tạm ngưng" value={suspended} onChange={e => setSuspended(e.target.value as Flag)} className="rounded-full border border-slate-200 px-3 py-1 text-[11px]">
+        <select aria-label="Lọc tạm ngưng" value={suspended} onChange={e => setSuspended(e.target.value as Flag)} className="rounded-full border border-slate-200 px-3 py-1 text-[11px] dark:border-slate-700">
           <option value="all">Tạm ngưng: tất cả</option><option value="yes">Đang tạm ngưng</option><option value="no">Không tạm ngưng</option>
         </select>
-        <select aria-label="Lọc đến hạn" value={due} onChange={e => setDue(e.target.value as Flag)} className="rounded-full border border-slate-200 px-3 py-1 text-[11px]">
+        <select aria-label="Lọc đến hạn" value={due} onChange={e => setDue(e.target.value as Flag)} className="rounded-full border border-slate-200 px-3 py-1 text-[11px] dark:border-slate-700">
           <option value="all">Hạn: tất cả</option><option value="yes">Đã đến hạn</option><option value="no">Chưa đến hạn</option>
         </select>
       </div>
       <LoadState loading={loading && !data} error={error} empty={!loading && !error && items.length === 0} emptyText="Không có thẻ nào phù hợp" onRetry={load} />
       <div className="flex flex-col gap-2">
         {items.map(card => (
-          <div key={card.id} className="rounded-xl border border-slate-100 p-3 flex flex-col gap-2">
+          <div key={card.id} className="rounded-xl border border-slate-100 p-3 flex flex-col gap-2 dark:border-slate-700">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="min-w-0">
-                <div className="text-sm font-bold text-slate-800">{card.term ?? '(mục từ đã xóa)'} <span className="text-xs font-normal text-slate-500">{card.pinyin}</span></div>
-                <div className="text-[11px] text-slate-500">
+                <div className="text-sm font-bold text-slate-800 dark:text-slate-100">{card.term ?? '(mục từ đã xóa)'} <span className="text-xs font-normal text-slate-500 dark:text-slate-400">{card.pinyin}</span></div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-400">
                   {CARD_TYPE_LABEL[card.card_type]} · {CARD_STATE_LABEL[card.state] ?? card.state}{card.is_suspended ? ' · tạm ngưng' : ''} · hạn {formatDateTime(card.due_at)} · ôn {card.reps}, quên {card.lapses}
                 </div>
               </div>
               <div className="flex gap-2 text-[11px] font-bold">
-                <button onClick={() => setHistoryId(historyId === card.id ? null : card.id)} className="px-3 py-1 rounded-full bg-slate-100 text-slate-600">Lịch sử</button>
+                <button onClick={() => setHistoryId(historyId === card.id ? null : card.id)} className="px-3 py-1 rounded-full bg-slate-100 text-slate-600 dark:bg-[#1e293b] dark:text-slate-300">Lịch sử</button>
                 <button disabled={busyId === card.id} onClick={() => act(card, () => (card.is_suspended ? resumeUserCard(userId, card.id) : suspendUserCard(userId, card.id)), card.is_suspended ? 'Đã tiếp tục thẻ.' : 'Đã tạm ngưng thẻ.')}
-                  className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 disabled:opacity-50">{card.is_suspended ? 'Tiếp tục' : 'Tạm ngưng'}</button>
-                <button disabled={busyId === card.id} onClick={() => setResetTarget(card)} className="px-3 py-1 rounded-full bg-rose-50 text-rose-700 disabled:opacity-50">Đặt lại</button>
+                  className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 disabled:opacity-50 dark:bg-blue-900/30 dark:text-blue-400">{card.is_suspended ? 'Tiếp tục' : 'Tạm ngưng'}</button>
+                <button disabled={busyId === card.id} onClick={() => setResetTarget(card)} className="px-3 py-1 rounded-full bg-rose-50 text-rose-700 disabled:opacity-50 dark:bg-rose-900/30 dark:text-rose-400">Đặt lại</button>
               </div>
             </div>
             {historyId === card.id && <History userId={userId} cardId={card.id} />}

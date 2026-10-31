@@ -28,7 +28,7 @@ export const HighlightedText: React.FC<{ text: string; className?: string }> = (
     <span className={className}>
       {parts.map((part, index) =>
         part.startsWith('【') && part.endsWith('】') ? (
-          <span key={index} className="rounded-md bg-[#ffd8e7] px-1 font-bold text-[#a43073]">
+          <span key={index} className="rounded-md bg-[#ffd8e7] px-1 font-bold text-[#a43073] dark:text-pink-400 dark:bg-pink-900/40">
             {part}
           </span>
         ) : (
@@ -105,7 +105,7 @@ export const QuizRoom: React.FC<QuizRoomProps> = ({ quiz, onSubmitted, onExit })
   }, [question, confirmOpen, setAnswer]);
 
   if (!question) {
-    return <div className="py-10 text-center text-sm text-slate-500">Bài kiểm tra này chưa có câu hỏi nào.</div>;
+    return <div className="py-10 text-center text-sm text-slate-500 dark:text-slate-400">Bài kiểm tra này chưa có câu hỏi nào.</div>;
   }
 
   const isRelated = question.target_kind === 'related';
@@ -115,16 +115,16 @@ export const QuizRoom: React.FC<QuizRoomProps> = ({ quiz, onSubmitted, onExit })
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <button onClick={onExit} className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-[#a43073]">
+        <button onClick={onExit} className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-[#a43073] dark:text-slate-400 dark:hover:text-pink-300">
           <span className="material-symbols-outlined text-[16px]">arrow_back</span>
           Tạm dừng
         </button>
-        <span className="text-xs font-semibold text-slate-500">
+        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
           Câu {index + 1}/{questions.length} • Đã trả lời {answeredCount}
         </span>
       </div>
 
-      <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
+      <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-[#1e293b]" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
         <div className="h-full rounded-full bg-[#a43073] transition-all" style={{ width: `${progress}%` }}></div>
       </div>
 
@@ -140,8 +140,8 @@ export const QuizRoom: React.FC<QuizRoomProps> = ({ quiz, onSubmitted, onExit })
                 i === index
                   ? 'bg-[#a43073] text-white'
                   : done
-                    ? 'bg-[#ffd8e7] text-[#85145a]'
-                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                    ? 'bg-[#ffd8e7] text-[#85145a] dark:text-pink-300 dark:bg-pink-900/40'
+                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-[#1e293b] dark:text-slate-400 dark:hover:bg-slate-700'
               }`}
             >
               {i + 1}
@@ -150,31 +150,31 @@ export const QuizRoom: React.FC<QuizRoomProps> = ({ quiz, onSubmitted, onExit })
         })}
       </div>
 
-      <div className="flex flex-col gap-4 rounded-3xl border border-pink-100 bg-white p-5 shadow-soft sm:p-7">
+      <div className="flex flex-col gap-4 rounded-3xl border border-pink-100 bg-white p-5 shadow-soft sm:p-7 dark:border-pink-900/40 dark:bg-slate-800">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-[10px] font-bold text-blue-900">
+          <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-[10px] font-bold text-blue-900 dark:bg-blue-900/30 dark:text-blue-300">
             {question.question_type === 'multiple_choice' ? 'Trắc nghiệm' : 'Điền từ'}
           </span>
           {isRelated && (
-            <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold text-amber-900">Từ mới để đoán</span>
+            <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold text-amber-900 dark:bg-amber-900/30 dark:text-amber-300">Từ mới để đoán</span>
           )}
         </div>
 
-        <h3 className="font-['Plus_Jakarta_Sans'] text-lg font-bold leading-relaxed text-slate-800 sm:text-xl">
+        <h3 className="font-['Plus_Jakarta_Sans'] text-lg font-bold leading-relaxed text-slate-800 sm:text-xl dark:text-slate-100">
           <HighlightedText text={question.prompt} />
         </h3>
 
         {question.example && (
-          <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-            <p className="font-['Noto_Serif_SC'] text-base leading-relaxed text-slate-800">
+          <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-700 dark:bg-[#1e293b]">
+            <p className="font-['Noto_Serif_SC'] text-base leading-relaxed text-slate-800 dark:text-slate-100">
               <HighlightedText text={question.example.zh} />
             </p>
-            {question.example.pinyin && <p className="mt-1 font-mono text-xs text-slate-500">{question.example.pinyin}</p>}
+            {question.example.pinyin && <p className="mt-1 font-mono text-xs text-slate-500 dark:text-slate-400">{question.example.pinyin}</p>}
           </div>
         )}
 
         {isRelated && question.hint && (
-          <div className="flex items-start gap-2 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+          <div className="flex items-start gap-2 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-900/40 dark:bg-amber-900/30 dark:text-amber-300">
             <span className="material-symbols-outlined text-[16px]">lightbulb</span>
             <span>Gợi ý: {question.hint}</span>
           </div>
@@ -190,11 +190,11 @@ export const QuizRoom: React.FC<QuizRoomProps> = ({ quiz, onSubmitted, onExit })
                   onClick={() => setAnswer(question.id, option)}
                   className={`flex items-center gap-3 rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition-all ${
                     selected
-                      ? 'border-[#a43073] bg-[#ffd8e7]/60 text-[#85145a] ring-2 ring-pink-200'
-                      : 'border-slate-200 bg-white text-slate-700 hover:border-pink-300 hover:bg-pink-50/50'
+                      ? 'border-[#a43073] bg-[#ffd8e7]/60 text-[#85145a] ring-2 ring-pink-200 dark:text-pink-300'
+                      : 'border-slate-200 bg-white text-slate-700 hover:border-pink-300 hover:bg-pink-50/50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100'
                   }`}
                 >
-                  <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${selected ? 'bg-[#a43073] text-white' : 'bg-slate-100 text-slate-500'}`}>
+                  <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${selected ? 'bg-[#a43073] text-white' : 'bg-slate-100 text-slate-500 dark:bg-[#1e293b] dark:text-slate-400'}`}>
                     {i + 1}
                   </span>
                   <span className="min-w-0 break-words">{option}</span>
@@ -210,13 +210,13 @@ export const QuizRoom: React.FC<QuizRoomProps> = ({ quiz, onSubmitted, onExit })
             onChange={event => setAnswer(question.id, event.target.value)}
             placeholder="Nhập đáp án của bạn..."
             aria-label="Đáp án của bạn"
-            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-[#f472b6]"
+            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-[#f472b6] dark:border-slate-700 dark:bg-[#1e293b] dark:text-slate-100"
           />
         )}
       </div>
 
       {error && (
-        <div className="flex items-center justify-between gap-3 rounded-2xl bg-rose-50 p-4 text-sm text-rose-700">
+        <div className="flex items-center justify-between gap-3 rounded-2xl bg-rose-50 p-4 text-sm text-rose-700 dark:bg-rose-900/30 dark:text-rose-400">
           <span>{error} Đáp án của bạn vẫn được giữ lại.</span>
           <button onClick={() => void doSubmit()} className="rounded-full bg-[#a43073] px-4 py-1.5 text-xs font-bold text-white">Nộp lại</button>
         </div>
@@ -226,7 +226,7 @@ export const QuizRoom: React.FC<QuizRoomProps> = ({ quiz, onSubmitted, onExit })
         <button
           onClick={() => setIndex(i => Math.max(0, i - 1))}
           disabled={index === 0}
-          className="rounded-full bg-slate-100 px-5 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-200 disabled:opacity-40"
+          className="rounded-full bg-slate-100 px-5 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-200 disabled:opacity-40 dark:bg-[#1e293b] dark:text-slate-300 dark:hover:bg-slate-700"
         >
           Câu trước
         </button>
@@ -252,7 +252,7 @@ export const QuizRoom: React.FC<QuizRoomProps> = ({ quiz, onSubmitted, onExit })
         <button
           onClick={requestSubmit}
           disabled={submitting}
-          className="self-center text-xs font-bold text-[#a43073] hover:underline disabled:opacity-60"
+          className="self-center text-xs font-bold text-[#a43073] hover:underline disabled:opacity-60 dark:text-pink-400"
         >
           {submitting ? 'Đang nộp...' : 'Nộp bài ngay'}
         </button>

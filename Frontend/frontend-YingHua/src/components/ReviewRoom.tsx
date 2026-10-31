@@ -44,10 +44,10 @@ const FEEDBACK_MS = 2600;
 const SPEECH_RATE = 0.85;
 
 const RATINGS: { value: 1 | 2 | 3 | 4; label: string; caption: string; dot: string; text: string; hover: string }[] = [
-  { value: 1, label: 'Quên', caption: 'Lặp lại ngay', dot: 'bg-rose-500', text: 'text-rose-600', hover: 'hover:bg-rose-50 hover:text-rose-700' },
-  { value: 2, label: 'Khó', caption: 'Cần củng cố', dot: 'bg-amber-500', text: 'text-amber-600', hover: 'hover:bg-amber-50 hover:text-amber-800' },
-  { value: 3, label: 'Được', caption: 'Nhớ rõ', dot: 'bg-blue-500', text: 'text-blue-600', hover: 'hover:bg-blue-50 hover:text-blue-800' },
-  { value: 4, label: 'Dễ', caption: 'Đã thuộc lòng', dot: 'bg-[#a43073]', text: 'text-[#a43073]', hover: 'hover:bg-pink-50 hover:text-[#a43073]' }
+  { value: 1, label: 'Quên', caption: 'Lặp lại ngay', dot: 'bg-rose-500', text: 'text-rose-600 dark:text-rose-400', hover: 'hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-900/20 dark:hover:text-rose-300' },
+  { value: 2, label: 'Khó', caption: 'Cần củng cố', dot: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400', hover: 'hover:bg-amber-50 hover:text-amber-800 dark:hover:bg-amber-900/20 dark:hover:text-amber-300' },
+  { value: 3, label: 'Được', caption: 'Nhớ rõ', dot: 'bg-blue-500', text: 'text-blue-600 dark:text-blue-400', hover: 'hover:bg-blue-50 hover:text-blue-800 dark:hover:bg-blue-900/20 dark:hover:text-blue-300' },
+  { value: 4, label: 'Dễ', caption: 'Đã thuộc lòng', dot: 'bg-[#a43073]', text: 'text-[#a43073] dark:text-pink-400', hover: 'hover:bg-pink-50 hover:text-[#a43073] dark:hover:bg-pink-900/20 dark:hover:text-pink-300' }
 ];
 
 /** UUID cho mỗi lần hiển thị thẻ; có dự phòng khi trình duyệt chưa hỗ trợ randomUUID. */
@@ -100,10 +100,10 @@ const SideBody: React.FC<{ side: ApiCardSide; isFront: boolean; onSpeak: (text: 
   const isEmpty = !side.term && !side.pinyin && !side.meaning_vi && !side.audio_text && !extraContextHint;
   return (
     <div className="flex flex-col items-center text-center gap-2 my-auto min-h-0 max-h-full overflow-y-auto custom-scrollbar px-2">
-      {hintLabel && <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{hintLabel}</span>}
-      {extraContextHint && <span className="text-base text-slate-700 font-semibold italic leading-snug">“{extraContextHint}”</span>}
+      {hintLabel && <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{hintLabel}</span>}
+      {extraContextHint && <span className="text-base text-slate-700 dark:text-slate-200 font-semibold italic leading-snug">“{extraContextHint}”</span>}
       {side.pinyin && (
-        <div className="text-xl font-bold text-[#0060ac] tracking-wide flex items-center gap-2">
+        <div className="text-xl font-bold text-[#0060ac] dark:text-blue-300 tracking-wide flex items-center gap-2">
           <span>{side.pinyin}</span>
           {side.term && (
             <button
@@ -111,7 +111,7 @@ const SideBody: React.FC<{ side: ApiCardSide; isFront: boolean; onSpeak: (text: 
                 e.stopPropagation();
                 onSpeak(side.term ?? '');
               }}
-              className="w-8 h-8 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-700 flex items-center justify-center shadow-xs transition-transform hover:scale-110"
+              className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 flex items-center justify-center shadow-xs dark:shadow-none transition-transform hover:scale-110"
               title="Phát âm chuẩn"
             >
               <span className="material-symbols-outlined text-[18px]">volume_up</span>
@@ -120,7 +120,7 @@ const SideBody: React.FC<{ side: ApiCardSide; isFront: boolean; onSpeak: (text: 
         </div>
       )}
       {side.term && (
-        <h2 className="text-6xl sm:text-7xl font-extrabold text-slate-800 tracking-normal font-['Noto_Serif_SC'] my-2 break-all">{side.term}</h2>
+        <h2 className="text-6xl sm:text-7xl font-extrabold text-slate-800 dark:text-white tracking-normal font-['Noto_Serif_SC'] my-2 break-all">{side.term}</h2>
       )}
       {!side.term && side.audio_text && isFront && (
         <>
@@ -129,31 +129,31 @@ const SideBody: React.FC<{ side: ApiCardSide; isFront: boolean; onSpeak: (text: 
               e.stopPropagation();
               onSpeak(side.audio_text ?? '');
             }}
-            className="w-24 h-24 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-700 flex items-center justify-center shadow-md transition-transform hover:scale-105"
+            className="w-24 h-24 rounded-full bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 flex items-center justify-center shadow-md transition-transform hover:scale-105"
             title="Nghe lại"
           >
             <span className="material-symbols-outlined text-[48px]">volume_up</span>
           </button>
-          <span className="text-sm font-semibold text-slate-600">Nghe và nhớ lại từ này</span>
+          <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">Nghe và nhớ lại từ này</span>
         </>
       )}
       {meaning && (
         <span
           className={`${
             side.term
-              ? 'text-base text-slate-700 font-semibold'
+              ? 'text-base text-slate-700 dark:text-slate-200 font-semibold'
               : meaning.length <= SHORT_MEANING_LENGTH
-                ? 'text-3xl text-slate-800 font-extrabold'
-                : 'text-xl text-slate-800 font-bold'
+                ? 'text-3xl text-slate-800 dark:text-white font-extrabold'
+                : 'text-xl text-slate-800 dark:text-slate-100 font-bold'
           } leading-snug break-words whitespace-pre-line max-w-full`}
         >
           {meaning}
         </span>
       )}
-      {isEmpty && <span className="text-base font-semibold text-slate-500">Từ này chưa có nghĩa trong từ điển, hãy tự nhớ lại rồi lật thẻ.</span>}
+      {isEmpty && <span className="text-base font-semibold text-slate-500 dark:text-slate-400">Từ này chưa có nghĩa trong từ điển, hãy tự nhớ lại rồi lật thẻ.</span>}
       {side.sino_vietnamese && (
-        <span className="text-xs text-slate-500 mt-1 px-3.5 py-1 rounded-full bg-slate-100 font-medium">
-          Âm Hán Việt: <strong className="text-slate-800">{side.sino_vietnamese}</strong>
+        <span className="text-xs text-slate-500 dark:text-slate-300 mt-1 px-3.5 py-1 rounded-full bg-slate-100 dark:bg-slate-700 font-medium">
+          Âm Hán Việt: <strong className="text-slate-800 dark:text-white">{side.sino_vietnamese}</strong>
         </span>
       )}
       {!isFront && !side.term && spoken && (
@@ -162,7 +162,7 @@ const SideBody: React.FC<{ side: ApiCardSide; isFront: boolean; onSpeak: (text: 
             e.stopPropagation();
             onSpeak(spoken);
           }}
-          className="text-xs font-bold text-blue-700 hover:underline"
+          className="text-xs font-bold text-blue-700 dark:text-blue-300 hover:underline"
         >
           Nghe lại
         </button>
@@ -420,14 +420,14 @@ export const ReviewRoom: React.FC<ReviewRoomProps> = ({
     }
     const showNext = nextDue && !(summary?.status === 'no_cards');
     return (
-      <div className="w-full min-h-[360px] rounded-3xl bg-white border-2 border-pink-100 shadow-soft flex flex-col items-center justify-center gap-3 p-8 text-center">
-        <div className="w-16 h-16 rounded-3xl bg-pink-100 text-[#a43073] flex items-center justify-center">
+      <div className="w-full min-h-[360px] rounded-3xl bg-white dark:bg-[#0f172a] border-2 border-pink-100 dark:border-slate-800 shadow-soft dark:shadow-none transition-colors duration-300 flex flex-col items-center justify-center gap-3 p-8 text-center">
+        <div className="w-16 h-16 rounded-3xl bg-pink-100 dark:bg-pink-900/30 text-[#a43073] dark:text-pink-400 flex items-center justify-center">
           <span className="material-symbols-outlined text-[36px]">{icon}</span>
         </div>
-        <h4 className="text-xl font-extrabold text-slate-800 font-['Plus_Jakarta_Sans']">{title}</h4>
-        <p className="text-sm text-slate-600 max-w-md leading-relaxed">{body}</p>
+        <h4 className="text-xl font-extrabold text-slate-800 dark:text-white font-['Plus_Jakarta_Sans']">{title}</h4>
+        <p className="text-sm text-slate-600 dark:text-slate-300 max-w-md leading-relaxed">{body}</p>
         {showNext && (
-          <p className="text-sm font-semibold text-[#0060ac]">
+          <p className="text-sm font-semibold text-[#0060ac] dark:text-blue-300">
             Thẻ kế tiếp đến hạn lúc {nextDue}
           </p>
         )}
@@ -437,7 +437,7 @@ export const ReviewRoom: React.FC<ReviewRoomProps> = ({
               Đọc truyện để lưu từ
             </button>
           )}
-          <button onClick={() => void loadBatch()} className="px-5 py-2.5 rounded-full bg-white border border-pink-200 text-[#a43073] text-xs font-bold hover:bg-pink-50">
+          <button onClick={() => void loadBatch()} className="px-5 py-2.5 rounded-full bg-white dark:bg-[#1e293b] border border-pink-200 dark:border-pink-900/40 text-[#a43073] dark:text-pink-400 text-xs font-bold hover:bg-pink-50 dark:hover:bg-pink-900/20">
             Kiểm tra lại thẻ đến hạn
           </button>
         </div>
@@ -453,39 +453,39 @@ export const ReviewRoom: React.FC<ReviewRoomProps> = ({
       <div className="w-full flex flex-col md:flex-row items-center justify-between gap-3">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="w-2.5 h-6 bg-[#a43073] rounded-full"></span>
-          <h3 className="text-xl font-bold text-slate-800 font-['Plus_Jakarta_Sans']">Phòng Luyện Flashcard 3D</h3>
-          <span className="text-xs bg-pink-50 text-[#a43073] px-3 py-1 rounded-full font-bold">{deckTitle}</span>
+          <h3 className="text-xl font-bold text-slate-800 dark:text-white font-['Plus_Jakarta_Sans']">Phòng Luyện Flashcard 3D</h3>
+          <span className="text-xs bg-pink-50 dark:bg-pink-900/20 text-[#a43073] dark:text-pink-400 px-3 py-1 rounded-full font-bold">{deckTitle}</span>
           {phase === 'card' && (
-            <span className="text-xs bg-slate-100 px-3 py-1 rounded-full text-slate-600 font-bold">
+            <span className="text-xs bg-slate-100 dark:bg-slate-700 px-3 py-1 rounded-full text-slate-600 dark:text-slate-300 font-bold">
               Còn {remaining} thẻ đến hạn · đã ôn {sessionReviewed}
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2 text-slate-500 text-xs bg-white px-4 py-2 rounded-full shadow-xs border border-pink-100">
-          <span className="material-symbols-outlined text-[16px] text-[#a43073]">keyboard</span>
+        <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs bg-white dark:bg-slate-800 px-4 py-2 rounded-full shadow-xs dark:shadow-none border border-pink-100 dark:border-slate-700">
+          <span className="material-symbols-outlined text-[16px] text-[#a43073] dark:text-pink-400">keyboard</span>
           <span>
-            Mẹo: Nhấn <kbd className="px-1.5 py-0.5 bg-slate-100 rounded text-slate-800 font-bold font-mono text-[10px]">Space</kbd> để lật thẻ, phím <kbd className="px-1.5 py-0.5 bg-slate-100 rounded text-slate-800 font-bold font-mono text-[10px]">1-4</kbd> để đánh giá
+            Mẹo: Nhấn <kbd className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 rounded text-slate-800 dark:text-slate-100 font-bold font-mono text-[10px]">Space</kbd> để lật thẻ, phím <kbd className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 rounded text-slate-800 dark:text-slate-100 font-bold font-mono text-[10px]">1-4</kbd> để đánh giá
           </span>
         </div>
       </div>
 
       <div className="h-8 flex items-center">
-        {feedback && <div className="px-4 py-1.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-xs shadow-xs">{feedback}</div>}
-        {!feedback && notice && <div className="px-4 py-1.5 rounded-full bg-amber-100 text-amber-900 font-bold text-xs shadow-xs">{notice}</div>}
+        {feedback && <div className="px-4 py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 font-bold text-xs shadow-xs dark:shadow-none">{feedback}</div>}
+        {!feedback && notice && <div className="px-4 py-1.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-900 dark:text-amber-300 font-bold text-xs shadow-xs dark:shadow-none">{notice}</div>}
       </div>
 
       <div className="w-full max-w-3xl flex flex-col items-center">
         {phase === 'loading' && (
-          <div className="w-full min-h-[360px] rounded-3xl bg-white border-2 border-pink-100 shadow-soft flex items-center justify-center gap-3 text-sm text-slate-500">
-            <span className="w-5 h-5 border-2 border-pink-300 border-t-transparent rounded-full animate-spin"></span>
+          <div className="w-full min-h-[360px] rounded-3xl bg-white dark:bg-[#0f172a] border-2 border-pink-100 dark:border-slate-800 shadow-soft dark:shadow-none transition-colors duration-300 flex items-center justify-center gap-3 text-sm text-slate-500 dark:text-slate-400">
+            <span className="w-5 h-5 border-2 border-pink-300 border-t-transparent rounded-full animate-spin dark:border-pink-900/40"></span>
             Đang nạp thẻ đến hạn...
           </div>
         )}
 
         {phase === 'error' && (
-          <div className="w-full min-h-[360px] rounded-3xl bg-white border-2 border-rose-100 shadow-soft flex flex-col items-center justify-center gap-3 p-8 text-center">
+          <div className="w-full min-h-[360px] rounded-3xl bg-white dark:bg-[#0f172a] border-2 border-rose-100 dark:border-rose-900/40 shadow-soft dark:shadow-none transition-colors duration-300 flex flex-col items-center justify-center gap-3 p-8 text-center">
             <span className="material-symbols-outlined text-[40px] text-rose-400">error</span>
-            <p className="text-sm text-rose-600">{error}</p>
+            <p className="text-sm text-rose-600 dark:text-rose-400">{error}</p>
             <button onClick={() => void loadBatch()} className="px-5 py-2 rounded-full bg-[#a43073] text-white text-xs font-bold">Thử lại</button>
           </div>
         )}
@@ -502,13 +502,13 @@ export const ReviewRoom: React.FC<ReviewRoomProps> = ({
                 className={`relative w-full h-full transition-transform duration-500 rounded-3xl shadow-floating transform-style-3d ${flipped ? 'rotate-y-180' : ''}`}
               >
                 {/* MẶT TRƯỚC */}
-                <div className="absolute inset-0 w-full h-full rounded-3xl bg-white p-8 flex flex-col justify-between gap-4 overflow-hidden backface-hidden border-2 border-pink-100 shadow-soft">
+                <div className="absolute inset-0 w-full h-full rounded-3xl bg-white dark:bg-[#0f172a] p-8 flex flex-col justify-between gap-4 overflow-hidden backface-hidden border-2 border-pink-100 dark:border-slate-700 shadow-soft dark:shadow-none">
                   <div className="flex items-center justify-between w-full">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="px-3 py-1 rounded-full bg-amber-100 text-amber-900 font-bold text-xs flex items-center gap-1">
+                      <span className="px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-900 dark:text-amber-300 font-bold text-xs flex items-center gap-1">
                         <span>⭐</span> {hskLabel(card.hsk_level)}
                       </span>
-                      <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-900 font-semibold text-xs">{CARD_TYPE_LABEL[card.card_type]}</span>
+                      <span className="px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-900 dark:text-blue-300 font-semibold text-xs">{CARD_TYPE_LABEL[card.card_type]}</span>
                     </div>
                     <button
                       onClick={e => {
@@ -516,7 +516,7 @@ export const ReviewRoom: React.FC<ReviewRoomProps> = ({
                         void handleToggleStar();
                       }}
                       className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
-                        card.is_starred ? 'bg-amber-100 text-amber-500' : 'bg-slate-100 text-slate-400 hover:text-amber-500'
+                        card.is_starred ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-500' : 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-300 hover:text-amber-500 dark:hover:text-amber-400'
                       }`}
                       title="Đánh dấu sao"
                     >
@@ -526,18 +526,18 @@ export const ReviewRoom: React.FC<ReviewRoomProps> = ({
 
                   <SideBody side={card.front} isFront onSpeak={speak} contextHint={card.context?.sentence_vi ?? null} />
 
-                  <div className="flex items-center justify-between w-full pt-4 border-t border-slate-100">
+                  <div className="flex items-center justify-between w-full pt-4 border-t border-slate-100 dark:border-slate-700">
                     {unsupportedListening ? (
-                      <span className="text-xs text-amber-700">Không phát được âm thanh. Hãy thử lại hoặc bỏ qua thẻ.</span>
+                      <span className="text-xs text-amber-700 dark:text-amber-400">Không phát được âm thanh. Hãy thử lại hoặc bỏ qua thẻ.</span>
                     ) : (
-                      <div className="flex items-center gap-1.5 text-slate-500 text-xs min-w-0">
-                        <span className="material-symbols-outlined text-[#a43073] text-[18px]">auto_stories</span>
+                      <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-xs min-w-0">
+                        <span className="material-symbols-outlined text-[#a43073] dark:text-pink-400 text-[18px]">auto_stories</span>
                         <span className="truncate">
-                          {card.context?.source_label ? <>Xuất hiện ở: <strong>{card.context.source_label}</strong></> : 'Từ lưu từ khung tra cứu'}
+                          {card.context?.source_label ? <>Xuất hiện ở: <strong className="text-slate-700 dark:text-slate-200">{card.context.source_label}</strong></> : 'Từ lưu từ khung tra cứu'}
                         </span>
                       </div>
                     )}
-                    <span className="text-xs font-bold text-[#a43073] flex items-center gap-1 animate-pulse shrink-0">
+                    <span className="text-xs font-bold text-[#a43073] dark:text-pink-400 flex items-center gap-1 animate-pulse shrink-0">
                       <span>Chạm để lật mặt sau</span>
                       <span className="material-symbols-outlined text-[18px]">sync</span>
                     </span>
@@ -545,39 +545,39 @@ export const ReviewRoom: React.FC<ReviewRoomProps> = ({
                 </div>
 
                 {/* MẶT SAU */}
-                <div className="absolute inset-0 w-full h-full rounded-3xl bg-gradient-to-b from-white to-[#eff4ff] p-6 flex flex-col gap-3 backface-hidden rotate-y-180 border-2 border-pink-200 shadow-soft overflow-y-auto custom-scrollbar">
+                <div className="absolute inset-0 w-full h-full rounded-3xl bg-gradient-to-b from-white to-[#eff4ff] dark:from-[#0f172a] dark:to-[#0f172a] p-6 flex flex-col gap-3 backface-hidden rotate-y-180 border-2 border-pink-200 dark:border-slate-700 shadow-soft dark:shadow-none overflow-y-auto custom-scrollbar">
                   <div className="flex items-center justify-between w-full">
                     <div className="flex items-center gap-2">
-                      <span className="text-2xl font-bold text-[#a43073] font-['Noto_Serif_SC']">{backSide.term}</span>
-                      {backSide.back.pinyin && <span className="text-base text-blue-600 font-semibold font-mono">({backSide.back.pinyin})</span>}
+                      <span className="text-2xl font-bold text-[#a43073] dark:text-pink-400 font-['Noto_Serif_SC']">{backSide.term}</span>
+                      {backSide.back.pinyin && <span className="text-base text-blue-600 dark:text-blue-300 font-semibold font-mono">({backSide.back.pinyin})</span>}
                       <button
                         onClick={e => {
                           e.stopPropagation();
                           speak(backSide.term);
                         }}
-                        className="w-7 h-7 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-700 flex items-center justify-center"
+                        className="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 flex items-center justify-center"
                         title="Phát âm chuẩn"
                       >
                         <span className="material-symbols-outlined text-[16px]">volume_up</span>
                       </button>
                     </div>
-                    <span className="text-xs px-3 py-1 rounded-full bg-[#ffd8e7] text-[#85145a] font-bold">Ý nghĩa & Ngữ cảnh</span>
+                    <span className="text-xs px-3 py-1 rounded-full bg-[#ffd8e7] dark:bg-pink-900/30 text-[#85145a] dark:text-pink-300 font-bold">Ý nghĩa & Ngữ cảnh</span>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-white shadow-xs border border-pink-100 flex flex-col gap-1">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Định nghĩa tiếng Việt</span>
-                    <span className="text-base font-bold text-slate-800 leading-snug break-words whitespace-pre-line">
+                  <div className="p-4 rounded-2xl bg-white dark:bg-slate-800 shadow-xs dark:shadow-none border border-pink-100 dark:border-slate-700 flex flex-col gap-1">
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Định nghĩa tiếng Việt</span>
+                    <span className="text-base font-bold text-slate-800 dark:text-slate-100 leading-snug break-words whitespace-pre-line">
                       {backSide.back.meaning_vi ? fullMeaning(backSide.back.meaning_vi) : 'Chưa có nghĩa trong từ điển'}
                     </span>
                     {backSide.back.sino_vietnamese && (
-                      <span className="text-xs text-slate-500">Âm Hán Việt: <strong className="text-slate-800">{backSide.back.sino_vietnamese}</strong></span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">Âm Hán Việt: <strong className="text-slate-800 dark:text-white">{backSide.back.sino_vietnamese}</strong></span>
                     )}
                   </div>
 
                   {backSide.context && (
-                    <div className="p-4 rounded-2xl bg-[#ffd8e7]/30 border border-pink-200 flex flex-col gap-1.5">
+                    <div className="p-4 rounded-2xl bg-[#ffd8e7]/30 dark:bg-pink-900/20 border border-pink-200 dark:border-pink-900/40 flex flex-col gap-1.5">
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-bold text-[#a43073] flex items-center gap-1">
+                        <span className="text-[11px] font-bold text-[#a43073] dark:text-pink-400 flex items-center gap-1">
                           <span className="material-symbols-outlined text-[16px]">menu_book</span>
                           {backSide.context.source_label ?? 'Câu thoại gốc trong Manhua'}
                         </span>
@@ -586,7 +586,7 @@ export const ReviewRoom: React.FC<ReviewRoomProps> = ({
                             e.stopPropagation();
                             speak(backSide.context?.sentence_zh ?? '');
                           }}
-                          className="text-blue-700 hover:text-blue-900 flex items-center gap-1 text-[11px] font-bold"
+                          className="text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-200 flex items-center gap-1 text-[11px] font-bold"
                         >
                           <span className="material-symbols-outlined text-[16px]">volume_up</span>
                           Nghe câu
@@ -596,17 +596,17 @@ export const ReviewRoom: React.FC<ReviewRoomProps> = ({
                         <AuthImage
                           src={backSide.context.snippet_url}
                           alt={`Ngữ cảnh của ${backSide.term}`}
-                          className="w-full max-h-40 object-contain rounded-xl bg-white"
+                          className="w-full max-h-40 object-contain rounded-xl bg-white dark:bg-slate-900"
                         />
                       )}
-                      <p className="text-sm font-['Noto_Serif_SC'] font-bold text-slate-800 mt-0.5">“{backSide.context.sentence_zh}”</p>
-                      {backSide.context.sentence_vi && <p className="text-xs text-slate-600 italic">“{backSide.context.sentence_vi}”</p>}
-                      {backSide.contexts_count > 1 && <p className="text-[10px] text-slate-400">Từ này còn {backSide.contexts_count - 1} ngữ cảnh khác trong Sổ tay.</p>}
+                      <p className="text-sm font-['Noto_Serif_SC'] font-bold text-slate-800 dark:text-slate-100 mt-0.5">“{backSide.context.sentence_zh}”</p>
+                      {backSide.context.sentence_vi && <p className="text-xs text-slate-600 dark:text-slate-300 italic">“{backSide.context.sentence_vi}”</p>}
+                      {backSide.contexts_count > 1 && <p className="text-[10px] text-slate-400 dark:text-slate-500">Từ này còn {backSide.contexts_count - 1} ngữ cảnh khác trong Sổ tay.</p>}
                     </div>
                   )}
 
                   {backSide.note && (
-                    <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-900 whitespace-pre-wrap break-words">
+                    <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900/50 text-xs text-amber-900 dark:text-amber-300 whitespace-pre-wrap break-words">
                       <span className="font-bold">Ghi chú của bạn: </span>
                       {backSide.note}
                     </div>
@@ -615,18 +615,18 @@ export const ReviewRoom: React.FC<ReviewRoomProps> = ({
                   {/* Chỉ tải khi lật thẻ lần đầu; khối tự cuộn cùng mặt sau nên thẻ không tràn chữ. */}
                   <AiNotePanel vocabEntryId={backSide.vocab_entry_id} active={flipped} onSpeak={speak} />
 
-                  <div className="flex items-center justify-between pt-2 mt-auto border-t border-slate-100">
+                  <div className="flex items-center justify-between pt-2 mt-auto border-t border-slate-100 dark:border-slate-700">
                     <button
                       onClick={e => {
                         e.stopPropagation();
                         void handleOpenSource();
                       }}
-                      className="inline-flex items-center gap-1 text-xs font-bold text-[#0060ac] hover:underline"
+                      className="inline-flex items-center gap-1 text-xs font-bold text-[#0060ac] dark:text-blue-300 hover:underline"
                     >
                       <span className="material-symbols-outlined text-[16px]">open_in_new</span>
                       <span>Xem lại trang truyện gốc nơi từ xuất hiện</span>
                     </button>
-                    <span className="text-xs text-slate-400 flex items-center gap-1">
+                    <span className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1">
                       <span className="material-symbols-outlined text-[16px]">touch_app</span>
                       Chạm để quay lại
                     </span>
@@ -642,23 +642,23 @@ export const ReviewRoom: React.FC<ReviewRoomProps> = ({
                     key={rating.value}
                     onClick={() => void handleGrade(rating.value)}
                     disabled={!flipped || grading}
-                    className={`flex flex-col items-center justify-center p-3 rounded-2xl bg-white text-slate-800 shadow-xs border border-slate-200 transition-all text-center disabled:opacity-50 disabled:cursor-not-allowed enabled:hover:shadow-md ${rating.hover}`}
+                    className={`flex flex-col items-center justify-center p-3 rounded-2xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-xs dark:shadow-none border border-slate-200 dark:border-slate-700 transition-all text-center disabled:opacity-50 disabled:cursor-not-allowed enabled:hover:shadow-md ${rating.hover}`}
                   >
                     <span className={`text-xs font-bold flex items-center gap-1 ${rating.text}`}>
                       <span className={`w-2 h-2 rounded-full ${rating.dot}`}></span> {rating.label}
                     </span>
                     <span className="text-sm font-bold mt-1">{rating.caption}</span>
-                    <span className="text-[10px] text-slate-400 font-mono mt-0.5">Phím {rating.value}</span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono mt-0.5">Phím {rating.value}</span>
                   </button>
                 ))}
               </div>
-              {!flipped && <p className="text-center text-xs text-slate-500">Lật thẻ để xem đáp án rồi chọn mức nhớ của bạn.</p>}
+              {!flipped && <p className="text-center text-xs text-slate-500 dark:text-slate-400">Lật thẻ để xem đáp án rồi chọn mức nhớ của bạn.</p>}
 
               <div className="flex items-center justify-between px-2 pt-1">
                 {card.card_type === 'listening' ? (
                   <button
                     onClick={() => void handleSkip()}
-                    className="flex items-center gap-1 text-xs font-semibold text-slate-600 hover:text-slate-900 py-1.5 px-3 rounded-full hover:bg-slate-100 transition-colors"
+                    className="flex items-center gap-1 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white py-1.5 px-3 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                     title="Bỏ qua thẻ này, không chấm điểm"
                   >
                     <span className="material-symbols-outlined text-[16px]">skip_next</span>
@@ -669,7 +669,7 @@ export const ReviewRoom: React.FC<ReviewRoomProps> = ({
                 )}
                 <button
                   onClick={toggleFlip}
-                  className="flex items-center gap-1.5 text-xs font-bold text-[#a43073] bg-[#ffd8e7]/60 hover:bg-[#ffd8e7] py-2 px-5 rounded-full transition-colors shadow-xs"
+                  className="flex items-center gap-1.5 text-xs font-bold text-[#a43073] dark:text-pink-300 bg-[#ffd8e7]/60 dark:bg-pink-900/30 hover:bg-[#ffd8e7] dark:hover:bg-pink-900/50 py-2 px-5 rounded-full transition-colors shadow-xs dark:shadow-none"
                 >
                   <span className="material-symbols-outlined text-[18px]">sync</span>
                   <span>Lật thẻ (Space)</span>
@@ -677,7 +677,7 @@ export const ReviewRoom: React.FC<ReviewRoomProps> = ({
                 {card.card_type === 'listening' ? (
                   <button
                     onClick={() => speak(card.front.audio_text ?? card.term)}
-                    className="flex items-center gap-1 text-xs font-semibold text-blue-700 hover:text-blue-900 py-1.5 px-3 rounded-full hover:bg-blue-50 transition-colors"
+                    className="flex items-center gap-1 text-xs font-semibold text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-200 py-1.5 px-3 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                   >
                     <span className="material-symbols-outlined text-[16px]">replay</span>
                     <span>Thử lại âm thanh</span>

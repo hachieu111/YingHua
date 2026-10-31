@@ -28,7 +28,7 @@ interface SeriesManagerModalProps {
 }
 
 const inputClass =
-  'w-full text-xs font-medium text-slate-700 bg-white p-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-[#f472b6]';
+  'w-full text-xs font-medium text-slate-700 dark:text-slate-100 bg-white dark:bg-[#1e293b] p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 outline-none focus:ring-2 focus:ring-[#f472b6]';
 
 export const SeriesManagerModal: React.FC<SeriesManagerModalProps> = ({
   isOpen,
@@ -217,23 +217,23 @@ export const SeriesManagerModal: React.FC<SeriesManagerModalProps> = ({
   const creating = currentId === null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-3xl shadow-floating border border-pink-100">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-pink-100 bg-gradient-to-r from-pink-50/70 via-white to-pink-50/40 sticky top-0 z-10">
+    <div className="fixed inset-0 z-50 bg-slate-900/50 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-white dark:bg-[#0f172a] w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-3xl shadow-floating dark:shadow-none border border-pink-100 dark:border-slate-700 transition-colors duration-300">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-pink-100 dark:border-slate-700 bg-gradient-to-r from-pink-50/70 via-white to-pink-50/40 dark:from-pink-900/20 dark:via-[#0f172a] dark:to-pink-900/10 sticky top-0 z-10">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-2xl bg-pink-100 flex items-center justify-center text-[#a43073]">
+            <div className="w-9 h-9 rounded-2xl bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center text-[#a43073] dark:text-pink-400">
               <span className="material-symbols-outlined text-[20px]">auto_stories</span>
             </div>
             <div>
-              <h3 className="text-sm font-bold text-slate-800">{creating ? 'Tạo truyện mới' : (detail?.series.title_vi ?? 'Quản lý truyện')}</h3>
-              <p className="text-[11px] text-slate-400 font-medium">
+              <h3 className="text-sm font-bold text-slate-800 dark:text-white">{creating ? 'Tạo truyện mới' : (detail?.series.title_vi ?? 'Quản lý truyện')}</h3>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
                 {creating ? 'Truyện riêng tư chỉ mình bạn xem được' : 'Thêm chương và tải ảnh các trang'}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors"
+            className="w-8 h-8 rounded-full bg-slate-100 dark:bg-[#1e293b] hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center transition-colors"
             aria-label="Đóng"
           >
             <span className="material-symbols-outlined text-[18px]">close</span>
@@ -242,7 +242,7 @@ export const SeriesManagerModal: React.FC<SeriesManagerModalProps> = ({
 
         <div className="p-6 space-y-4">
           {error && (
-            <div className="p-3 rounded-2xl bg-red-50 border border-red-200 text-[11px] text-red-700" role="alert">
+            <div className="p-3 rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 text-[11px] text-red-700 dark:text-red-400" role="alert">
               {error}
               {duplicate && (
                 <button onClick={() => handleCreate(true)} disabled={busy} className="ml-2 font-bold underline">
@@ -255,26 +255,26 @@ export const SeriesManagerModal: React.FC<SeriesManagerModalProps> = ({
           {creating ? (
             <div className="space-y-3">
               <div>
-                <label className="text-[11px] font-bold text-slate-500 block mb-1" htmlFor="series-title-vi">Tên truyện (tiếng Việt) *</label>
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1" htmlFor="series-title-vi">Tên truyện (tiếng Việt) *</label>
                 <input id="series-title-vi" value={titleVi} onChange={event => setTitleVi(event.target.value)} maxLength={255} className={inputClass} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-bold text-slate-500 block mb-1" htmlFor="series-title-zh">Tên gốc (tiếng Trung)</label>
+                  <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1" htmlFor="series-title-zh">Tên gốc (tiếng Trung)</label>
                   <input id="series-title-zh" value={titleZh} onChange={event => setTitleZh(event.target.value)} maxLength={255} className={inputClass} />
                 </div>
                 <div>
-                  <label className="text-[11px] font-bold text-slate-500 block mb-1" htmlFor="series-author">Tác giả</label>
+                  <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1" htmlFor="series-author">Tác giả</label>
                   <input id="series-author" value={author} onChange={event => setAuthor(event.target.value)} maxLength={255} className={inputClass} />
                 </div>
               </div>
               <div>
-                <label className="text-[11px] font-bold text-slate-500 block mb-1" htmlFor="series-description">Mô tả</label>
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1" htmlFor="series-description">Mô tả</label>
                 <textarea id="series-description" value={description} onChange={event => setDescription(event.target.value)} maxLength={5000} rows={3} className={inputClass} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-bold text-slate-500 block mb-1" htmlFor="series-hsk">Cấp HSK ước lượng</label>
+                  <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1" htmlFor="series-hsk">Cấp HSK ước lượng</label>
                   <select id="series-hsk" value={hsk} onChange={event => setHsk(event.target.value)} className={inputClass}>
                     <option value="">Chưa xác định</option>
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(level => (
@@ -283,13 +283,13 @@ export const SeriesManagerModal: React.FC<SeriesManagerModalProps> = ({
                   </select>
                 </div>
                 <div>
-                  <label className="text-[11px] font-bold text-slate-500 block mb-1" htmlFor="series-genres">Thể loại (cách nhau dấu phẩy)</label>
+                  <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1" htmlFor="series-genres">Thể loại (cách nhau dấu phẩy)</label>
                   <input id="series-genres" value={genres} onChange={event => setGenres(event.target.value)} placeholder="Học đường, Hài hước" className={inputClass} />
                 </div>
               </div>
               {isAdmin && (
                 <div>
-                  <label className="text-[11px] font-bold text-slate-500 block mb-1" htmlFor="series-visibility">Hiển thị</label>
+                  <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1" htmlFor="series-visibility">Hiển thị</label>
                   <select id="series-visibility" value={visibility} onChange={event => setVisibility(event.target.value as 'private' | 'public')} className={inputClass}>
                     <option value="private">Riêng tư (chỉ mình tôi)</option>
                     <option value="public">Công khai (mọi người thấy ở Trang Chủ)</option>
@@ -301,20 +301,20 @@ export const SeriesManagerModal: React.FC<SeriesManagerModalProps> = ({
             <>
               {loading && !detail && (
                 <div className="flex justify-center py-6">
-                  <span className="w-6 h-6 border-2 border-pink-300 border-t-transparent rounded-full animate-spin"></span>
+                  <span className="w-6 h-6 border-2 border-pink-300 border-t-transparent rounded-full animate-spin dark:border-pink-900/40"></span>
                 </div>
               )}
 
               {detail && (
                 <>
-                  <div className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100">
-                    <span className="text-xs text-slate-600">
+                  <div className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+                    <span className="text-xs text-slate-600 dark:text-slate-300">
                       {detail.series.visibility === 'public' ? 'Truyện công khai' : 'Truyện riêng tư'} · {detail.chapters.length} chương
                     </span>
                     <button
                       onClick={() => coverInputRef.current?.click()}
                       disabled={busy}
-                      className="px-3 py-1.5 rounded-full bg-white border border-pink-100 text-[#a43073] text-[11px] font-bold hover:bg-pink-50 disabled:opacity-60"
+                      className="px-3 py-1.5 rounded-full bg-white dark:bg-[#1e293b] border border-pink-100 dark:border-pink-900/40 text-[#a43073] dark:text-pink-400 text-[11px] font-bold hover:bg-pink-50 dark:hover:bg-slate-700 disabled:opacity-60"
                     >
                       Đặt ảnh bìa
                     </button>
@@ -339,9 +339,9 @@ export const SeriesManagerModal: React.FC<SeriesManagerModalProps> = ({
                   )}
 
                   <div>
-                    <h4 className="text-xs font-bold text-slate-800 mb-2">Chương</h4>
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 mb-2">Chương</h4>
                     {detail.chapters.length === 0 ? (
-                      <p className="text-xs text-slate-500 bg-slate-50 rounded-2xl p-4 text-center">Chưa có chương nào. Thêm chương đầu tiên bên dưới.</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 rounded-2xl p-4 text-center">Chưa có chương nào. Thêm chương đầu tiên bên dưới.</p>
                     ) : (
                       <div className="flex flex-col gap-2">
                         {detail.chapters.map(chapter => (
@@ -364,24 +364,24 @@ export const SeriesManagerModal: React.FC<SeriesManagerModalProps> = ({
                         ))}
                       </div>
                     )}
-                    <p className="mt-2 text-[10px] text-slate-400">Tải trang: tối đa {MAX_CHAPTER_UPLOAD_FILES} ảnh mỗi lần, mỗi ảnh ≤ 10MB.</p>
+                    <p className="mt-2 text-[10px] text-slate-400 dark:text-slate-500">Tải trang: tối đa {MAX_CHAPTER_UPLOAD_FILES} ảnh mỗi lần, mỗi ảnh ≤ 10MB.</p>
                     <input ref={pageInputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple className="hidden" onChange={handlePagesChosen} />
                   </div>
 
-                  <div className="p-4 rounded-2xl border border-pink-100 bg-pink-50/30 space-y-3">
-                    <h4 className="text-xs font-bold text-slate-800">Thêm chương</h4>
+                  <div className="p-4 rounded-2xl border border-pink-100 dark:border-slate-700 bg-pink-50/30 dark:bg-pink-900/10 space-y-3">
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100">Thêm chương</h4>
                     <div className="grid grid-cols-3 gap-3">
                       <div>
-                        <label className="text-[11px] font-bold text-slate-500 block mb-1" htmlFor="chapter-number">Số chương</label>
+                        <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1" htmlFor="chapter-number">Số chương</label>
                         <input id="chapter-number" type="number" min={0} step="0.1" value={chapterNumber} onChange={event => setChapterNumber(event.target.value)} className={inputClass} />
                       </div>
                       <div className="col-span-2">
-                        <label className="text-[11px] font-bold text-slate-500 block mb-1" htmlFor="chapter-title">Tên chương (tùy chọn)</label>
+                        <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1" htmlFor="chapter-title">Tên chương (tùy chọn)</label>
                         <input id="chapter-title" value={chapterTitle} onChange={event => setChapterTitle(event.target.value)} maxLength={255} className={inputClass} />
                       </div>
                     </div>
                     {isAdmin && detail.series.visibility === 'public' && (
-                      <label className="flex items-center gap-2 text-xs text-slate-600">
+                      <label className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
                         <input type="checkbox" checked={chapterTrial} onChange={event => setChapterTrial(event.target.checked)} />
                         Cho Khách đọc thử chương này
                       </label>
@@ -389,7 +389,7 @@ export const SeriesManagerModal: React.FC<SeriesManagerModalProps> = ({
                     <button
                       onClick={handleAddChapter}
                       disabled={busy}
-                      className="px-4 py-2 rounded-full bg-white border border-pink-200 text-[#a43073] text-xs font-bold hover:bg-pink-50 disabled:opacity-60"
+                      className="px-4 py-2 rounded-full bg-white dark:bg-[#1e293b] border border-pink-200 dark:border-pink-900/40 text-[#a43073] dark:text-pink-400 text-xs font-bold hover:bg-pink-50 dark:hover:bg-slate-700 disabled:opacity-60"
                     >
                       + Thêm chương
                     </button>
@@ -397,13 +397,13 @@ export const SeriesManagerModal: React.FC<SeriesManagerModalProps> = ({
 
                   {uploaded.length > 0 && (
                     <div>
-                      <h4 className="text-xs font-bold text-slate-800 mb-2">Trang vừa tải lên</h4>
+                      <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 mb-2">Trang vừa tải lên</h4>
                       <div className="flex flex-col gap-2">
                         {uploaded.map(({ page, filename }) => {
                           const live = statuses[page.id];
                           return (
-                            <div key={page.id} className="flex items-center justify-between gap-3 px-3 py-2 rounded-xl bg-slate-50 border border-slate-100">
-                              <span className="text-[11px] text-slate-700 truncate">{filename}</span>
+                            <div key={page.id} className="flex items-center justify-between gap-3 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+                              <span className="text-[11px] text-slate-700 dark:text-slate-200 truncate">{filename}</span>
                               <StatusPill status={live ? live.status : page.status} textReady={(live ? live.text_ready : page.text_ready) === true} />
                             </div>
                           );
@@ -417,8 +417,8 @@ export const SeriesManagerModal: React.FC<SeriesManagerModalProps> = ({
           )}
         </div>
 
-        <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
-          <button onClick={onClose} className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-200 transition-colors">
+        <div className="px-6 py-4 bg-slate-50 dark:bg-[#0f172a] border-t border-slate-100 dark:border-slate-700 flex items-center justify-end gap-2.5">
+          <button onClick={onClose} className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
             {creating ? 'Hủy bỏ' : 'Xong'}
           </button>
           {creating && (

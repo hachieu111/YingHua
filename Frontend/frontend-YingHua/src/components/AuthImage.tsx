@@ -40,11 +40,11 @@ export const AuthImage: React.FC<AuthImageProps> = ({ src, alt, className, fallb
   if (objectUrl) return <img src={objectUrl} alt={alt} className={className} onLoad={onLoad} draggable={false} />;
 
   return (
-    <div className={`${className ?? ''} flex items-center justify-center bg-slate-100 text-slate-300`} role="img" aria-label={alt}>
+    <div className={`${className ?? ''} flex items-center justify-center bg-slate-100 dark:bg-slate-700 text-slate-300 dark:text-slate-500`} role="img" aria-label={alt}>
       {failed || !src ? (
         (fallback ?? <span className="material-symbols-outlined text-[28px]">image_not_supported</span>)
       ) : (
-        <span className="w-5 h-5 border-2 border-pink-300 border-t-transparent rounded-full animate-spin"></span>
+        <span className="w-5 h-5 border-2 border-pink-300 border-t-transparent rounded-full animate-spin dark:border-pink-900/40"></span>
       )}
     </div>
   );
