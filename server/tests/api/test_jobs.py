@@ -24,7 +24,11 @@ JOB_NAMES = [
     "cleanup_orphan_files",
     "cleanup_quick_uploads",
     "cleanup_sessions",
+    "evaluate_achievements",
+    "finalize_seasons",
     "optimize_fsrs",
+    "purge_minigame_rounds",
+    "remind_vip_expiry",
     "send_reminders",
 ]
 
@@ -109,8 +113,8 @@ async def test_run_due_jobs_cleans_expired_data_keeps_series_pages_and_records_r
     assert await _scalar(app, "SELECT count(*) FROM guest_sessions WHERE id = :id", id=guest_id) == 0
     assert await _scalar(app, "SELECT count(*) FROM stored_files WHERE id = :id", id=orphan_id) == 0
 
-    # F15.03: chạy lại ngay thì chưa đến hạn; sau 2 giờ chỉ tác vụ chu kỳ 60 phút
-    # và nhắc ôn (15 phút) chạy lại; khóa đã nhả.
+    # F15.03: chạy lại ngay thì chưa đến hạn; sau 2 giờ chỉ tác vụ chu kỳ ≤ 60 phút (dọn ảnh, nhắc VIP, quét
+    # huy hiệu) và tác vụ 15 phút (nhắc ôn, chốt mùa) chạy lại; khóa đã nhả.
     assert await runner.run_due_jobs(later, "w1") == []
     runner_2h = build_job_runner(
         container.session_factory,
@@ -119,7 +123,13 @@ async def test_run_due_jobs_cleans_expired_data_keeps_series_pages_and_records_r
         container.settings,
     )
     again = await runner_2h.run_due_jobs(later + timedelta(hours=2), "w2")
-    assert [r.name for r in again] == ["cleanup_quick_uploads", "send_reminders"]
+    assert [r.name for r in again] == [
+        "cleanup_quick_uploads",
+        "evaluate_achievements",
+        "finalize_seasons",
+        "remind_vip_expiry",
+        "send_reminders",
+    ]
     assert await _scalar(app, "SELECT count(*) FROM scheduled_jobs WHERE locked_by IS NOT NULL") == 0
     assert await _scalar(app, "SELECT count(*) FROM job_runs WHERE status = 'running'") == 0
 

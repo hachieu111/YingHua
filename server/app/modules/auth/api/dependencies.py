@@ -73,7 +73,7 @@ def build_auth_services(container: Container) -> AuthServices:
     issuer = SessionIssuer(tokens, clock, config)
     email_sender = FileOutboxEmailSender(container.settings.storage_dir / "outbox")
     return AuthServices(
-        register=RegisterUseCase(uow_factory, clock, issuer),
+        register=RegisterUseCase(uow_factory, clock, issuer, container.welcome_gift),
         login=LoginUseCase(uow_factory, clock, issuer, container.login_limiter, config),
         refresh=RefreshSessionUseCase(uow_factory, clock, issuer, config.short_refresh_ttl),
         logout=LogoutUseCase(uow_factory, clock),

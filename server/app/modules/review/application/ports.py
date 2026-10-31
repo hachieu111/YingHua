@@ -7,6 +7,7 @@ from collections.abc import Sequence
 from datetime import datetime
 from typing import Any, Protocol
 
+from app.core.learning_events import LearningEventPort
 from app.modules.admin.application.public import AuditLogRepository
 from app.modules.auth.application.public import Identity
 from app.modules.review.application.dto import AiNoteRequest, EntryFace
@@ -219,6 +220,9 @@ class ReviewUnitOfWork(Protocol):
 
     @property
     def activity(self) -> ActivityRecorder: ...
+
+    @property
+    def learning(self) -> LearningEventPort: ...
 
     async def __aenter__(self) -> ReviewUnitOfWork: ...
 

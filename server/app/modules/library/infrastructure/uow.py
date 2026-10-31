@@ -3,12 +3,14 @@ from __future__ import annotations
 from app.core.db import SqlAlchemyUnitOfWork
 from app.core.stored_files import SqlStoredFileRepository
 from app.modules.admin.infrastructure.public import SqlAuditLogRepository
+from app.modules.gamification.infrastructure.public import SqlLearningEvents
 from app.modules.imaging.infrastructure.public import SqlTranslationRepository
 from app.modules.library.infrastructure.chapter_repository import SqlChapterRepository
 from app.modules.library.infrastructure.page_repository import SqlPageRepository
 from app.modules.library.infrastructure.progress_repository import SqlProgressRepository
 from app.modules.library.infrastructure.repositories import SqlLibraryRepository, SqlRatingRepository
 from app.modules.library.infrastructure.series_repository import SqlSeriesRepository
+from app.modules.rewards.infrastructure.public import SqlVipAccess
 from app.modules.stats.infrastructure.public import SqlActivityRecorder
 
 
@@ -23,6 +25,8 @@ class SqlLibraryUnitOfWork(SqlAlchemyUnitOfWork):
     translations: SqlTranslationRepository
     audit: SqlAuditLogRepository
     activity: SqlActivityRecorder
+    learning: SqlLearningEvents
+    vip: SqlVipAccess
 
     def _init_repositories(self) -> None:
         self.series = SqlSeriesRepository(self.session)
@@ -35,3 +39,6 @@ class SqlLibraryUnitOfWork(SqlAlchemyUnitOfWork):
         self.translations = SqlTranslationRepository(self.session)
         self.audit = SqlAuditLogRepository(self.session)
         self.activity = SqlActivityRecorder(self.session)
+        self.learning = SqlLearningEvents(self.session)  # XP của M16, cùng phiên (F16.02)
+        # Cổng hỏi quyền đọc truyện VIP (F17.05): M17 hiện thực, dùng chung phiên với giao dịch này.
+        self.vip = SqlVipAccess(self.session)

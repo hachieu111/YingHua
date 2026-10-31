@@ -8,7 +8,9 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Protocol
 
+from app.core.learning_events import LearningEventPort
 from app.core.stored_files import StoredFileRepository
+from app.core.vip_access import VipAccessPort
 from app.modules.imaging.application.public import TranslationRepository
 from app.modules.library.domain.entities import (
     Assets,
@@ -248,6 +250,12 @@ class LibraryUnitOfWork(Protocol):
 
     @property
     def activity(self) -> ActivityRecorder: ...
+
+    @property
+    def learning(self) -> LearningEventPort: ...
+
+    @property
+    def vip(self) -> VipAccessPort: ...
 
     async def __aenter__(self) -> LibraryUnitOfWork: ...
 

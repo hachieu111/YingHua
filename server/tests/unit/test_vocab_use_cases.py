@@ -12,6 +12,7 @@ import pytest
 
 from app.core.errors import ExternalServiceError
 from app.core.image_validation import ImageInfo, ImageUpload
+from app.core.learning_events import LearningSignal
 from app.core.stored_files import FileKind, NewStoredFile, StoredFile
 from app.modules.imaging.domain.entities import Bubble
 from app.modules.library.application.dto import PageAccess, SeriesRef
@@ -46,7 +47,7 @@ from app.modules.vocab.domain.errors import (
     VocabNotFoundError,
 )
 from tests.conftest import FixedClock
-from tests.unit.activity_fakes import FakeActivity
+from tests.unit.activity_fakes import FakeActivity, FakeLearning
 from tests.unit.review_fakes import FakeAudit, FakeCards, identity
 
 NOW = datetime(2026, 10, 24, 8, 0, tzinfo=timezone.utc)
@@ -212,6 +213,7 @@ class FakeVocabUow:
         self.bubbles = FakeBubbles(bubbles)
         self.audit = FakeAudit()
         self.activity = FakeActivity()
+        self.learning = FakeLearning()
         self.commits = 0
 
     async def __aenter__(self) -> FakeVocabUow:
@@ -481,6 +483,18 @@ async def test_update_status_note_meaning_and_star() -> None:
     assert cleared.entry.note is None and cleared.entry.status is VocabStatus.KNOWN
     back = await _update(env).execute(identity(), entry.id, {"status": "learning"})
     assert back.entry.status is VocabStatus.LEARNING
+
+
+async def test_update_to_known_signals_instant_badge_check_once_and_only_on_change() -> None:
+    """F16.11 / US-NH-91: chuyển sang "Đã thuộc" báo M16 đánh giá huy hiệu ngay; đổi ghi chú thì không."""
+    env = Env()
+    entry = await _saved(env)
+    await _update(env).execute(identity(), entry.id, {"note": "x"})
+    assert env.uow.learning.signals == []
+    await _update(env).execute(identity(), entry.id, {"status": "known"})
+    await _update(env).execute(identity(), entry.id, {"status": "known"})  # không đổi nên không báo lại
+    assert env.uow.learning.signals == [(identity().user_id, LearningSignal.VOCAB_MASTERED)]
+    assert env.uow.learning.after_commit_calls >= 3
 
 
 async def test_update_rejects_bad_values_and_other_users() -> None:

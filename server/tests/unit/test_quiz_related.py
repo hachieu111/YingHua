@@ -12,6 +12,7 @@ from typing import Any
 
 import pytest
 
+from app.core.ai_policy import StaticAiPolicy
 from app.modules.dictionary.domain.difficulty import example_difficulty, token_level
 from app.modules.quiz.api.schemas import QuizDetailResponse
 from app.modules.quiz.application.config import QuizConfig
@@ -69,7 +70,8 @@ from tests.unit.quiz_fakes import (
 from tests.unit.review_fakes import identity
 
 NOW = datetime(2026, 10, 25, 8, 0, tzinfo=timezone.utc)
-CONFIG = QuizConfig(question_count=10, min_words=10, daily_llm_limit=2, llm_enabled=False)
+CONFIG = QuizConfig(question_count=10, min_words=10)
+LLM_OFF = StaticAiPolicy(False, 2)
 
 
 def _word(i: int, term: str | None = None, meaning: str | None = "nghĩa", level: int | None = 2) -> QuizWord:
@@ -249,6 +251,7 @@ class Env:
             self.related,
             EstimateRetrievabilityUseCase(FsrsScheduler(enable_fuzzing=False)),
             CONFIG,
+            LLM_OFF,
             self.clock,
             self.rng,
         )

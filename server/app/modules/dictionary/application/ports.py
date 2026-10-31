@@ -4,6 +4,7 @@ from collections.abc import Mapping, Sequence
 from datetime import date
 from typing import Any, Protocol
 
+from app.core.learning_events import LearningEventPort
 from app.modules.dictionary.domain.entities import (
     DictEntry,
     EntryRow,
@@ -91,7 +92,11 @@ class DictionaryWriter(Protocol):
 
 
 class LookupEventRepository(Protocol):
-    async def add(self, user_id: int, term: str, entry_id: int | None, action: str) -> None: ...
+    async def add(
+        self, user_id: int, term: str, entry_id: int | None, action: str, bubble_id: int | None = None
+    ) -> bool:
+        """Ghi một lượt tra. Trả True khi `bubble_id` là bong bóng người này chưa tra lần nào (F16.11)."""
+        ...
 
     async def recent_terms(self, user_id: int, limit: int) -> list[str]:
         """Các từ người dùng đã tra gần đây nhất (hover/tra cứu), không trùng, mới nhất trước."""
@@ -121,6 +126,9 @@ class DictionaryUnitOfWork(Protocol):
 
     @property
     def events(self) -> LookupEventRepository: ...
+
+    @property
+    def learning(self) -> LearningEventPort: ...
 
     async def __aenter__(self) -> DictionaryUnitOfWork: ...
 

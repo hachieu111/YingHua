@@ -19,6 +19,8 @@ def _entity(m: UserSettingsModel) -> UserSettings:
         bubble_font_scale=m.bubble_font_scale,
         reminder_enabled=m.reminder_enabled,
         reminder_time=m.reminder_time,
+        show_on_leaderboard=m.show_on_leaderboard,
+        dismissed_tours=list(m.dismissed_tours or []),
     )
 
 
@@ -36,6 +38,8 @@ class SqlSettingsRepository:
                 show_xianxia=True,
                 bubble_font_scale=100,
                 reminder_enabled=False,
+                show_on_leaderboard=True,
+                dismissed_tours=[],
             )
             self._session.add(model)
             await self._session.flush()
@@ -55,4 +59,6 @@ class SqlSettingsRepository:
         model.bubble_font_scale = settings.bubble_font_scale
         model.reminder_enabled = settings.reminder_enabled
         model.reminder_time = settings.reminder_time
+        model.show_on_leaderboard = settings.show_on_leaderboard
+        model.dismissed_tours = list(settings.dismissed_tours)
         await self._session.flush()

@@ -66,6 +66,10 @@ class SystemSettingsValues(BaseModel):
     ai_note_daily_limit: int
     grammar_daily_limit: int
     mistake_review_daily_limit: int
+    vip_quiz_daily_llm_limit: int
+    vip_ai_note_daily_limit: int
+    vip_grammar_daily_limit: int
+    vip_mistake_review_daily_limit: int
     maintenance_mode: bool
     auto_moderation_enabled: bool
     ocr_on_upload_enabled: bool

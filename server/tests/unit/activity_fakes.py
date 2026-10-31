@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from app.core.learning_events import LearningEvent, LearningSignal
 from app.modules.review.domain.fsrs_profile import FsrsProfile
 from app.modules.stats.domain.activity import ActivityDelta
 
@@ -19,6 +20,25 @@ class FakeActivity:
 
     def total(self, field: str) -> int:
         return sum(getattr(delta, field) for _, _, delta in self.records)
+
+
+class FakeLearning:
+    """Bản giả của `LearningEventPort` (M16): ghi lại sự kiện XP mà use case của module nguồn báo lên."""
+
+    def __init__(self) -> None:
+        self.events: list[LearningEvent] = []
+        self.signals: list[tuple[int, LearningSignal]] = []
+        self.after_commit_calls = 0
+
+    async def record(self, event: LearningEvent) -> int:
+        self.events.append(event)
+        return 0
+
+    async def signal(self, user_id: int, signal: LearningSignal, at: datetime) -> None:
+        self.signals.append((user_id, signal))
+
+    async def after_commit(self) -> None:
+        self.after_commit_calls += 1
 
 
 class FakeFsrsProfiles:

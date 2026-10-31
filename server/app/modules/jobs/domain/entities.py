@@ -12,11 +12,19 @@ CLEANUP_SESSIONS = "cleanup_sessions"
 CLEANUP_ORPHAN_FILES = "cleanup_orphan_files"
 OPTIMIZE_FSRS = "optimize_fsrs"
 SEND_REMINDERS = "send_reminders"
+REMIND_VIP_EXPIRY = "remind_vip_expiry"  # nhắc VIP sắp hết hạn (F17.03, US-HG-06)
+FINALIZE_SEASONS = "finalize_seasons"  # chốt mùa thi đua và trao thưởng (F16.10, US-HG-05)
+EVALUATE_ACHIEVEMENTS = "evaluate_achievements"  # quét mở khóa huy hiệu (F16.11)
+PURGE_MINIGAME_ROUNDS = "purge_minigame_rounds"  # dọn lượt mini-game cũ (F16.01, F15.03)
 
 # Khóa chống chạy chồng tự hết hạn: nếu worker chết giữa chừng, tác vụ chạy lại được sau chừng này.
 JOB_LOCK_TTL = timedelta(minutes=10)
 SESSIONS_INTERVAL_SECONDS = 6 * 3600
 ORPHAN_FILES_INTERVAL_SECONDS = 24 * 3600
+VIP_REMINDER_INTERVAL_SECONDS = 60 * 60
+FINALIZE_SEASONS_INTERVAL_SECONDS = 15 * 60
+EVALUATE_ACHIEVEMENTS_INTERVAL_SECONDS = 60 * 60
+PURGE_MINIGAME_ROUNDS_INTERVAL_SECONDS = 24 * 3600
 MAX_ERROR_CHARS = 1000
 
 

@@ -43,7 +43,7 @@ def build_suggestion_services(container: Container) -> SuggestionServices:
         return SqlSuggestionUnitOfWork(container.session_factory)
 
     factory = container.session_factory
-    chapters = LibraryChapterSource(GetChapterUseCase(lambda: SqlLibraryUnitOfWork(factory)))
+    chapters = LibraryChapterSource(GetChapterUseCase(lambda: SqlLibraryUnitOfWork(factory), container.clock))
     hints = DictionaryTermHints(factory)
     levels = SettingsLearnerLevelSource(factory)
     library = SqlLibraryUnitOfWork

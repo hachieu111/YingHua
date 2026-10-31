@@ -24,6 +24,7 @@ from app.modules.admin.api.settings_router import status_router as system_status
 from app.modules.auth.api.router import account_router, auth_router
 from app.modules.dictionary.api.router import admin_router as dictionary_admin_router
 from app.modules.dictionary.api.router import router as dictionary_router
+from app.modules.gamification.api.router import router as gamification_router
 from app.modules.imaging.api.router import admin_router as imaging_admin_router
 from app.modules.imaging.api.router import router as imaging_router
 from app.modules.imaging.api.sample_router import router as sample_page_router
@@ -38,6 +39,7 @@ from app.modules.reader.api.router import router as reader_router
 from app.modules.review.api.admin_router import admin_router as review_admin_router
 from app.modules.review.api.ai_note_router import router as ai_note_router
 from app.modules.review.api.router import router as review_router
+from app.modules.rewards.api.router import routers as rewards_routers
 from app.modules.settings.api.admin_router import admin_router as settings_admin_router
 from app.modules.settings.api.router import router as settings_router
 from app.modules.stats.api.admin_router import admin_router as stats_admin_router
@@ -121,6 +123,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         notifications_router,
         tts_router,
         jobs_router,
+        *rewards_routers,
+        gamification_router,
     ):
         app.include_router(router, prefix=API_PREFIX)
     return app

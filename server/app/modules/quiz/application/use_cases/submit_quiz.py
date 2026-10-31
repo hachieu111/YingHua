@@ -4,6 +4,7 @@ from collections.abc import Callable, Sequence
 from datetime import datetime
 
 from app.core.clock import Clock
+from app.core.learning_events import LearningEvent, LearningSource
 from app.modules.auth.application.public import Identity
 from app.modules.quiz.application.access import build_detail, load_quiz
 from app.modules.quiz.application.dto import AnswerInput, QuizDetail
@@ -28,7 +29,7 @@ class SubmitQuizUseCase:
     giao dịch: lưu điểm và đáp án, với từ sai đặt `due = now` cho mọi thẻ (giữ S, D, không ghi lượt ôn FSRS),
     bỏ tạm ngưng, chuyển "Đã thuộc" về "Đang học", rồi đánh dấu `wrong_cards_rescheduled_at`. Từ "Bỏ qua" và
     từ đã bị xóa khỏi sổ tay sau khi ra đề được bỏ qua. Bài của người khác → 404.
-    Cộng `quizzes_done` của ngày trong cùng giao dịch (F12.01).
+    Cộng `quizzes_done` của ngày rồi ghi XP (F16.02) trong cùng giao dịch (F12.01).
     """
 
     def __init__(
@@ -67,7 +68,9 @@ class SubmitQuizUseCase:
             quiz.wrong_cards_rescheduled_at = now
             await uow.quizzes.save_result(quiz, graded)
             await uow.activity.record(user_id, now, ActivityDelta(quizzes_done=1))
+            await uow.learning.record(_learning_event(user_id, quiz.id, now, graded))
             await uow.commit()
+            await uow.learning.after_commit()
             return await build_detail(uow, quiz)
 
     async def _reschedule_wrong(
@@ -77,6 +80,17 @@ class SubmitQuizUseCase:
         active = [i for i in entry_ids if i in refs and refs[i].status != STATUS_IGNORED]
         await self._reschedule.execute(uow.cards, user_id, active, now)
         await uow.vocab.mark_learning(user_id, [i for i in active if refs[i].status == STATUS_KNOWN], now)
+
+
+def _learning_event(
+    user_id: int, quiz_id: int, now: datetime, graded: Sequence[GradedAnswer]
+) -> LearningEvent:
+    """Sự kiện XP của bài (F16.02): số câu đúng, số câu đã trả lời và tổng số câu (M16 tự quyết định điểm)."""
+    answered = sum(1 for g in graded if g.user_answer)
+    correct = sum(1 for g in graded if g.is_correct)
+    return LearningEvent(
+        user_id, LearningSource.QUIZ, str(quiz_id), now, value=correct, answered=answered, total=len(graded)
+    )
 
 
 def _grade(questions: Sequence[QuizQuestion], answers: Sequence[AnswerInput]) -> list[GradedAnswer]:

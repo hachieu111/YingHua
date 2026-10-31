@@ -3,6 +3,8 @@ from __future__ import annotations
 import unicodedata
 from collections.abc import Callable
 
+from app.core.clock import Clock
+from app.core.learning_events import LearningSignal
 from app.modules.auth.application.public import Identity
 from app.modules.dictionary.application.ports import DictionaryUnitOfWork, PinyinProvider
 from app.modules.dictionary.domain.entities import (
@@ -73,12 +75,19 @@ class LookupWordUseCase:
     Khách (identity=None) chỉ nhận phần cơ bản: pinyin, vài nghĩa đầu và cấp HSK.
     """
 
-    def __init__(self, uow_factory: Callable[[], DictionaryUnitOfWork], pinyin: PinyinProvider) -> None:
+    def __init__(
+        self, uow_factory: Callable[[], DictionaryUnitOfWork], pinyin: PinyinProvider, clock: Clock
+    ) -> None:
         self._uow_factory = uow_factory
         self._pinyin = pinyin
+        self._clock = clock
 
     async def execute(
-        self, term: str, identity: Identity | None, include_specialized: bool = True
+        self,
+        term: str,
+        identity: Identity | None,
+        include_specialized: bool = True,
+        bubble_id: int | None = None,
     ) -> LookupResult:
         term = normalize_term(term)
         chars = list(dict.fromkeys(c for c in term if is_han_char(c)))
@@ -93,8 +102,15 @@ class LookupWordUseCase:
                 general = [d.gloss for e in entries for d in e.definitions]
                 specialized = select_specialized(await uow.reader.get_specialized(term), general)
             if identity is not None:
-                await uow.events.add(identity.user_id, term, entries[0].id if entries else None, "lookup")
+                entry_id = entries[0].id if entries else None
+                new_bubble = await uow.events.add(identity.user_id, term, entry_id, "lookup", bubble_id)
+                if new_bubble:
+                    # F16.11: chỉ bong bóng mới với người này mới có thể làm tăng huy hiệu; đánh giá sau
+                    # commit, lỗi chỉ ghi log nên đường hover không bị chậm hay hỏng.
+                    now = self._clock.now()
+                    await uow.learning.signal(identity.user_id, LearningSignal.BUBBLE_LOOKUP, now)
                 await uow.commit()
+                await uow.learning.after_commit()
 
         readings = _group_readings(entries, examples, {})
         if limited:

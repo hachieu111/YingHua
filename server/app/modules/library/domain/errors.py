@@ -61,6 +61,13 @@ class LoginRequiredError(UnauthenticatedError):
     default_message = "Vui lòng đăng ký hoặc đăng nhập để đọc tiếp"
 
 
+class VipRequiredError(PermissionDeniedError):
+    """Chương của truyện VIP cần VIP còn hạn hoặc vé đã mở khóa truyện (F17.05); `details` có lối mở khóa."""
+
+    code = "VIP_REQUIRED"
+    default_message = "Chương này cần VIP hoặc vé mở khóa truyện để đọc"
+
+
 class SeriesTitleRequiredError(InvalidInputError):
     code = "SERIES_TITLE_REQUIRED"
     default_message = "Tên truyện là trường bắt buộc"

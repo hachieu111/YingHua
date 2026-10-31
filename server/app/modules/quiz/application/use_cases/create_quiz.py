@@ -5,6 +5,7 @@ import random
 from collections.abc import Callable
 from datetime import datetime
 
+from app.core.ai_policy import AiPolicy
 from app.core.clock import Clock
 from app.modules.auth.application.public import Identity
 from app.modules.quiz.application.access import build_detail
@@ -37,7 +38,8 @@ class CreateQuizUseCase:
 
     Chọn từ không ở trạng thái "Bỏ qua" theo R hiện tại (≈60% thấp / 30% trung bình / 10% cao), dưới
     `min_words` từ thì từ chối. LLM tắt hoặc người học hết hạn mức LLM trong ngày thì dùng đề dự phòng ngay.
-    Hạn mức F13.05 chỉ đếm bài có `source <> 'fallback'`: đề dự phòng không tốn phí nên không bao giờ bị chặn,
+    Hạn mức F13.05 (cao hơn khi VIP, F17.04) chỉ đếm bài có `source <> 'fallback'`: đề dự phòng không tốn phí
+    nên không bao giờ bị chặn,
     người học luôn nhận được bài. Việc gọi LLM (tối đa ~20 giây) diễn ra NGOÀI giao dịch CSDL để không giữ
     kết nối trong lúc chờ dịch vụ ngoài.
     """
@@ -50,6 +52,7 @@ class CreateQuizUseCase:
         related: RelatedCandidateSource,
         estimate: EstimateRetrievabilityUseCase,
         config: QuizConfig,
+        policy: AiPolicy,
         clock: Clock,
         rng: random.Random,
     ) -> None:
@@ -59,6 +62,7 @@ class CreateQuizUseCase:
         self._related = related
         self._estimate = estimate
         self._config = config
+        self._policy = policy
         self._clock = clock
         self._rng = rng
 
@@ -141,11 +145,12 @@ class CreateQuizUseCase:
     async def _blocked_reason(
         self, uow: QuizUnitOfWork, user_id: int, profile: LearnerProfile, now: datetime
     ) -> FallbackReason | None:
-        if not self._config.llm_enabled:
+        if not await self._policy.llm_enabled():
             return FallbackReason.LLM_DISABLED
         start, end = local_day_bounds(now, profile.timezone)
         used = await uow.quizzes.count_llm_between(user_id, start, end)
-        return FallbackReason.DAILY_LIMIT if used >= self._config.daily_llm_limit else None
+        # Hạn mức riêng của người này: cao hơn khi đang VIP (F17.04).
+        return FallbackReason.DAILY_LIMIT if used >= await self._policy.daily_limit(user_id) else None
 
 
 def _without(pool: list[QuizWord], chosen: list[QuizWord]) -> list[QuizWord]:

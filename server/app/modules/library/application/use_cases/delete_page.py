@@ -35,7 +35,7 @@ class DeletePageUseCase:
         staged = StagedFiles(self._storage)
         try:
             async with self._uow_factory() as uow:
-                ctx = await load_readable_page(uow, page_id, actor)
+                ctx = await load_readable_page(uow, page_id, actor, self._clock.now())
                 if not can_edit_page(ctx, actor):
                     raise PermissionDeniedError()
                 assets = await uow.pages.assets_of_page(page_id)

@@ -11,6 +11,7 @@ import httpx
 import pytest
 from pydantic import SecretStr
 
+from app.core.ai_policy import StaticAiPolicy
 from app.core.errors import ExternalServiceError, InvalidInputError
 from app.core.llm_gemini import LlmCall
 from app.core.single_flight import SingleFlight
@@ -486,7 +487,8 @@ class _Env:
             self.levels,
             _Profiles(),
             SingleFlight(),
-            AiNoteConfig(enabled, daily_limit, 3, 5.0, "gemini-test"),
+            AiNoteConfig(3, 5.0, "gemini-test"),
+            StaticAiPolicy(enabled, daily_limit),
             FixedClock(NOW),
         )
 

@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.core.db import SqlAlchemyUnitOfWork
 from app.modules.admin.infrastructure.public import SqlAuditLogRepository
+from app.modules.gamification.infrastructure.public import SqlLearningEvents
 from app.modules.quiz.application.ports import ExampleSource, QuizVocabSource
 from app.modules.quiz.infrastructure.repositories import SqlQuizRepository
 from app.modules.review.infrastructure.public import SqlCardRepository
@@ -25,6 +26,7 @@ class SqlQuizUnitOfWork(SqlAlchemyUnitOfWork):
     audit: SqlAuditLogRepository
     examples: ExampleSource
     activity: SqlActivityRecorder
+    learning: SqlLearningEvents
 
     def __init__(
         self,
@@ -42,3 +44,4 @@ class SqlQuizUnitOfWork(SqlAlchemyUnitOfWork):
         self.cards = SqlCardRepository(self.session)
         self.audit = SqlAuditLogRepository(self.session)
         self.activity = SqlActivityRecorder(self.session)
+        self.learning = SqlLearningEvents(self.session)  # XP của M16, cùng phiên (F16.02)

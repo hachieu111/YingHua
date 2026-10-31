@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.core.db import SqlAlchemyUnitOfWork
 from app.modules.admin.infrastructure.public import SqlAuditLogRepository
+from app.modules.gamification.infrastructure.public import SqlLearningEvents
 from app.modules.review.application.ports import VocabCardSource
 from app.modules.review.infrastructure.ai_note_repository import SqlAiNoteRepository
 from app.modules.review.infrastructure.fsrs_profile_repository import SqlFsrsProfileRepository
@@ -25,6 +26,7 @@ class SqlReviewUnitOfWork(SqlAlchemyUnitOfWork):
     ai_notes: SqlAiNoteRepository
     fsrs_profiles: SqlFsrsProfileRepository
     activity: SqlActivityRecorder
+    learning: SqlLearningEvents
 
     def __init__(
         self, session_factory: async_sessionmaker[AsyncSession], vocab_factory: VocabSourceFactory
@@ -40,3 +42,4 @@ class SqlReviewUnitOfWork(SqlAlchemyUnitOfWork):
         self.ai_notes = SqlAiNoteRepository(self.session)
         self.fsrs_profiles = SqlFsrsProfileRepository(self.session)
         self.activity = SqlActivityRecorder(self.session)
+        self.learning = SqlLearningEvents(self.session)  # XP của M16, cùng phiên (F16.02)

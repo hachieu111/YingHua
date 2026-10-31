@@ -25,6 +25,13 @@ class NotificationKind(str, Enum):
     REPORT_RESOLVED = "report_resolved"
     REPORT_REJECTED = "report_rejected"
     CONTENT_REMOVED = "content_removed"  # ảnh/trang bị quản trị gỡ (F13.04)
+    # Giai đoạn 6.5 (cột `notifications.kind` không có CHECK nên không cần migration)
+    SEASON_REWARD = "season_reward"  # thưởng mùa thi đua (F16.10)
+    ACHIEVEMENT_UNLOCKED = "achievement_unlocked"  # mở khóa huy hiệu (F16.11)
+    STREAK_MILESTONE = "streak_milestone"  # mốc chuỗi ngày (F16.06)
+    VIP_GRANTED = "vip_granted"  # được cấp VIP: quà chào mừng, quản trị (F17.03, F17.10)
+    VIP_EXPIRING = "vip_expiring"  # VIP sắp hết hạn (F17.03)
+    WALLET_ADJUSTED = "wallet_adjusted"  # quản trị điều chỉnh xu/vé (F17.10)
 
 
 class Channel(str, Enum):

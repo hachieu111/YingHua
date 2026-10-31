@@ -3,6 +3,7 @@ from __future__ import annotations
 from app.core.db import SqlAlchemyUnitOfWork
 from app.core.stored_files import SqlStoredFileRepository
 from app.modules.admin.infrastructure.public import SqlAuditLogRepository
+from app.modules.gamification.infrastructure.public import SqlLearningEvents
 from app.modules.imaging.infrastructure.public import SqlBubbleRepository
 from app.modules.reader.infrastructure.public import SqlBubbleEditRepository
 from app.modules.review.infrastructure.public import SqlCardRepository
@@ -27,6 +28,7 @@ class SqlVocabUnitOfWork(SqlAlchemyUnitOfWork):
     sentences: SqlSavedSentenceRepository
     edits: SqlBubbleEditRepository
     activity: SqlActivityRecorder
+    learning: SqlLearningEvents
 
     def _init_repositories(self) -> None:
         self.entries = SqlVocabRepository(self.session)
@@ -38,3 +40,4 @@ class SqlVocabUnitOfWork(SqlAlchemyUnitOfWork):
         self.sentences = SqlSavedSentenceRepository(self.session)
         self.edits = SqlBubbleEditRepository(self.session)
         self.activity = SqlActivityRecorder(self.session)
+        self.learning = SqlLearningEvents(self.session)  # XP của M16, cùng phiên (F16.02)

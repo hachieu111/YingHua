@@ -152,20 +152,22 @@ async def test_error_report_flow_duplicate_resolve_and_notification(
 
     mine = (await client.get(url, headers=reporter.headers)).json()
     assert mine["items"][0]["status"] == "resolved" and mine["items"][0]["resolution_note"] == "Đã sửa"
+    # Tài khoản mới có sẵn thông báo quà chào mừng VIP (F17.03) nên số chưa đọc tính cả thông báo đó.
     assert (await client.get(f"{API}/notifications/unread-count", headers=reporter.headers)).json() == {
-        "unread": 1
+        "unread": 2
     }
     inbox = (await client.get(f"{API}/notifications", headers=reporter.headers)).json()
     note = inbox["items"][0]
-    assert note["kind"] == "report_resolved" and note["is_read"] is False and inbox["unread"] == 1
+    assert note["kind"] == "report_resolved" and note["is_read"] is False and inbox["unread"] == 2
+    assert inbox["items"][1]["kind"] == "vip_granted"
     assert (
         await client.post(f"{API}/notifications/{note['id']}/read", headers=other.headers)
     ).status_code == 404
     read = await client.post(f"{API}/notifications/{note['id']}/read", headers=reporter.headers)
-    assert read.json() == {"unread": 0}
+    assert read.json() == {"unread": 1}
     assert (await client.post(f"{API}/notifications/read-all", headers=reporter.headers)).json()[
         "updated"
-    ] == 0
+    ] == 1
     async with app.state.container.session_factory() as session:
         count = (
             await session.execute(

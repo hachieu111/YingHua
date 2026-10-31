@@ -8,6 +8,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
+from app.core.ai_policy import AiPolicy, StaticAiPolicy
 from app.core.errors import PermissionDeniedError
 from app.modules.quiz.application.config import QuizConfig
 from app.modules.quiz.application.drafting import FallbackQuestionBuilder, QuizDrafter
@@ -49,7 +50,8 @@ from tests.unit.quiz_fakes import (
 from tests.unit.review_fakes import admin_identity, identity
 
 NOW = datetime(2026, 10, 24, 8, 0, tzinfo=timezone.utc)
-CONFIG = QuizConfig(question_count=10, min_words=10, daily_llm_limit=2, llm_enabled=False)
+CONFIG = QuizConfig(question_count=10, min_words=10)
+LLM_OFF = StaticAiPolicy(False, 2)  # LLM tắt: luôn dùng đề dự phòng
 
 
 def _words(n: int = 12) -> list[QuizWord]:
@@ -76,7 +78,7 @@ def _llm_payload(words: list[QuizWord], skip: set[int] | None = None) -> dict[st
 
 class Env:
     def __init__(
-        self, words: list[QuizWord], generator: FakeGenerator | None = None, config: QuizConfig = CONFIG
+        self, words: list[QuizWord], generator: FakeGenerator | None = None, policy: AiPolicy = LLM_OFF
     ) -> None:
         self.vocab = FakeQuizVocab(words)
         self.repo = FakeQuizRepo()
@@ -93,7 +95,8 @@ class Env:
             drafter,
             FakeRelated(),
             EstimateRetrievabilityUseCase(FsrsScheduler(enable_fuzzing=False)),
-            config,
+            CONFIG,
+            policy,
             self.clock,
             self.rng,
         )
@@ -152,7 +155,7 @@ async def test_create_quiz_limits_questions_to_available_words() -> None:
     assert len(detail.questions) == 10
 
 
-LLM_ON = QuizConfig(10, 10, 2, True)
+LLM_ON = StaticAiPolicy(True, 2)
 
 
 async def test_llm_valid_payload_makes_llm_quiz_without_fallback_note() -> None:
@@ -187,6 +190,7 @@ def _rebuild(env: Env, generator: FakeGenerator, timeout: float = 0.5) -> Create
         drafter,
         FakeRelated(),
         EstimateRetrievabilityUseCase(FsrsScheduler(enable_fuzzing=False)),
+        CONFIG,
         LLM_ON,
         env.clock,
         env.rng,

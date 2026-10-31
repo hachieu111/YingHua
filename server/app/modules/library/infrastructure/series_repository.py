@@ -44,6 +44,7 @@ def series_entity(m: SeriesModel) -> Series:
         est_hsk_level=m.est_hsk_level,
         created_by=m.created_by,
         genres=list(m.genres or []),
+        is_vip=m.is_vip,
     )
 
 
@@ -212,6 +213,9 @@ class SqlSeriesRepository:
         model.est_hsk_level = series.est_hsk_level
         model.created_by = series.created_by
         model.genres = list(series.genres)
+        # Truyện đã thành riêng tư thì không còn là truyện VIP (ràng buộc `vip_public`); M17 mới được bật cờ.
+        if series.visibility is not Visibility.PUBLIC:
+            model.is_vip = False
         await self._session.flush()
 
     async def delete(self, series_id: int) -> None:

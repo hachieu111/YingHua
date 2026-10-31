@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Protocol
 
+from app.core.learning_events import LearningEventPort
 from app.modules.admin.application.public import AuditLogRepository
 from app.modules.auth.application.public import Identity
 from app.modules.quiz.domain.entities import (
@@ -259,6 +260,9 @@ class QuizUnitOfWork(Protocol):
 
     @property
     def activity(self) -> ActivityRecorder: ...
+
+    @property
+    def learning(self) -> LearningEventPort: ...
 
     async def __aenter__(self) -> QuizUnitOfWork: ...
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import time
 from enum import Enum
 from typing import Any
@@ -20,6 +20,19 @@ BUBBLE_FONT_SCALE_MIN, BUBBLE_FONT_SCALE_MAX = 80, 160
 BUBBLE_FONT_SCALE_STEP = 10
 DEFAULT_BUBBLE_FONT_SCALE = 100
 _REMINDER_TIME_PATTERN = re.compile(r"^([01]\d|2[0-3]):([0-5]\d)$")
+TOUR_KEYS = (
+    "home",
+    "reader",
+    "upload",
+    "library",
+    "flashcards",
+    "leaderboard",
+    "profile",
+    "shop",
+    "game",
+    "sample",
+    "admin",
+)  # F02.05: các hướng dẫn người mới có thể chọn "không nhắc lại"
 
 
 class ReadingMode(str, Enum):
@@ -46,6 +59,8 @@ class UserSettings:
     bubble_font_scale: int = DEFAULT_BUBBLE_FONT_SCALE  # F02.04: cỡ chữ lớp dịch, phần trăm
     reminder_enabled: bool = False  # F14.03: bật nhắc ôn hằng ngày
     reminder_time: time | None = None  # F14.03: giờ nhắc theo giờ địa phương (múi giờ ở `timezone`)
+    show_on_leaderboard: bool = True  # F16.08: tắt thì hiện ẩn danh với người khác trên bảng xếp hạng
+    dismissed_tours: list[str] = field(default_factory=list)  # F02.05: hướng dẫn đã chọn "không nhắc lại"
 
 
 @dataclass(frozen=True, slots=True)
@@ -68,6 +83,8 @@ EDITABLE_FIELDS = frozenset(
         "bubble_font_scale",
         "reminder_enabled",
         "reminder_time",
+        "show_on_leaderboard",
+        "dismissed_tours",
     }
 )
 
@@ -117,6 +134,11 @@ def apply_changes(settings: UserSettings, changes: Mapping[str, Any]) -> None:
         if not isinstance(flag, bool):
             raise _invalid("show_xianxia")
         settings.show_xianxia = flag
+    if "show_on_leaderboard" in changes:
+        visible = changes["show_on_leaderboard"]
+        if not isinstance(visible, bool):
+            raise _invalid("show_on_leaderboard")
+        settings.show_on_leaderboard = visible
     if "bubble_font_scale" in changes:
         scale = changes["bubble_font_scale"]
         valid = (
@@ -132,7 +154,16 @@ def apply_changes(settings: UserSettings, changes: Mapping[str, Any]) -> None:
                 details={"field": "bubble_font_scale"},
             )
         settings.bubble_font_scale = scale
+    if "dismissed_tours" in changes:
+        settings.dismissed_tours = _clean_tours(changes["dismissed_tours"])
     _apply_reminder(settings, changes)
+
+
+def _clean_tours(raw: Any) -> list[str]:
+    """F02.05 — Thay toàn bộ danh sách; chỉ nhận khóa thuộc `TOUR_KEYS`, bỏ trùng, giữ thứ tự."""
+    if not isinstance(raw, (list, tuple)) or any(key not in TOUR_KEYS for key in raw):
+        raise _invalid("dismissed_tours")
+    return list(dict.fromkeys(raw))
 
 
 def _apply_reminder(settings: UserSettings, changes: Mapping[str, Any]) -> None:

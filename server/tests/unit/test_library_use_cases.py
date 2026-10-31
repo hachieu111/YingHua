@@ -148,7 +148,7 @@ async def test_private_series_of_another_user_is_not_found(uow: FakeUow, fixed_c
     created = await CreateSeriesUseCase(lambda: uow, fixed_clock).execute(  # type: ignore[arg-type,return-value]
         _identity(5), SeriesInput(title_vi="Riêng")
     )
-    get = GetSeriesUseCase(lambda: uow)  # type: ignore[arg-type,return-value]
+    get = GetSeriesUseCase(lambda: uow, fixed_clock)  # type: ignore[arg-type,return-value]
     with pytest.raises(SeriesNotFoundError):
         await get.execute(_identity(6), created.series.id)
     with pytest.raises(SeriesNotFoundError):

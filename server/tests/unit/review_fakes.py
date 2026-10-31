@@ -20,7 +20,7 @@ from app.modules.review.domain.entities import (
     ReviewLog,
 )
 from app.modules.review.domain.errors import PresentationIdTakenError
-from tests.unit.activity_fakes import FakeActivity, FakeFsrsProfiles
+from tests.unit.activity_fakes import FakeActivity, FakeFsrsProfiles, FakeLearning
 
 
 def identity(user_id: int = 1) -> Identity:
@@ -263,6 +263,7 @@ class FakeReviewUow:
         self.vocab = FakeVocabSource()
         self.audit = FakeAudit()
         self.activity = FakeActivity()
+        self.learning = FakeLearning()
         self.fsrs_profiles = FakeFsrsProfiles()
         self.commits = 0
 

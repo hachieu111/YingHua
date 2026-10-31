@@ -9,6 +9,7 @@ from typing import Any
 from fastapi import Request
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
+from app.core.ai_policy import AiPolicies
 from app.core.clock import Clock, SystemClock
 from app.core.config import Settings
 from app.core.db import create_engine, create_session_factory
@@ -17,8 +18,17 @@ from app.core.security import TokenService
 from app.core.single_flight import SingleFlight
 from app.core.storage import FileStorage, LocalFileStorage
 from app.core.ttl_cache import TtlCache
+from app.core.welcome_gift import WelcomeGiftPort
 from app.modules.admin.application.system_settings import CachedSystemSettings, defaults_from_settings
 from app.modules.admin.infrastructure.public import SqlSystemSettingsSource
+from app.modules.gamification.application.ports import NoticeSender
+from app.modules.gamification.infrastructure.public import build_notice_sender
+from app.modules.rewards.application.public import GrantWelcomeGiftUseCase, build_ai_policies
+from app.modules.rewards.infrastructure.public import (
+    SqlRewardsUnitOfWork,
+    SqlVipStatusReader,
+    build_reward_notifier,
+)
 
 
 @dataclass(slots=True)
@@ -34,6 +44,9 @@ class Container:
     guest_tts_limiter: FailureLimiter
     voices_cache: TtlCache[Any]  # danh sách giọng TTS khả dụng (F11.03), dùng chung cả tiến trình
     system_settings: CachedSystemSettings  # cấu hình hệ thống do quản trị đặt (F13.05), đệm vài giây
+    ai_policies: AiPolicies  # công tắc + hạn mức LLM theo tính năng, nâng khi đang VIP (F17.04)
+    welcome_gift: WelcomeGiftPort  # quà chào mừng cho tài khoản mới (F01.01, F17.03)
+    notices: NoticeSender  # thông báo trong ứng dụng của M16 (gửi sau khi giao dịch thưởng đã lưu, F14.05)
 
 
 def build_container(settings: Settings, clock: Clock | None = None) -> Container:
@@ -42,6 +55,9 @@ def build_container(settings: Settings, clock: Clock | None = None) -> Container
     session_factory = create_session_factory(engine)
     tokens = TokenService(
         settings.jwt_secret.get_secret_value(), settings.jwt_algorithm, settings.access_token_minutes, clock
+    )
+    system_settings = CachedSystemSettings(
+        lambda: SqlSystemSettingsSource(session_factory), defaults_from_settings(settings), clock
     )
     return Container(
         settings=settings,
@@ -54,9 +70,14 @@ def build_container(settings: Settings, clock: Clock | None = None) -> Container
         single_flight=SingleFlight(),
         guest_tts_limiter=FailureLimiter(timedelta(minutes=settings.guest_tts_window_minutes), clock),
         voices_cache=TtlCache(clock),
-        system_settings=CachedSystemSettings(
-            lambda: SqlSystemSettingsSource(session_factory), defaults_from_settings(settings), clock
+        system_settings=system_settings,
+        ai_policies=build_ai_policies(system_settings, SqlVipStatusReader(session_factory), clock),
+        welcome_gift=GrantWelcomeGiftUseCase(
+            lambda: SqlRewardsUnitOfWork(session_factory),
+            clock,
+            build_reward_notifier(session_factory, settings.storage_dir / "outbox", clock),
         ),
+        notices=build_notice_sender(session_factory, clock),
     )
 
 

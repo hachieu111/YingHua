@@ -113,7 +113,7 @@ class AnalyzeGrammarUseCase:
         start, end = local_day_bounds(self._clock.now(), await self._timezones.timezone_of(user_id))
         async with self._uow_factory() as uow:
             used = await uow.grammar.count_requests_between(user_id, start, end)
-        if used >= await self._policy.daily_limit():
+        if used >= await self._policy.daily_limit(user_id):
             logger.warning("Hết hạn mức phân tích ngữ pháp trong ngày")
             return GrammarStatus.LIMIT_REACHED
         return None

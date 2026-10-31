@@ -4,6 +4,7 @@ from collections.abc import Callable
 from datetime import datetime
 
 from app.core.clock import Clock
+from app.core.learning_events import LearningEvent, LearningSource
 from app.modules.auth.application.public import Identity
 from app.modules.review.application.dto import DueBatch, GradeCommand, GradeResult
 from app.modules.review.application.due import build_due_batch
@@ -25,8 +26,8 @@ class GradeCardUseCase:
     Mỗi từ chỉ hỏi một thẻ mỗi ngày ("bury siblings" như Anki): chấm xong, các thẻ khác của cùng từ đang
     đến hạn được dời sang đầu ngày hôm sau theo múi giờ người học, giữ nguyên S, D và không ghi lượt ôn — nên
     phiên ôn không hỏi lại cùng một từ và Sổ tay hết báo "Cần ôn lại" cho từ vừa ôn (chốt 25/10/2026).
-    Lập lịch dùng tham số FSRS riêng của người học nếu đã có (F08.08), cộng bộ đếm hoạt động ngày trong cùng
-    giao dịch (F12.01, F12.02).
+    Lập lịch dùng tham số FSRS riêng của người học nếu đã có (F08.08), cộng bộ đếm hoạt động ngày rồi ghi XP
+    (F16.02, khóa là mã lượt ôn) trong cùng giao dịch (F12.01, F12.02).
     """
 
     def __init__(
@@ -87,7 +88,9 @@ class GradeCardUseCase:
                 now,
                 ActivityDelta(reviews_count=1, study_seconds=study_seconds_from_ms(command.duration_ms)),
             )
+            await uow.learning.record(LearningEvent(user_id, LearningSource.REVIEW, str(log.id), now))
             await uow.commit()
+            await uow.learning.after_commit()
             batch = await build_due_batch(uow, user_id, now, NEXT_BATCH_SIZE, deck, card.id)
         return _result(card, log, False, batch)
 

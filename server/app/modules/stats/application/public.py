@@ -9,7 +9,8 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Protocol
 
-from app.modules.stats.domain.activity import ActivityDelta, study_seconds_from_ms
+from app.modules.stats.domain.activity import ActivityDelta, local_date, study_seconds_from_ms
+from app.modules.stats.domain.streak import StreakResult, compute_streak
 
 
 class ActivityRecorder(Protocol):
@@ -18,4 +19,12 @@ class ActivityRecorder(Protocol):
         ...
 
 
-__all__ = ["ActivityDelta", "ActivityRecorder", "study_seconds_from_ms"]
+# `compute_streak` và `local_date` cho M16 (F16.06): cùng quy tắc chuỗi ngày và ngày địa phương với F12.02.
+__all__ = [
+    "ActivityDelta",
+    "ActivityRecorder",
+    "StreakResult",
+    "compute_streak",
+    "local_date",
+    "study_seconds_from_ms",
+]

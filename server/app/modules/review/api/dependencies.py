@@ -9,7 +9,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.container import Container, get_container
 from app.core.external_call_log import SqlLlmCallLogWriter
 from app.modules.admin.api.public import build_ensure_target
-from app.modules.admin.application.public import SystemSettingsSnapshot
 from app.modules.admin.application.use_cases.get_user_overview import GetUserOverviewUseCase
 from app.modules.dictionary.infrastructure.public import JiebaExampleLevelChecker
 from app.modules.library.application.public import CountUserContentUseCase, LibraryPageAccess
@@ -67,7 +66,7 @@ def build_ai_note_generator(container: Container) -> AiNoteGenerator:
 
 
 def build_ai_note_use_case(
-    container: Container, uow_factory: Callable[[], ReviewUnitOfWork], system: SystemSettingsSnapshot
+    container: Container, uow_factory: Callable[[], ReviewUnitOfWork]
 ) -> GetAiNoteUseCase:
     settings = container.settings
     factory = container.session_factory
@@ -79,17 +78,16 @@ def build_ai_note_use_case(
         SettingsLearnerProfileSource(factory),
         container.single_flight,
         AiNoteConfig(
-            llm_enabled=system.llm_enabled,
-            daily_limit=system.ai_note_daily_limit,
             regenerate_limit=settings.ai_note_regenerate_limit,
             llm_timeout_seconds=settings.llm_timeout_seconds,
             model=settings.llm_model,
         ),
+        container.ai_policies.ai_note,
         container.clock,
     )
 
 
-def build_review_services(container: Container, system: SystemSettingsSnapshot) -> ReviewServices:
+def build_review_services(container: Container) -> ReviewServices:
     """Lắp ghép M08. Nội dung thẻ và bộ thẻ do M07 hiện thực qua port `VocabCardSource` (chung phiên)."""
     clock = container.clock
     pages = LibraryPageAccess(lambda: SqlLibraryUnitOfWork(container.session_factory), clock)
@@ -118,7 +116,7 @@ def build_review_services(container: Container, system: SystemSettingsSnapshot) 
         summary=summary,
         list_cards=ListCardsUseCase(uow_factory, clock),
         overview=overview,
-        ai_note=build_ai_note_use_case(container, uow_factory, system),
+        ai_note=build_ai_note_use_case(container, uow_factory),
     )
 
 
@@ -139,6 +137,6 @@ def build_learning_facts_source(container: Container) -> ReviewLearningFactsSour
     return ReviewLearningFactsSource(summary, uow_factory)
 
 
-async def get_review_services(container: Container = Depends(get_container)) -> ReviewServices:
-    """Công tắc LLM và hạn mức Thẻ mở rộng AI đọc từ cấu hình hệ thống mỗi yêu cầu (F13.05)."""
-    return build_review_services(container, await container.system_settings.snapshot())
+def get_review_services(container: Container = Depends(get_container)) -> ReviewServices:
+    """Công tắc LLM và hạn mức Thẻ mở rộng AI lấy từ chính sách AI (F13.05, nâng khi VIP F17.04)."""
+    return build_review_services(container)

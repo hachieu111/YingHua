@@ -8,7 +8,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.container import Container, get_container
 from app.core.external_call_log import SqlLlmCallLogWriter
-from app.modules.admin.application.public import SystemSettingsSnapshot, mistake_review_ai_policy
 from app.modules.dictionary.infrastructure.public import JiebaExampleLevelChecker
 from app.modules.quiz.application.config import QuizConfig
 from app.modules.quiz.application.drafting import FallbackQuestionBuilder, QuizDrafter
@@ -81,7 +80,7 @@ def build_generator(container: Container) -> QuizGenerator:
     return DisabledQuizGenerator()
 
 
-def build_quiz_services(container: Container, system: SystemSettingsSnapshot) -> QuizServices:
+def build_quiz_services(container: Container) -> QuizServices:
     settings, clock = container.settings, container.clock
 
     def vocab_source(session: AsyncSession) -> QuizVocabSource:
@@ -91,12 +90,8 @@ def build_quiz_services(container: Container, system: SystemSettingsSnapshot) ->
         return SqlQuizUnitOfWork(container.session_factory, vocab_source, examples)
 
     examples = DictionaryExampleSource(container.session_factory)
-    config = QuizConfig(
-        question_count=settings.quiz_question_count,
-        min_words=settings.quiz_min_words,
-        daily_llm_limit=system.quiz_daily_llm_limit,
-        llm_enabled=system.llm_enabled,
-    )
+    config = QuizConfig(question_count=settings.quiz_question_count, min_words=settings.quiz_min_words)
+    policies = container.ai_policies
     rng = random.Random()
     drafter = QuizDrafter(
         build_generator(container),
@@ -105,7 +100,7 @@ def build_quiz_services(container: Container, system: SystemSettingsSnapshot) ->
         LlmReviewer(JiebaExampleLevelChecker(container.session_factory), examples, rng),
     )
     return QuizServices(
-        summary=GetQuizSummaryUseCase(uow_factory, config),
+        summary=GetQuizSummaryUseCase(uow_factory, config, policies.quiz),
         create=CreateQuizUseCase(
             uow_factory,
             SettingsLearnerProfileSource(container.session_factory),
@@ -113,6 +108,7 @@ def build_quiz_services(container: Container, system: SystemSettingsSnapshot) ->
             RelatedCandidateAdapter(container.session_factory),
             EstimateRetrievabilityUseCase(FsrsScheduler()),
             config,
+            policies.quiz,
             clock,
             rng,
         ),
@@ -130,7 +126,7 @@ def build_quiz_services(container: Container, system: SystemSettingsSnapshot) ->
             MistakePracticeBuilder(
                 FallbackQuestionBuilder(DictionaryDistractorSource(container.session_factory), examples, rng)
             ),
-            mistake_review_ai_policy(container.system_settings),
+            policies.mistake_review,
             container.single_flight,
             clock,
             MistakeReviewConfig(settings.llm_timeout_seconds),
@@ -155,6 +151,6 @@ def build_mistake_generator(container: Container) -> MistakeReviewGenerator:
     return DisabledMistakeReviewGenerator()
 
 
-async def get_quiz_services(container: Container = Depends(get_container)) -> QuizServices:
-    """Công tắc LLM và hạn mức đề đọc từ cấu hình hệ thống mỗi yêu cầu (F13.05)."""
-    return build_quiz_services(container, await container.system_settings.snapshot())
+def get_quiz_services(container: Container = Depends(get_container)) -> QuizServices:
+    """Công tắc LLM và hạn mức đề đọc từ chính sách AI (cấu hình F13.05, nâng khi VIP F17.04) mỗi yêu cầu."""
+    return build_quiz_services(container)

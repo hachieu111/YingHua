@@ -23,6 +23,15 @@ class ReadingMode(str, Enum):
     LEARN = "learn"
 
 
+class VipAccessLevel(str, Enum):
+    """Quyền truy cập của người xem với một truyện (F17.05): để giao diện hiện nhãn VIP và ổ khóa."""
+
+    OPEN = "open"  # truyện thường
+    TRIAL_ONLY = "trial_only"  # truyện VIP, chỉ đọc chương đọc thử
+    UNLOCKED = "unlocked"  # truyện VIP đã mở khóa bằng vé
+    VIP = "vip"  # truyện VIP, đang VIP hoặc là quản trị viên: đọc mọi chương
+
+
 class LibraryTab(str, Enum):
     """Các tab của trang Thư viện (F03.13). Tab "Ảnh tải lên" dùng danh sách ảnh tải nhanh riêng."""
 
@@ -60,6 +69,7 @@ class Series:
     est_hsk_level: int | None = None
     created_by: int | None = None
     genres: list[str] = field(default_factory=list)
+    is_vip: bool = False  # cờ truyện VIP do M17 đặt (F17.09); chỉ truyện công khai
 
 
 @dataclass(frozen=True, slots=True)
@@ -89,6 +99,7 @@ class SeriesView:
     is_favorite: bool
     can_edit: bool = False
     progress: SeriesProgress | None = None
+    vip_access: VipAccessLevel = VipAccessLevel.OPEN
 
 
 @dataclass(slots=True)
@@ -106,6 +117,7 @@ class Chapter:
 class ChapterView:
     chapter: Chapter
     page_count: int
+    is_locked: bool = False  # truyện VIP, chương không đọc thử, người xem chưa có quyền (F17.05)
 
 
 @dataclass(slots=True)
@@ -205,6 +217,8 @@ class FileContext:
     series_owner_id: int | None = None
     chapter_is_trial: bool | None = None
     page_owner_id: int | None = None  # chủ ảnh tải nhanh
+    series_id: int | None = None
+    series_is_vip: bool = False  # tệp thuộc chương của truyện VIP: cần quyền VIP (F17.05)
 
 
 @dataclass(frozen=True, slots=True)

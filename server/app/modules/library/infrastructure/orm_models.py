@@ -41,6 +41,7 @@ class SeriesModel(Base):
             "OR (visibility = 'private' AND owner_id IS NOT NULL)",
             name="visibility_owner",
         ),
+        CheckConstraint("NOT is_vip OR visibility = 'public'", name="vip_public"),
         Index("ix_series_owner_id", "owner_id"),
         Index("ix_series_visibility", "visibility"),
         Index(
@@ -71,6 +72,7 @@ class SeriesModel(Base):
     est_hsk_level: Mapped[int | None] = mapped_column(SmallInteger)
     created_by: Mapped[int | None] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="SET NULL"))
     genres: Mapped[list[str]] = mapped_column(ARRAY(String(32)), server_default=text("'{}'"))
+    is_vip: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))  # F17.05; do M17 đặt
     created_at: Mapped[datetime] = mapped_column(TS, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(TS, server_default=func.now(), onupdate=func.now())
 

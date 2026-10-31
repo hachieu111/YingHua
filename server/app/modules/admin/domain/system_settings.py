@@ -41,6 +41,13 @@ SETTING_SPECS: dict[str, SettingSpec] = {
         SettingSpec("ai_note_daily_limit", SettingKind.INT, "Hạn mức Thẻ mở rộng AI mỗi ngày"),
         SettingSpec("grammar_daily_limit", SettingKind.INT, "Hạn mức phân tích ngữ pháp mỗi ngày"),
         SettingSpec("mistake_review_daily_limit", SettingKind.INT, "Hạn mức giải thích lỗi sai mỗi ngày"),
+        # Hạn mức khi đang VIP (F17.04); chỉ có tác dụng nếu lớn hơn hạn mức thường tương ứng.
+        SettingSpec("vip_quiz_daily_llm_limit", SettingKind.INT, "Hạn mức đề kiểm tra LLM mỗi ngày (VIP)"),
+        SettingSpec("vip_ai_note_daily_limit", SettingKind.INT, "Hạn mức Thẻ mở rộng AI mỗi ngày (VIP)"),
+        SettingSpec("vip_grammar_daily_limit", SettingKind.INT, "Hạn mức phân tích ngữ pháp mỗi ngày (VIP)"),
+        SettingSpec(
+            "vip_mistake_review_daily_limit", SettingKind.INT, "Hạn mức giải thích lỗi sai mỗi ngày (VIP)"
+        ),
         SettingSpec("maintenance_mode", SettingKind.BOOL, "Chế độ bảo trì"),
         SettingSpec("auto_moderation_enabled", SettingKind.BOOL, "Kiểm duyệt ảnh tự động"),
         SettingSpec("ocr_on_upload_enabled", SettingKind.BOOL, "Xử lý OCR ngay khi tải"),
@@ -60,6 +67,10 @@ class SystemSettingsSnapshot:
     ai_note_daily_limit: int
     grammar_daily_limit: int
     mistake_review_daily_limit: int
+    vip_quiz_daily_llm_limit: int
+    vip_ai_note_daily_limit: int
+    vip_grammar_daily_limit: int
+    vip_mistake_review_daily_limit: int
     maintenance_mode: bool
     auto_moderation_enabled: bool
     ocr_on_upload_enabled: bool

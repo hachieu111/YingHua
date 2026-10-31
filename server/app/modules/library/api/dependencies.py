@@ -68,8 +68,8 @@ def build_library_services(container: Container) -> LibraryServices:
     clock, storage, settings = container.clock, container.storage, container.settings
     return LibraryServices(
         max_upload_bytes=settings.max_upload_mb * 1024 * 1024,
-        list_series=ListSeriesUseCase(uow_factory),
-        get_series=GetSeriesUseCase(uow_factory),
+        list_series=ListSeriesUseCase(uow_factory, clock),
+        get_series=GetSeriesUseCase(uow_factory, clock),
         create_series=CreateSeriesUseCase(uow_factory, clock),
         update_series=UpdateSeriesUseCase(uow_factory, clock),
         delete_series=DeleteSeriesUseCase(uow_factory, clock, storage),
@@ -77,7 +77,7 @@ def build_library_services(container: Container) -> LibraryServices:
         create_chapter=CreateChapterUseCase(uow_factory, clock),
         update_chapter=UpdateChapterUseCase(uow_factory, clock),
         delete_chapter=DeleteChapterUseCase(uow_factory, clock, storage),
-        get_chapter=GetChapterUseCase(uow_factory),
+        get_chapter=GetChapterUseCase(uow_factory, clock),
         upload_pages=UploadPagesUseCase(uow_factory, clock, storage),
         quick_upload=QuickUploadUseCase(
             uow_factory, clock, storage, timedelta(days=settings.upload_retention_days)
@@ -87,7 +87,7 @@ def build_library_services(container: Container) -> LibraryServices:
         delete_page=DeletePageUseCase(uow_factory, clock, storage),
         save_progress=SaveProgressUseCase(uow_factory, clock),
         list_continue=ListContinueReadingUseCase(uow_factory),
-        list_library=ListLibraryUseCase(uow_factory),
+        list_library=ListLibraryUseCase(uow_factory, clock),
         add_to_library=AddToLibraryUseCase(uow_factory, clock),
         remove_from_library=RemoveFromLibraryUseCase(uow_factory),
         set_favorite=SetFavoriteUseCase(uow_factory, clock),

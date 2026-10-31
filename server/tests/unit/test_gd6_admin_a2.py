@@ -306,11 +306,11 @@ async def test_ai_policy_reads_current_system_settings() -> None:
     source = _Source({"grammar_daily_limit": 4, "mistake_review_daily_limit": 9, "llm_enabled": True})
     settings = CachedSystemSettings(lambda: source, _defaults(), FixedClock())
     grammar, mistakes = grammar_ai_policy(settings), mistake_review_ai_policy(settings)
-    assert (await grammar.daily_limit(), await mistakes.daily_limit()) == (4, 9)
+    assert (await grammar.daily_limit(7), await mistakes.daily_limit(7)) == (4, 9)
     assert await grammar.llm_enabled() is True
     source.data = {"grammar_daily_limit": 1, "llm_enabled": False}
     settings.invalidate()
-    assert await grammar.daily_limit() == 1 and await grammar.llm_enabled() is False
+    assert await grammar.daily_limit(7) == 1 and await grammar.llm_enabled() is False
 
 
 def test_default_limits_come_from_settings_single_source() -> None:

@@ -5,12 +5,14 @@ from __future__ import annotations
 from collections.abc import Iterable, Sequence
 
 from app.core.errors import InvalidInputError
+from app.core.vip_access import ViewerVipState
 from app.modules.library.domain.entities import (
     Actor,
     FileContext,
     ReadingMode,
     Series,
     SeriesStatus,
+    VipAccessLevel,
     Visibility,
 )
 from app.modules.library.domain.errors import (
@@ -112,13 +114,41 @@ def nearest_page_no(page_nos: Sequence[int], target: int) -> int | None:
     return min(page_nos, key=lambda n: (abs(n - target), n))
 
 
+def vip_access_level(
+    is_vip_series: bool, actor: Actor, state: ViewerVipState | None, series_id: int
+) -> VipAccessLevel:
+    """Quyền truy cập của người xem với một truyện (F17.05).
+
+    Quản trị viên đọc mọi chương dù không VIP; đang VIP thắng việc đã mở khóa bằng vé; Khách chỉ đọc thử.
+    """
+    if not is_vip_series:
+        return VipAccessLevel.OPEN
+    if actor.is_admin:
+        return VipAccessLevel.VIP
+    if state is None:
+        return VipAccessLevel.TRIAL_ONLY
+    if state.is_vip:
+        return VipAccessLevel.VIP
+    if series_id in state.unlocked_series_ids:
+        return VipAccessLevel.UNLOCKED
+    return VipAccessLevel.TRIAL_ONLY
+
+
+def is_chapter_locked(is_vip_series: bool, is_trial: bool, level: VipAccessLevel) -> bool:
+    """Chương bị khóa với người xem: truyện VIP, không phải chương đọc thử, người xem chưa có quyền."""
+    return is_vip_series and not is_trial and level is VipAccessLevel.TRIAL_ONLY
+
+
 def can_view_file(
     kind: str,
     file_owner_id: int | None,
     contexts: Sequence[FileContext],
     actor: Actor,
+    vip: ViewerVipState | None = None,
 ) -> bool:
-    """Quyền xem một tệp theo nơi nó được dùng (F03.10, F03.03, F01.10)."""
+    """Quyền xem một tệp theo nơi nó được dùng (F03.10, F03.03, F01.10, F17.05).
+
+    `vip` là quyền VIP của người xem với các truyện VIP chứa tệp; None nghĩa là không có quyền (Khách)."""
     # Quản trị viên xem được mọi tệp, kể cả ảnh ngữ cảnh của sổ tay (security.md, F13.07).
     if actor.is_admin:
         return True
@@ -128,14 +158,19 @@ def can_view_file(
         return False
     if kind in _LOGIN_ONLY_KINDS:
         return not actor.is_guest
-    return any(_context_allows(ctx, actor) for ctx in contexts)
+    return any(_context_allows(ctx, actor, vip) for ctx in contexts)
 
 
-def _context_allows(ctx: FileContext, actor: Actor) -> bool:
+def _context_allows(ctx: FileContext, actor: Actor, vip: ViewerVipState | None) -> bool:
     if ctx.series_visibility is None:  # ảnh tải nhanh: chỉ chủ ảnh
         return actor.user_id is not None and ctx.page_owner_id == actor.user_id
     if ctx.series_visibility is Visibility.PRIVATE:
         return actor.user_id is not None and ctx.series_owner_id == actor.user_id
-    if ctx.is_cover or not actor.is_guest:
+    if ctx.is_cover:
         return True
-    return bool(ctx.chapter_is_trial)  # Khách chỉ xem chương đọc thử (F03.03)
+    if actor.is_guest:
+        return bool(ctx.chapter_is_trial)  # Khách chỉ xem chương đọc thử (F03.03)
+    if ctx.series_is_vip and not ctx.chapter_is_trial:
+        # Ảnh chương VIP: không đọc được bằng đường dẫn tệp trực tiếp nếu chưa có quyền (F17.05).
+        return vip is not None and ctx.series_id is not None and vip.can_read(ctx.series_id)
+    return True

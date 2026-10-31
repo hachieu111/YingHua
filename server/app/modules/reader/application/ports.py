@@ -66,7 +66,9 @@ class GuestSessionRepository(Protocol):
 class DictionaryLookup(Protocol):
     """Tra từ qua M06 (kèm cài đặt hiển thị của người dùng)."""
 
-    async def lookup(self, term: str, identity: Identity | None) -> LookupResult: ...
+    async def lookup(
+        self, term: str, identity: Identity | None, bubble_id: int | None = None
+    ) -> LookupResult: ...
 
 
 @dataclass(frozen=True, slots=True)

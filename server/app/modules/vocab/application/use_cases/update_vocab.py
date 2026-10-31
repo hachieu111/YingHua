@@ -4,6 +4,7 @@ from collections.abc import Callable, Mapping
 from typing import Any
 
 from app.core.clock import Clock
+from app.core.learning_events import LearningSignal
 from app.modules.admin.application.public import record_admin_action, resolve_owner
 from app.modules.auth.application.public import Identity
 from app.modules.library.application.public import PageAccessPort
@@ -11,6 +12,7 @@ from app.modules.vocab.application.access import load_entry
 from app.modules.vocab.application.dto import VocabDetail
 from app.modules.vocab.application.ports import TermDictionary, VocabUnitOfWork
 from app.modules.vocab.application.views import build_detail
+from app.modules.vocab.domain.entities import VocabStatus
 from app.modules.vocab.domain.rules import apply_changes
 
 
@@ -45,8 +47,12 @@ class UpdateVocabUseCase:
         now = self._clock.now()
         async with self._uow_factory() as uow:
             entry = await load_entry(uow, owner, entry_id)
+            was_known = entry.status is VocabStatus.KNOWN
             apply_changes(entry, changes, self._note_max_chars, now)
             await uow.entries.update(entry)
+            if entry.status is VocabStatus.KNOWN and not was_known:
+                # F16.11: huy hiệu hsk3_master mở khóa ngay, không chờ tác vụ nền 60 phút.
+                await uow.learning.signal(owner, LearningSignal.VOCAB_MASTERED, now)
             await record_admin_action(
                 uow.audit,
                 identity,
@@ -58,4 +64,5 @@ class UpdateVocabUseCase:
                 {"fields": sorted(changes)},
             )
             await uow.commit()
+            await uow.learning.after_commit()
             return await build_detail(uow, self._pages, self._dictionary, identity, entry, now)

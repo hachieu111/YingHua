@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from app.core.clock import Clock
 from app.modules.auth.application.public import Identity
 from app.modules.imaging.application.public import TranslationStatus
 from app.modules.library.application.access import actor_of, load_readable_chapter
@@ -12,18 +13,20 @@ from app.modules.library.domain.rules import can_edit_series
 
 
 class GetChapterUseCase:
-    """F03.03, F03.10, F04.02 — Chương kèm danh sách trang và trạng thái xử lý (US-KH-04, US-NH-18).
+    """F03.03, F03.10, F04.02, F17.05 — Chương kèm danh sách trang và trạng thái xử lý (US-KH-04, US-NH-18).
 
-    Khách chỉ mở được chương đọc thử của truyện công khai.
+    Khách chỉ mở được chương đọc thử của truyện công khai. Chương không đọc thử của truyện VIP cần VIP còn hạn
+    hoặc vé đã mở khóa truyện, nếu không thì 403 `VIP_REQUIRED` (US-NH-96).
     """
 
-    def __init__(self, uow_factory: Callable[[], LibraryUnitOfWork]) -> None:
+    def __init__(self, uow_factory: Callable[[], LibraryUnitOfWork], clock: Clock) -> None:
         self._uow_factory = uow_factory
+        self._clock = clock
 
     async def execute(self, identity: Identity | None, chapter_id: int) -> ChapterDetail:
         actor = actor_of(identity)
         async with self._uow_factory() as uow:
-            chapter, series = await load_readable_chapter(uow, chapter_id, actor)
+            chapter, series = await load_readable_chapter(uow, chapter_id, actor, self._clock.now())
             can_edit = can_edit_series(series, actor)
             pages = await build_page_views(
                 uow, await uow.pages.list_for_chapter(chapter_id), series.id, can_edit

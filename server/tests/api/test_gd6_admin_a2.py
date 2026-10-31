@@ -220,8 +220,8 @@ async def test_changed_ai_limit_takes_effect_for_reader_policy(
     admin = await make_admin(app, client)
     settings = app.state.container.system_settings
     default = (
-        await grammar_ai_policy(settings).daily_limit(),
-        await mistake_review_ai_policy(settings).daily_limit(),
+        await grammar_ai_policy(settings).daily_limit(admin.id),
+        await mistake_review_ai_policy(settings).daily_limit(admin.id),
     )
     assert default == (
         app.state.container.settings.grammar_daily_limit,
@@ -231,8 +231,8 @@ async def test_changed_ai_limit_takes_effect_for_reader_policy(
         f"{API}/admin/system-settings", json={"grammar_daily_limit": 3}, headers=admin.headers
     )
     assert res.status_code == 200, res.text
-    assert await grammar_ai_policy(settings).daily_limit() == 3
-    assert await mistake_review_ai_policy(settings).daily_limit() == default[1]
+    assert await grammar_ai_policy(settings).daily_limit(admin.id) == 3
+    assert await mistake_review_ai_policy(settings).daily_limit(admin.id) == default[1]
 
 
 async def test_audit_logs_filter_by_admin_target_and_time(app: FastAPI, client: httpx.AsyncClient) -> None:

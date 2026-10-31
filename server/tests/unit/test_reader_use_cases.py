@@ -151,7 +151,7 @@ class FakeDictionary:
     def __init__(self) -> None:
         self.calls: list[tuple[str, Identity | None]] = []
 
-    async def lookup(self, term: str, identity: Identity | None) -> Any:
+    async def lookup(self, term: str, identity: Identity | None, bubble_id: int | None = None) -> Any:
         self.calls.append((term, identity))
         return object()
 

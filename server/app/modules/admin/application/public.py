@@ -5,8 +5,10 @@ from __future__ import annotations
 
 from app.modules.admin.application.ai_policy import (
     SystemSettingsAiPolicy,
+    ai_note_ai_policy,
     grammar_ai_policy,
     mistake_review_ai_policy,
+    quiz_ai_policy,
 )
 from app.modules.admin.application.dto import UserActivity
 from app.modules.admin.application.ownership import record_admin_action, resolve_owner
@@ -23,8 +25,10 @@ __all__ = [
     "SystemSettingsSnapshot",
     "UserActivity",
     "UserActivitySource",
+    "ai_note_ai_policy",
     "grammar_ai_policy",
     "mistake_review_ai_policy",
+    "quiz_ai_policy",
     "record_admin_action",
     "resolve_owner",
 ]

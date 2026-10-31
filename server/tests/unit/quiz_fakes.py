@@ -25,7 +25,7 @@ from app.modules.quiz.domain.entities import (
     RelatedCandidate,
     WordContext,
 )
-from tests.unit.activity_fakes import FakeActivity
+from tests.unit.activity_fakes import FakeActivity, FakeLearning
 from tests.unit.review_fakes import FakeAudit, FakeCards
 
 
@@ -226,6 +226,7 @@ class FakeQuizUow:
         self.cards = cards or FakeCards()
         self.audit = FakeAudit()
         self.activity = FakeActivity()
+        self.learning = FakeLearning()
         self.commits = 0
 
     async def __aenter__(self) -> FakeQuizUow:

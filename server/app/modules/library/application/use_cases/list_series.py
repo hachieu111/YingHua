@@ -2,9 +2,16 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from app.core.clock import Clock
 from app.core.errors import InvalidInputError
 from app.modules.auth.application.public import Identity
-from app.modules.library.application.access import actor_of, attach_progress, mark_editable, require_user
+from app.modules.library.application.access import (
+    actor_of,
+    attach_progress,
+    attach_vip_access,
+    mark_editable,
+    require_user,
+)
 from app.modules.library.application.dto import Paged
 from app.modules.library.application.ports import LibraryUnitOfWork, SeriesFilter
 from app.modules.library.domain.entities import SeriesView
@@ -13,15 +20,16 @@ SCOPES = frozenset({"public", "mine"})
 
 
 class ListSeriesUseCase:
-    """F03.02 — Duyệt và tìm truyện (US-NH-09, US-KH-04).
+    """F03.02, F17.05 — Duyệt và tìm truyện (US-NH-09, US-KH-04); mỗi truyện kèm cờ VIP và quyền truy cập.
 
     `public`: truyện công khai có ít nhất một chương (Khách: chỉ truyện có chương đọc thử; admin: thấy cả
     truyện
     chưa có chương). `mine`: truyện riêng tư của chính người gọi.
     """
 
-    def __init__(self, uow_factory: Callable[[], LibraryUnitOfWork]) -> None:
+    def __init__(self, uow_factory: Callable[[], LibraryUnitOfWork], clock: Clock) -> None:
         self._uow_factory = uow_factory
+        self._clock = clock
 
     async def execute(
         self,
@@ -50,4 +58,5 @@ class ListSeriesUseCase:
         async with self._uow_factory() as uow:
             views, total = await uow.series.search(flt, (page - 1) * size, size)
             views = await attach_progress(uow, views, actor.user_id)
+            views = await attach_vip_access(uow, views, actor, self._clock.now())
         return Paged(mark_editable(views, actor), total)

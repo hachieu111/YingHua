@@ -77,6 +77,11 @@ class Settings(BaseSettings):
     # Mặc định hạn mức mỗi người mỗi ngày; quản trị đặt lại trong system_settings (F13.05)
     grammar_daily_limit: int = Field(default=30, ge=0)  # phân tích ngữ pháp câu thoại (F05.09)
     mistake_review_daily_limit: int = Field(default=20, ge=0)  # giải thích lỗi sai (F09.10)
+    # Hạn mức mỗi ngày khi đang VIP (F17.04); quản trị đặt lại trong system_settings (F13.05)
+    vip_quiz_daily_llm_limit: int = Field(default=10, ge=0)
+    vip_ai_note_daily_limit: int = Field(default=40, ge=0)
+    vip_grammar_daily_limit: int = Field(default=60, ge=0)
+    vip_mistake_review_daily_limit: int = Field(default=40, ge=0)
     tts_timeout_seconds: float = 10.0
     tts_enabled: bool = True  # mặc định; quản trị đặt lại trong system_settings (F13.05)
     guest_tts_max_requests: int = 20  # lượt Khách gọi dịch vụ TTS (không tính cache) mỗi cửa sổ

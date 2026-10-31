@@ -127,6 +127,11 @@ class SeriesResponse(BaseModel):
     in_library: bool
     is_favorite: bool
     can_edit: bool
+    is_vip: bool = Field(description="Truyện VIP: người không VIP chỉ đọc chương đọc thử (F17.05)")
+    vip_access: Literal["open", "trial_only", "unlocked", "vip"] = Field(
+        description="Quyền truy cập của người gọi: open (truyện thường), trial_only, unlocked (đã mở khóa "
+        "bằng vé), vip (đang VIP hoặc quản trị viên)"
+    )
     progress: SeriesProgressResponse | None = None
     created_at: datetime
     updated_at: datetime
@@ -152,6 +157,8 @@ class SeriesResponse(BaseModel):
             in_library=view.in_library,
             is_favorite=view.is_favorite,
             can_edit=view.can_edit,
+            is_vip=s.is_vip,
+            vip_access=view.vip_access.value,
             progress=SeriesProgressResponse.from_progress(view.progress) if view.progress else None,
             created_at=s.created_at,
             updated_at=s.updated_at,
@@ -171,24 +178,28 @@ class ChapterResponse(BaseModel):
     number: float
     title: str | None
     is_trial: bool
+    is_locked: bool = Field(
+        default=False, description="Chương của truyện VIP mà người gọi chưa có quyền đọc (F17.05)"
+    )
     page_count: int
     created_at: datetime
 
     @classmethod
-    def from_chapter(cls, chapter: Chapter, page_count: int = 0) -> ChapterResponse:
+    def from_chapter(cls, chapter: Chapter, page_count: int = 0, is_locked: bool = False) -> ChapterResponse:
         return cls(
             id=chapter.id,
             series_id=chapter.series_id,
             number=float(chapter.number),
             title=chapter.title,
             is_trial=chapter.is_trial,
+            is_locked=is_locked,
             page_count=page_count,
             created_at=chapter.created_at,
         )
 
     @classmethod
     def from_view(cls, view: ChapterView) -> ChapterResponse:
-        return cls.from_chapter(view.chapter, view.page_count)
+        return cls.from_chapter(view.chapter, view.page_count, view.is_locked)
 
 
 class ResumeResponse(BaseModel):

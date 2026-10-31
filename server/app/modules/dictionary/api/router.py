@@ -65,7 +65,7 @@ async def lookup(
 ) -> LookupResponse:
     # TODO(F05.04): giới hạn 5 lượt tra mỗi phiên cho Khách khi có trình đọc thử (Giai đoạn 3).
     settings = await _user_settings(container, identity)
-    use_case = LookupWordUseCase(_uow_factory(container), _pinyin)
+    use_case = LookupWordUseCase(_uow_factory(container), _pinyin, container.clock)
     result = await use_case.execute(
         term, identity, include_specialized=settings.show_xianxia if settings else True
     )

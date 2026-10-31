@@ -17,6 +17,7 @@ from sqlalchemy import (
     func,
     text,
 )
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import Base
@@ -44,6 +45,10 @@ class UserSettingsModel(Base):
     bubble_font_scale: Mapped[int] = mapped_column(SmallInteger, server_default=text("100"))
     reminder_enabled: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
     reminder_time: Mapped[time | None] = mapped_column(Time)
+    show_on_leaderboard: Mapped[bool] = mapped_column(Boolean, server_default=text("true"))
+    dismissed_tours: Mapped[list[str]] = mapped_column(
+        ARRAY(String(16)), server_default=text("'{}'"), default=list
+    )
     timezone: Mapped[str] = mapped_column(String(64), server_default="Asia/Ho_Chi_Minh")
     learning_goal: Mapped[str | None] = mapped_column(String(16))
     weekly_page_goal: Mapped[int | None] = mapped_column(SmallInteger)

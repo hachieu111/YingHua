@@ -227,12 +227,19 @@ class SqlPageRepository:
         if translation_ids:
             uses_file = or_(uses_file, PageModel.translation_id.in_(list(translation_ids)))
         pages = await self._session.execute(
-            select(PageModel.owner_id, SeriesModel.visibility, SeriesModel.owner_id, ChapterModel.is_trial)
+            select(
+                PageModel.owner_id,
+                SeriesModel.id,
+                SeriesModel.visibility,
+                SeriesModel.owner_id,
+                SeriesModel.is_vip,
+                ChapterModel.is_trial,
+            )
             .outerjoin(ChapterModel, ChapterModel.id == PageModel.chapter_id)
             .outerjoin(SeriesModel, SeriesModel.id == ChapterModel.series_id)
             .where(uses_file)
         )
-        for page_owner, visibility, series_owner, is_trial in pages.all():
+        for page_owner, series_id, visibility, series_owner, is_vip, is_trial in pages.all():
             if visibility is None:
                 contexts.append(FileContext(page_owner_id=page_owner))
             else:
@@ -241,6 +248,8 @@ class SqlPageRepository:
                         series_visibility=Visibility(visibility),
                         series_owner_id=series_owner,
                         chapter_is_trial=bool(is_trial),
+                        series_id=series_id,
+                        series_is_vip=bool(is_vip),
                     )
                 )
         return contexts

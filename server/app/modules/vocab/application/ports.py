@@ -8,6 +8,7 @@ from datetime import datetime
 from typing import Any, Protocol
 
 from app.core.image_validation import ImageUpload
+from app.core.learning_events import LearningEventPort
 from app.core.stored_files import StoredFileRepository
 from app.modules.admin.application.public import AuditLogRepository
 from app.modules.imaging.application.public import BubbleRepository
@@ -165,6 +166,9 @@ class VocabUnitOfWork(Protocol):
 
     @property
     def activity(self) -> ActivityRecorder: ...
+
+    @property
+    def learning(self) -> LearningEventPort: ...
 
     async def __aenter__(self) -> VocabUnitOfWork: ...
 

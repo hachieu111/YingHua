@@ -5,7 +5,7 @@ from dataclasses import replace
 from datetime import date
 from typing import Any
 
-from sqlalchemy import case, func, literal, literal_column, or_, select
+from sqlalchemy import case, exists, func, literal, literal_column, or_, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.elements import ColumnClause
@@ -530,9 +530,25 @@ class SqlLookupEventRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def add(self, user_id: int, term: str, entry_id: int | None, action: str) -> None:
-        self._session.add(LookupEventModel(user_id=user_id, term=term[:64], entry_id=entry_id, action=action))
+    async def add(
+        self, user_id: int, term: str, entry_id: int | None, action: str, bubble_id: int | None = None
+    ) -> bool:
+        is_new_bubble = bubble_id is not None and not await self._session.scalar(
+            select(
+                exists().where(
+                    LookupEventModel.user_id == user_id,
+                    LookupEventModel.bubble_id == bubble_id,
+                    LookupEventModel.action.in_(_LOOKUP_ACTIONS),
+                )
+            )
+        )
+        self._session.add(
+            LookupEventModel(
+                user_id=user_id, term=term[:64], entry_id=entry_id, action=action, bubble_id=bubble_id
+            )
+        )
         await self._session.flush()
+        return is_new_bubble
 
     async def recent_terms(self, user_id: int, limit: int) -> list[str]:
         rows = await self._session.execute(

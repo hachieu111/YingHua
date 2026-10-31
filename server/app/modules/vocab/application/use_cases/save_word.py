@@ -7,6 +7,7 @@ from datetime import datetime
 
 from app.core.clock import Clock
 from app.core.errors import DomainError
+from app.core.learning_events import LearningEvent, LearningSource
 from app.core.storage import FileStorage, StagedFiles
 from app.core.stored_files import FileKind, store_image
 from app.modules.auth.application.public import Identity
@@ -58,7 +59,7 @@ class SaveWordUseCase:
     có (không tạo thẻ, không đổi lịch ôn); đã có đúng ngữ cảnh đó → `VocabContextAlreadySavedError`. Hai yêu
     cầu đồng thời chỉ tạo một mục nhờ ràng buộc duy nhất (INSERT ... ON CONFLICT DO NOTHING).
     Không cắt được ảnh: vẫn lưu từ kèm câu văn và báo `snippet_missing`.
-    Từ mới được tạo thì cộng `words_saved` của ngày trong cùng giao dịch (F12.01).
+    Từ mới được tạo thì cộng `words_saved` của ngày, rồi ghi XP (F16.02, khóa là từ), cùng giao dịch (F12.01).
     Từ điển không có nghĩa (kể cả khi từ nằm trong bong bóng): KHÔNG đoán nghĩa từ câu dịch của bong bóng,
     vì câu dịch là nghĩa cả câu chứ không phải nghĩa của từ; `meaning_vi` để null, người học sửa qua PATCH
     (F07.04) và thẻ recall dùng gợi ý dự phòng (F08.03).
@@ -93,7 +94,10 @@ class SaveWordUseCase:
                 saved = await self._save(uow, staged, identity.user_id, term, command, source, now)
                 if saved.created:
                     await uow.activity.record(identity.user_id, now, ActivityDelta(words_saved=1))
+                    word_event = LearningEvent(identity.user_id, LearningSource.WORD_SAVED, term, now)
+                    await uow.learning.record(word_event)
                 await uow.commit()
+                await uow.learning.after_commit()
                 detail = await build_detail(uow, self._pages, self._dictionary, identity, saved.entry, now)
         except BaseException:
             await staged.discard()

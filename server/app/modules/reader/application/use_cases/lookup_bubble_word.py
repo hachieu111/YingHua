@@ -47,7 +47,7 @@ class LookupBubbleWordUseCase:
         if not contains_word(bubble.text_zh, word):
             raise WordNotInBubbleError()
         guest = await self._consume_guest_quota(guest_session_id) if identity is None else None
-        result = await self._dictionary.lookup(word, identity)
+        result = await self._dictionary.lookup(word, identity, bubble_id)
         return BubbleLookup(bubble_id=bubble_id, word=word, result=result, guest=guest)
 
     async def _consume_guest_quota(self, session_id: uuid.UUID | None) -> GuestQuota:

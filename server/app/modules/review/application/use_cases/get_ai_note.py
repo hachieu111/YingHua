@@ -5,6 +5,7 @@ import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from app.core.ai_policy import AiPolicy
 from app.core.clock import Clock
 from app.core.single_flight import SingleFlight
 from app.modules.auth.application.public import Identity
@@ -48,8 +49,8 @@ EXAMPLE_FETCH_LIMIT = 6  # lấy dư câu ví dụ dự phòng để chọn đ�
 
 @dataclass(frozen=True, slots=True)
 class AiNoteConfig:
-    llm_enabled: bool
-    daily_limit: int  # số lần gọi LLM tạo thẻ mỗi người mỗi ngày
+    """Công tắc LLM và hạn mức mỗi ngày không nằm ở đây mà đi qua port `AiPolicy` (F13.05, F17.04)."""
+
     regenerate_limit: int  # số lần "Tạo lại" cho mỗi mục từ
     llm_timeout_seconds: float
     model: str | None = None  # tên mô hình ghi vào bộ đệm khi nội dung do LLM sinh
@@ -82,6 +83,7 @@ class GetAiNoteUseCase:
         profiles: LearnerProfileSource,
         flight: SingleFlight,
         config: AiNoteConfig,
+        policy: AiPolicy,
         clock: Clock,
     ) -> None:
         self._uow_factory = uow_factory
@@ -91,6 +93,7 @@ class GetAiNoteUseCase:
         self._profiles = profiles
         self._flight = flight
         self._config = config
+        self._policy = policy
         self._clock = clock
 
     async def execute(self, identity: Identity, entry_id: int, *, regenerate: bool = False) -> AiNoteView:
@@ -137,12 +140,12 @@ class GetAiNoteUseCase:
         return self._view(note)
 
     async def _may_call_llm(self, user_id: int, timezone: str | None) -> bool:
-        if not self._config.llm_enabled:
+        if not await self._policy.llm_enabled():
             return False
         start, end = local_day_bounds(self._clock.now(), timezone)
         async with self._uow_factory() as uow:
             used = await uow.ai_notes.count_llm_between(user_id, start, end)
-        if used >= self._config.daily_limit:
+        if used >= await self._policy.daily_limit(user_id):
             logger.warning("Hết hạn mức Thẻ mở rộng AI trong ngày, dùng nội dung dự phòng")
             return False
         return True

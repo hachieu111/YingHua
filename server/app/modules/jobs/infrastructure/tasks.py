@@ -13,6 +13,13 @@ from app.core.storage import FileStorage
 from app.modules.auth.application.ports import AuthUnitOfWork
 from app.modules.auth.application.public import PurgeExpiredSessionsUseCase
 from app.modules.auth.infrastructure.public import SqlAuthUnitOfWork
+from app.modules.gamification.application.ports import GamificationUnitOfWork
+from app.modules.gamification.application.public import (
+    EvaluateAchievementsUseCase,
+    FinalizeSeasonsUseCase,
+    PurgeMinigameRoundsUseCase,
+)
+from app.modules.gamification.infrastructure.public import SqlGamificationUnitOfWork, build_notice_sender
 from app.modules.imaging.application.ports import ImagingUnitOfWork
 from app.modules.imaging.application.worker import PurgeOrphanResultFilesUseCase
 from app.modules.imaging.infrastructure.public import SqlImagingUnitOfWork
@@ -23,10 +30,18 @@ from app.modules.jobs.domain.entities import (
     CLEANUP_ORPHAN_FILES,
     CLEANUP_QUICK_UPLOADS,
     CLEANUP_SESSIONS,
+    EVALUATE_ACHIEVEMENTS,
+    EVALUATE_ACHIEVEMENTS_INTERVAL_SECONDS,
+    FINALIZE_SEASONS,
+    FINALIZE_SEASONS_INTERVAL_SECONDS,
     OPTIMIZE_FSRS,
     ORPHAN_FILES_INTERVAL_SECONDS,
+    PURGE_MINIGAME_ROUNDS,
+    PURGE_MINIGAME_ROUNDS_INTERVAL_SECONDS,
+    REMIND_VIP_EXPIRY,
     SEND_REMINDERS,
     SESSIONS_INTERVAL_SECONDS,
+    VIP_REMINDER_INTERVAL_SECONDS,
     JobDefinition,
 )
 from app.modules.jobs.infrastructure.uow import SqlJobsUnitOfWork
@@ -46,6 +61,9 @@ from app.modules.review.application.use_cases.optimize_fsrs_parameters import (
 )
 from app.modules.review.infrastructure.public import FsrsLibraryOptimizer, SqlDueCardCounter
 from app.modules.review.infrastructure.uow import SqlReviewUnitOfWork
+from app.modules.rewards.application.ports import RewardsUnitOfWork
+from app.modules.rewards.application.public import RemindVipExpiryUseCase
+from app.modules.rewards.infrastructure.public import SqlRewardsUnitOfWork, build_reward_notifier
 from app.modules.vocab.infrastructure.public import DictionaryTermAdapter, SqlVocabCardSource
 
 
@@ -108,14 +126,59 @@ class SendRemindersTask:
         return dict((await self._reminders.execute(now)).as_summary())
 
 
+class RemindVipExpiryTask:
+    """F17.03, US-HG-06 — Nhắc người học có VIP sắp hết hạn trong 24 giờ tới."""
+
+    def __init__(self, remind: RemindVipExpiryUseCase) -> None:
+        self._remind = remind
+
+    async def run(self, now: datetime) -> dict[str, Any]:
+        return dict((await self._remind.execute(now)).as_summary())
+
+
+class FinalizeSeasonsTask:
+    """F16.10, US-HG-05 — Chốt mùa thi đua đã kết thúc và trao thưởng; tự tạo mùa kế tiếp."""
+
+    def __init__(self, finalize: FinalizeSeasonsUseCase) -> None:
+        self._finalize = finalize
+
+    async def run(self, now: datetime) -> dict[str, Any]:
+        return dict((await self._finalize.execute(now)).as_summary())
+
+
+class EvaluateAchievementsTask:
+    """F16.11 — Quét mở khóa huy hiệu cho người có hoạt động trong ngày."""
+
+    def __init__(self, evaluate: EvaluateAchievementsUseCase) -> None:
+        self._evaluate = evaluate
+
+    async def run(self, now: datetime) -> dict[str, Any]:
+        return dict((await self._evaluate.execute(now)).as_summary())
+
+
+class PurgeMinigameRoundsTask:
+    """F16.01, F15.03 — Dọn lượt mini-game đã phát quá 7 ngày."""
+
+    def __init__(self, purge: PurgeMinigameRoundsUseCase) -> None:
+        self._purge = purge
+
+    async def run(self, now: datetime) -> dict[str, Any]:
+        return {"rounds": await self._purge.execute(now)}
+
+
 def default_job_definitions(settings: Settings) -> list[JobDefinition]:
-    """Danh sách tác vụ mặc định; chu kỳ lấy từ Settings (dọn ảnh 60 phút, FSRS 7 ngày, nhắc ôn 15 phút)."""
+    """Danh sách tác vụ mặc định; chu kỳ lấy từ Settings (dọn ảnh 60 phút, FSRS 7 ngày, nhắc ôn 15 phút)
+    và hằng số (nhắc VIP sắp hết hạn 60 phút, chốt mùa 15 phút, quét huy hiệu 60 phút)."""
     return [
         JobDefinition(CLEANUP_QUICK_UPLOADS, settings.cleanup_interval_minutes * 60),
         JobDefinition(CLEANUP_SESSIONS, SESSIONS_INTERVAL_SECONDS),
         JobDefinition(CLEANUP_ORPHAN_FILES, ORPHAN_FILES_INTERVAL_SECONDS),
         JobDefinition(OPTIMIZE_FSRS, settings.fsrs_optimize_interval_days * 86400),
         JobDefinition(SEND_REMINDERS, settings.reminder_scan_minutes * 60),
+        JobDefinition(REMIND_VIP_EXPIRY, VIP_REMINDER_INTERVAL_SECONDS),
+        JobDefinition(FINALIZE_SEASONS, FINALIZE_SEASONS_INTERVAL_SECONDS),
+        JobDefinition(EVALUATE_ACHIEVEMENTS, EVALUATE_ACHIEVEMENTS_INTERVAL_SECONDS),
+        JobDefinition(PURGE_MINIGAME_ROUNDS, PURGE_MINIGAME_ROUNDS_INTERVAL_SECONDS),
     ]
 
 
@@ -146,6 +209,14 @@ def build_job_tasks(
     def review_uow() -> ReviewUnitOfWork:
         return SqlReviewUnitOfWork(session_factory, vocab_source)
 
+    def rewards_uow() -> RewardsUnitOfWork:
+        return SqlRewardsUnitOfWork(session_factory)
+
+    def gamification_uow() -> GamificationUnitOfWork:
+        return SqlGamificationUnitOfWork(session_factory)
+
+    notices = build_notice_sender(session_factory, clock)
+
     return {
         CLEANUP_QUICK_UPLOADS: CleanupQuickUploadsTask(PurgeExpiredQuickUploadsUseCase(library_uow, storage)),
         CLEANUP_SESSIONS: CleanupSessionsTask(
@@ -171,6 +242,16 @@ def build_job_tasks(
                 ReminderConfig(settings.reminder_grace_hours),
             )
         ),
+        REMIND_VIP_EXPIRY: RemindVipExpiryTask(
+            RemindVipExpiryUseCase(
+                rewards_uow, build_reward_notifier(session_factory, settings.storage_dir / "outbox", clock)
+            )
+        ),
+        FINALIZE_SEASONS: FinalizeSeasonsTask(FinalizeSeasonsUseCase(gamification_uow, notices)),
+        EVALUATE_ACHIEVEMENTS: EvaluateAchievementsTask(
+            EvaluateAchievementsUseCase(gamification_uow, notices)
+        ),
+        PURGE_MINIGAME_ROUNDS: PurgeMinigameRoundsTask(PurgeMinigameRoundsUseCase(gamification_uow)),
     }
 
 

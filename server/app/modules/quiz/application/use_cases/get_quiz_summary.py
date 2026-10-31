@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from app.core.ai_policy import AiPolicy
 from app.modules.admin.application.public import resolve_owner
 from app.modules.auth.application.public import Identity
 from app.modules.quiz.application.config import QuizConfig
@@ -15,14 +16,17 @@ class GetQuizSummaryUseCase:
     Từ "Bỏ qua" không tính. Quản trị viên xem được của người khác qua `owner_id` (F13.07).
     """
 
-    def __init__(self, uow_factory: Callable[[], QuizUnitOfWork], config: QuizConfig) -> None:
+    def __init__(
+        self, uow_factory: Callable[[], QuizUnitOfWork], config: QuizConfig, policy: AiPolicy
+    ) -> None:
         self._uow_factory = uow_factory
         self._config = config
+        self._policy = policy
 
     async def execute(self, identity: Identity, owner_id: int | None = None) -> QuizSummary:
         owner = resolve_owner(identity, owner_id)
         async with self._uow_factory() as uow:
             eligible = len(await uow.vocab.quizzable_words(owner))
         return QuizSummary(
-            eligible, self._config.min_words, self._config.question_count, self._config.llm_enabled
+            eligible, self._config.min_words, self._config.question_count, await self._policy.llm_enabled()
         )

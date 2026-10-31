@@ -14,6 +14,7 @@ from app.modules.library.domain.entities import (
     Actor,
     Assets,
     Chapter,
+    ChapterView,
     PageContext,
     Series,
     SeriesView,
@@ -24,8 +25,15 @@ from app.modules.library.domain.errors import (
     LoginRequiredError,
     PageNotFoundError,
     SeriesNotFoundError,
+    VipRequiredError,
 )
-from app.modules.library.domain.rules import can_edit_series, can_read_series, needs_audit
+from app.modules.library.domain.rules import (
+    can_edit_series,
+    can_read_series,
+    is_chapter_locked,
+    needs_audit,
+    vip_access_level,
+)
 
 
 def actor_of(identity: Identity | None) -> Actor:
@@ -63,14 +71,29 @@ def ensure_chapter_readable(series: Series, chapter: Chapter, actor: Actor) -> N
         raise LoginRequiredError()
 
 
+async def ensure_vip_access(
+    uow: LibraryUnitOfWork, series: Series, chapter: Chapter, actor: Actor, now: datetime
+) -> None:
+    """Chương không đọc thử của truyện VIP cần VIP còn hạn, vé đã mở khóa truyện hoặc quyền quản trị (F17.05).
+
+    Chặn cả trang, bong bóng và ảnh trang vì mọi đường đọc đều đi qua đây. Khách đã bị chặn trước đó (401).
+    """
+    if not series.is_vip or chapter.is_trial or actor.is_admin or actor.user_id is None:
+        return
+    state = await uow.vip.viewer_state(actor.user_id, [series.id], now)
+    if not state.can_read(series.id):
+        raise VipRequiredError(details={"series_id": series.id, "has_tickets": state.ticket_balance > 0})
+
+
 async def load_readable_chapter(
-    uow: LibraryUnitOfWork, chapter_id: int, actor: Actor
+    uow: LibraryUnitOfWork, chapter_id: int, actor: Actor, now: datetime
 ) -> tuple[Chapter, Series]:
     chapter = await uow.chapters.get(chapter_id)
     if chapter is None:
         raise ChapterNotFoundError()
     series = await load_readable_series(uow, chapter.series_id, actor)
     ensure_chapter_readable(series, chapter, actor)
+    await ensure_vip_access(uow, series, chapter, actor, now)
     return chapter, series
 
 
@@ -83,7 +106,9 @@ async def load_editable_chapter(
     return chapter, await load_editable_series(uow, chapter.series_id, actor)
 
 
-async def load_readable_page(uow: LibraryUnitOfWork, page_id: int, actor: Actor) -> PageContext:
+async def load_readable_page(
+    uow: LibraryUnitOfWork, page_id: int, actor: Actor, now: datetime
+) -> PageContext:
     """Trang trong truyện theo quyền đọc truyện; ảnh tải nhanh chỉ chủ ảnh và quản trị viên (F03.08)."""
     ctx = await uow.pages.get_context(page_id)
     if ctx is None:
@@ -95,6 +120,7 @@ async def load_readable_page(uow: LibraryUnitOfWork, page_id: int, actor: Actor)
     if not can_read_series(ctx.series, actor):
         raise PageNotFoundError()
     ensure_chapter_readable(ctx.series, ctx.chapter, actor)
+    await ensure_vip_access(uow, ctx.series, ctx.chapter, actor, now)
     return ctx
 
 
@@ -112,6 +138,34 @@ async def attach_progress(
         return views
     found = await uow.progress.summaries_for_series(user_id, [v.series.id for v in views])
     return [replace(v, progress=found.get(v.series.id)) for v in views]
+
+
+async def attach_vip_access(
+    uow: LibraryUnitOfWork, views: list[SeriesView], actor: Actor, now: datetime
+) -> list[SeriesView]:
+    """Gắn quyền truy cập VIP của người gọi vào thẻ truyện bằng một lượt truy vấn theo lô (F17.05).
+
+    Truyện thường luôn là `open`; chỉ hỏi cổng VIP khi có truyện VIP và người gọi đã đăng nhập.
+    """
+    vip_ids = [v.series.id for v in views if v.series.is_vip]
+    if not vip_ids:
+        return views
+    state = None
+    if actor.user_id is not None and not actor.is_admin:
+        state = await uow.vip.viewer_state(actor.user_id, vip_ids, now)
+    return [
+        replace(v, vip_access=vip_access_level(v.series.is_vip, actor, state, v.series.id)) for v in views
+    ]
+
+
+def mark_locked_chapters(chapters: list[ChapterView], view: SeriesView) -> list[ChapterView]:
+    """Gắn cờ khóa cho từng chương của truyện VIP theo quyền của người xem (F17.05)."""
+    series = view.series
+    if not series.is_vip:
+        return chapters
+    return [
+        replace(c, is_locked=is_chapter_locked(True, c.chapter.is_trial, view.vip_access)) for c in chapters
+    ]
 
 
 def mark_editable(views: list[SeriesView], actor: Actor) -> list[SeriesView]:

@@ -8,7 +8,6 @@ from fastapi import Depends, Header
 
 from app.container import Container, get_container
 from app.core.external_call_log import SqlLlmCallLogWriter
-from app.modules.admin.application.public import grammar_ai_policy
 from app.modules.dictionary.infrastructure.public import JiebaExampleLevelChecker
 from app.modules.library.application.public import LibraryPageAccess
 from app.modules.library.infrastructure.public import SqlLibraryUnitOfWork
@@ -58,7 +57,7 @@ def build_reader_services(container: Container) -> ReaderServices:
         lookup=LookupBubbleWordUseCase(
             uow_factory,
             pages,
-            DictionaryLookupAdapter(container.session_factory),
+            DictionaryLookupAdapter(container.session_factory, container.clock),
             clock,
             settings.guest_lookup_limit,
             timedelta(hours=settings.guest_session_hours),
@@ -77,7 +76,7 @@ def build_reader_services(container: Container) -> ReaderServices:
             build_grammar_analyzer(container),
             JiebaExampleLevelChecker(container.session_factory),
             SettingsTimezoneSource(container.session_factory),
-            grammar_ai_policy(container.system_settings),
+            container.ai_policies.grammar,
             container.single_flight,
             clock,
             GrammarConfig(settings.llm_timeout_seconds, settings.llm_model),

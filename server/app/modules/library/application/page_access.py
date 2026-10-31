@@ -53,9 +53,10 @@ class LibraryPageAccess:
         self, identity: Identity | None, page_id: int, *, require_edit: bool = False
     ) -> PageAccess:
         actor = actor_of(identity)
+        now = self._clock.now()
         async with self._uow_factory() as uow:
-            ctx = await load_readable_page(uow, page_id, actor)
-        if ctx.page.expires_at is not None and ctx.page.expires_at <= self._clock.now():
+            ctx = await load_readable_page(uow, page_id, actor, now)
+        if ctx.page.expires_at is not None and ctx.page.expires_at <= now:
             raise FileExpiredError()
         can_edit = can_edit_page(ctx, actor)
         if require_edit and not can_edit:
@@ -72,7 +73,7 @@ class LibraryPageAccess:
             )
             for page_id in page_ids:
                 try:
-                    ctx = await load_readable_page(uow, page_id, actor)
+                    ctx = await load_readable_page(uow, page_id, actor, now)
                 except DomainError:
                     continue
                 if ctx.page.expires_at is None or ctx.page.expires_at > now:
@@ -82,11 +83,12 @@ class LibraryPageAccess:
     async def describe_pages(self, identity: Identity | None, page_ids: Sequence[int]) -> list[PageAccess]:
         """Thông tin các trang đọc được, giữ thứ tự đầu vào; bỏ qua trang không còn hoặc không có quyền."""
         actor = actor_of(identity)
+        now = self._clock.now()
         result: list[PageAccess] = []
         async with self._uow_factory() as uow:
             for page_id in page_ids:
                 try:
-                    ctx = await load_readable_page(uow, page_id, actor)
+                    ctx = await load_readable_page(uow, page_id, actor, now)
                 except DomainError:
                     continue
                 result.append(_access(ctx, can_edit_page(ctx, actor)))

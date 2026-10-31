@@ -102,7 +102,7 @@ class ReviewMistakeUseCase:
         start, end = local_day_bounds(self._clock.now(), timezone)
         async with self._uow_factory() as uow:
             used = await uow.quizzes.count_llm_mistake_reviews_between(user_id, start, end)
-        if used >= await self._policy.daily_limit():
+        if used >= await self._policy.daily_limit(user_id):
             logger.warning("Hết hạn mức giải thích lỗi sai trong ngày, dùng nội dung dự phòng")
             return False
         return True

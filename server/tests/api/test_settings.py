@@ -25,7 +25,54 @@ async def test_new_user_gets_defaults(client: httpx.AsyncClient) -> None:
         "reminder_enabled": False,
         "reminder_time": None,
         "timezone": "Asia/Ho_Chi_Minh",
+        "show_on_leaderboard": True,
+        "dismissed_tours": [],
     }
+
+
+async def test_dismissed_tours_save_reset_dedupe_and_reject_unknown(client: httpx.AsyncClient) -> None:
+    """F02.05: lưu "không nhắc lại" ở máy chủ, thay toàn bộ, bỏ trùng, khóa lạ 422, tách theo người."""
+    account = await register(client)
+    other = await register(client)
+    res = await client.patch(
+        "/api/v1/settings",
+        json={"dismissed_tours": ["reader", "home", "reader", "upload"]},
+        headers=account.headers,
+    )
+    assert res.status_code == 200 and res.json()["dismissed_tours"] == ["reader", "home", "upload"]
+    again = await client.get("/api/v1/settings", headers=account.headers)
+    assert again.json()["dismissed_tours"] == ["reader", "home", "upload"]
+    assert (await client.get("/api/v1/settings", headers=other.headers)).json()["dismissed_tours"] == []
+
+    for bad in (["unknown"], ["home", "x"], "home", [1]):
+        res = await client.patch("/api/v1/settings", json={"dismissed_tours": bad}, headers=account.headers)
+        assert res.status_code == 422, res.text
+    assert (await client.get("/api/v1/settings", headers=account.headers)).json()["dismissed_tours"] == [
+        "reader",
+        "home",
+        "upload",
+    ]
+
+    res = await client.patch("/api/v1/settings", json={"dismissed_tours": []}, headers=account.headers)
+    assert res.status_code == 200 and res.json()["dismissed_tours"] == []
+    assert (await client.get("/api/v1/settings", headers=account.headers)).json()["dismissed_tours"] == []
+
+
+async def test_show_on_leaderboard_toggles_and_rejects_non_boolean(client: httpx.AsyncClient) -> None:
+    """US-NH-89 TC1, TC4: cờ ẩn danh mặc định bật, lưu được, không phải boolean thì 422."""
+    account = await register(client)
+    res = await client.patch("/api/v1/settings", json={"show_on_leaderboard": False}, headers=account.headers)
+    assert res.status_code == 200 and res.json()["show_on_leaderboard"] is False
+    again = await client.get("/api/v1/settings", headers=account.headers)
+    assert again.json()["show_on_leaderboard"] is False
+    for bad in ("no", 0, None):
+        res = await client.patch(
+            "/api/v1/settings", json={"show_on_leaderboard": bad}, headers=account.headers
+        )
+        assert res.status_code in (400, 422), res.text
+    assert (await client.get("/api/v1/settings", headers=account.headers)).json()[
+        "show_on_leaderboard"
+    ] is False
 
 
 async def test_settings_require_login(client: httpx.AsyncClient) -> None:
